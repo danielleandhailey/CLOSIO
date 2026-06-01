@@ -1,0 +1,121 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Send, MessageSquare, Loader } from 'lucide-react';
+import { claudeService } from '../lib/claude';
+import { formatCurrency, formatDate, formatRate } from '../lib/utils';
+
+const buildPipelineContext = (borrowers) => {
+  if (!borrowers || borrowers.length === 0) return 'No borrowers in pipeline.';
+  return borrowers.map(b => {
+    const tags = (b.borrower_tags || []).map(t => t.tag).join(', ');
+    const tasks = (b.tasks || []).filter(t => !t.completed).length;
+    const contingencies = (b.contingencies || []).filter(c => !c.completed).length;
+    const stips = (b.stipulations || []).filter(s => !s.received).length;
+    return `- ${b.name} | Stage: ${b.stage} | Lender: ${b.lender || '—'} | Rate: ${formatRate(b.rate)} (${b.rate_status || 'Floating'}) | COE: ${formatDate(b.coe_date)} | Loan: ${formatCurrency(b.loan_amount)} | Tags: ${tags || 'none'} | Open Tasks: ${tasks} | Contingencies: ${contingencies} | Stips Needed: ${stips}`;
+  }).join('\n');
+};
+
+const AIChatBubble = ({ borrowers, onNavigate }) => {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([{
+    role: 'assistant',
+    content: "Hi! I'm your CLOSIO AI assistant. Ask me about your pipeline — who's floating, COE dates, stips needed, or anything else about your borrowers.",
+  }]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef();
+  const inputRef = useRef();
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    
+    const userMsg = { role: 'user', content: text };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const context = buildPipelineContext(borrowers);
+      const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }));
+      const reply = await claudeService.chat(history, context);
+
+      // Check for navigation commands
+      if (reply.includes('NAVIGATE:')) {
+        const tab = reply.split('NAVIGATE:')[1].split('\n')[0].trim();
+        onNavigate?.(tab);
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Opening ${tab} tab for you…`,
+        }]);
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+      }
+    } catch (e) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Error: ${e.message}. Check your Claude API key configuration.`,
+      }]);
+    } finally {
+      setLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  };
+
+  const onKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  };
+
+  return (
+    <div className="chat-bubble" style={{ right: '80px' }}>
+      {open && (
+        <div className="chat-window">
+          <div className="chat-header">
+            <span>🤖 CLOSIO AI Assistant</span>
+            <button type="button" className="btn-icon" onClick={() => setOpen(false)}><X size={14} /></button>
+          </div>
+
+          <div className="chat-messages">
+            {messages.map((m, i) => (
+              <div key={i} className={`chat-msg ${m.role === 'user' ? 'user' : 'ai'}`}>
+                {m.content}
+              </div>
+            ))}
+            {loading && (
+              <div className="chat-msg ai">
+                <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} /> Thinking…
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          <div className="chat-input-row">
+            <textarea
+              ref={inputRef}
+              className="chat-input"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={onKey}
+              placeholder="Ask about your pipeline…"
+              rows={1}
+            />
+            <button type="button" className="btn-icon btn-primary" style={{ background: '#7c3aed', color: 'white', borderRadius: '5px', width: '36px', height: '36px', flexShrink: 0 }} onClick={send} disabled={loading}>
+              <Send size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <button type="button" className="chat-trigger" onClick={() => setOpen(o => !o)} title="AI Assistant">
+        🤖
+      </button>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+};
+
+export default AIChatBubble;

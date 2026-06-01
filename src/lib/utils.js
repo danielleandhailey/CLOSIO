@@ -1,0 +1,110 @@
+import { format, isToday, isBefore, differenceInDays, parseISO } from 'date-fns';
+import { PRESET_TAGS } from './constants';
+
+// ---- Date helpers ----
+export const formatDate = (d) => {
+  if (!d) return '—';
+  try { return format(typeof d === 'string' ? parseISO(d) : d, 'MM/dd/yy'); }
+  catch { return '—'; }
+};
+
+export const formatDateTime = (d) => {
+  if (!d) return '—';
+  try { return format(typeof d === 'string' ? parseISO(d) : d, 'MM/dd hh:mm a'); }
+  catch { return '—'; }
+};
+
+export const taskUrgency = (due) => {
+  if (!due) return 'upcoming';
+  const d = typeof due === 'string' ? parseISO(due) : due;
+  if (isBefore(d, new Date()) && !isToday(d)) return 'overdue';
+  if (isToday(d)) return 'today';
+  return 'upcoming';
+};
+
+export const urgencyColor = (urgency) => ({
+  overdue:  { color: '#dc2626', bg: '#fee2e2' },
+  today:    { color: '#d97706', bg: '#fef3c7' },
+  upcoming: { color: '#16a34a', bg: '#dcfce7' },
+}[urgency] || { color: '#6b7280', bg: '#f3f4f6' });
+
+// ---- Loan calculations ----
+export const calcPI = (loanAmount, rate, termYears = 30) => {
+  if (!loanAmount || !rate) return null;
+  const r = (rate / 100) / 12;
+  const n = termYears * 12;
+  if (r === 0) return loanAmount / n;
+  return loanAmount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+};
+
+export const calcLTV = (loanAmount, purchasePrice) => {
+  if (!loanAmount || !purchasePrice) return null;
+  return ((loanAmount / purchasePrice) * 100).toFixed(1);
+};
+
+export const formatCurrency = (n) => {
+  if (n == null || n === '') return '—';
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+};
+
+export const formatRate = (r) => r ? `${parseFloat(r).toFixed(3)}%` : '—';
+
+// ---- Tag helpers ----
+export const getTagStyle = (tag) => {
+  const preset = PRESET_TAGS.find(t => t.label === tag);
+  if (preset) return { color: preset.color, backgroundColor: preset.bg, border: `1px solid ${preset.color}40` };
+  return { color: '#4b5563', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db' };
+};
+
+// ---- Touch stamp helpers ----
+export const touchedRecently = (lastTouched) => {
+  if (!lastTouched) return false;
+  const d = typeof lastTouched === 'string' ? parseISO(lastTouched) : lastTouched;
+  return differenceInDays(new Date(), d) <= 2;
+};
+
+// ---- Sorting ----
+export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
+  const stageIdx = (s) => stageOrder.indexOf(s);
+  return [...borrowers].sort((a, b) => {
+    switch (sortBy) {
+      case 'stage':
+        return stageIdx(a.stage) - stageIdx(b.stage);
+      case 'coe_date':
+        if (!a.coe_date && !b.coe_date) return 0;
+        if (!a.coe_date) return 1;
+        if (!b.coe_date) return -1;
+        return new Date(a.coe_date) - new Date(b.coe_date);
+      case 'floating':
+        if (a.rate_status === 'Floating' && b.rate_status !== 'Floating') return -1;
+        if (a.rate_status !== 'Floating' && b.rate_status === 'Floating') return 1;
+        return 0;
+      case 'last_touched':
+        if (!a.last_touched) return 1;
+        if (!b.last_touched) return -1;
+        return new Date(b.last_touched) - new Date(a.last_touched);
+      case 'name':
+        return a.name.localeCompare(b.name);
+      default:
+        return stageIdx(a.stage) - stageIdx(b.stage);
+    }
+  });
+};
+
+// ---- Annual savings from rate retread ----
+export const calcAnnualSavings = (loanAmount, lockedRate, currentRate) => {
+  if (!loanAmount || !lockedRate || !currentRate) return 0;
+  const oldPI = calcPI(loanAmount, lockedRate);
+  const newPI = calcPI(loanAmount, currentRate);
+  if (!oldPI || !newPI) return 0;
+  return (oldPI - newPI) * 12;
+};
+
+// ---- Debounce ----
+export const debounce = (fn, delay) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
