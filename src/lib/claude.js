@@ -1,5 +1,5 @@
 const CLAUDE_API_KEY = process.env.REACT_APP_CLAUDE_API_KEY;
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const CLAUDE_MODEL = 'claude-opus-4-5';
 
 export const claudeService = {
   // AI Chat with pipeline context
@@ -89,25 +89,27 @@ SUMMARY: [your summary here]
 JSON: [valid JSON object with only the fields you found]`;
 
     try {
+      const isPDF = mimeType === 'application/pdf';
+      const contentBlock = isPDF
+        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
+        : { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Data } };
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-api-key': CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01',
+      };
+      if (isPDF) headers['anthropic-beta'] = 'pdfs-2024-09-25';
+
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
+        headers,
         body: JSON.stringify({
           model: CLAUDE_MODEL,
-          max_tokens: 1000,
+          max_tokens: 1500,
           messages: [{
             role: 'user',
-            content: [
-              {
-                type: 'document',
-                source: { type: 'base64', media_type: mimeType, data: base64Data }
-              },
-              { type: 'text', text: docPrompt }
-            ],
+            content: [contentBlock, { type: 'text', text: docPrompt }],
           }],
         }),
       });
