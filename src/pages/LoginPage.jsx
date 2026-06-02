@@ -8,6 +8,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('LOA');
+  const [supervisorEmail, setSupervisorEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -21,7 +22,7 @@ const LoginPage = () => {
         const { error } = await signIn(email, password);
         if (error) throw error;
       } else {
-        const { error } = await signUp(email, password, fullName, role);
+        const { error } = await signUp(email, password, fullName, role, supervisorEmail);
         if (error) throw error;
         setSuccess('Account created! Check your email to confirm, then sign in.');
         setMode('login');
@@ -102,6 +103,23 @@ const LoginPage = () => {
                   <option value="Admin">Admin</option>
                 </select>
               </div>
+              {(role === 'LOA') && (
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#6a6a80', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }}>
+                    Your Loan Officer's Email
+                  </label>
+                  <input
+                    className="form-input"
+                    type="email"
+                    value={supervisorEmail}
+                    onChange={e => setSupervisorEmail(e.target.value)}
+                    placeholder="lo@westcapitallending.com"
+                  />
+                  <div style={{ fontSize: '10px', color: '#6a6a80', marginTop: '4px' }}>
+                    Links you to your LO's pipeline and team chat
+                  </div>
+                </div>
+              )}
             </>
           )}
 

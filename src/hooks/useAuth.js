@@ -45,11 +45,23 @@ export const AuthProvider = ({ children }) => {
     return supabase.auth.signInWithPassword({ email, password });
   };
 
-  const signUp = async (email, password, fullName, role = 'LOA') => {
-    return supabase.auth.signUp({
+  const signUp = async (email, password, fullName, role = 'LOA', supervisorEmail = '') => {
+    const result = await supabase.auth.signUp({
       email, password,
-      options: { data: { full_name: fullName, role } }
+      options: { data: { full_name: fullName, role, supervisor_email: supervisorEmail, team_name: 'West Capital' } }
     });
+    // If signup succeeded, also upsert the profile directly (belt+suspenders in case trigger fails)
+    if (result.data?.user) {
+      await supabase.from('profiles').upsert({
+        id: result.data.user.id,
+        email,
+        full_name: fullName,
+        role,
+        supervisor_email: supervisorEmail,
+        team_name: 'West Capital',
+      }, { onConflict: 'id' });
+    }
+    return result;
   };
 
   const signOut = () => supabase.auth.signOut();
