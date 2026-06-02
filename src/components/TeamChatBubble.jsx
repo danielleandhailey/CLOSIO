@@ -8,16 +8,25 @@ const TeamChatBubble = () => {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [input, setInput] = useState('');
-  const [lastSeenId, setLastSeenId] = useState(() => localStorage.getItem('chat_last_seen') || '');
+  const [flash, setFlash] = useState(false);
   const { messages, sendMessage } = useTeamChat();
   const { profile } = useAuth();
   const bottomRef = useRef();
+  const prevCount = useRef(messages.length);
 
-  // Count unread = messages after lastSeenId that aren't from me
   const myName = profile?.full_name || profile?.email || '';
-  const lastSeenIndex = messages.findIndex(m => m.id === lastSeenId);
-  const newMessages = lastSeenIndex >= 0 ? messages.slice(lastSeenIndex + 1) : (lastSeenId ? messages : []);
-  const unread = newMessages.filter(m => m.sender_name !== myName).length;
+
+  // Flash yellow when new message from teammate
+  useEffect(() => {
+    if (messages.length > prevCount.current) {
+      const newMsg = messages[messages.length - 1];
+      if (newMsg?.sender_name !== myName) {
+        setFlash(true);
+        setTimeout(() => setFlash(false), 3000);
+      }
+    }
+    prevCount.current = messages.length;
+  }, [messages, myName]);
 
   // Scroll to bottom when chat opens or new message
   useEffect(() => {
@@ -25,14 +34,6 @@ const TeamChatBubble = () => {
       bottomRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages, open, minimized]);
-
-  // Mark as seen when chat is open
-  useEffect(() => {
-    if (open && !minimized && messages.length > 0) {
-      const lastId = messages[messages.length - 1].id;
-      setLastSeenId(lastId);
-      localStorage.setItem('chat_last_seen', lastId);
-    }
   }, [open, minimized, messages]);
 
   const send = async () => {
@@ -121,16 +122,8 @@ const TeamChatBubble = () => {
         </div>
       )}
 
-      <button type="button" className="chat-trigger" style={{ background: unread > 0 ? '#f59e0b' : '#065f46', position: 'relative', animation: unread > 0 ? 'pulse 1s infinite' : 'none' }} onClick={() => setOpen(o => !o)} title="Team Chat">
+      <button type="button" className="chat-trigger" style={{ background: flash ? '#f59e0b' : '#065f46', position: 'relative', animation: flash ? 'pulse 1s infinite' : 'none' }} onClick={() => setOpen(o => !o)} title="Team Chat">
         💬
-        {unread > 0 && (
-          <span style={{
-            position: 'absolute', top: '-5px', right: '-5px',
-            background: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: '700',
-            borderRadius: '50%', width: '18px', height: '18px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>{unread}</span>
-        )}
       </button>
     </div>
   );
