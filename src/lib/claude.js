@@ -1,5 +1,5 @@
 const CLAUDE_API_KEY = process.env.REACT_APP_CLAUDE_API_KEY;
-const CLAUDE_MODEL = 'claude-opus-4-5';
+const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
 
 export const claudeService = {
   // AI Chat with pipeline context

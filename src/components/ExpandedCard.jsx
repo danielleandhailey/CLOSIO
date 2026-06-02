@@ -168,6 +168,12 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
       setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'uploading' } : x));
 
       try {
+        // Check file size — warn but still try up to 20MB
+        if (file.size > 20 * 1024 * 1024) {
+          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: 'File too large (max 20MB). Please compress or split the PDF.' } : x));
+          continue;
+        }
+
         // Read file as base64
         const base64 = await new Promise((res, rej) => {
           const reader = new FileReader();
