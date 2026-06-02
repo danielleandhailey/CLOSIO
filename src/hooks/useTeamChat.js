@@ -32,6 +32,17 @@ export const useTeamChat = () => {
 
   const sendMessage = async (message, senderName, senderRole) => {
     const { data: { user } } = await supabase.auth.getUser();
+    const newMsg = {
+      id: Date.now().toString(),
+      message,
+      sender_name: senderName,
+      sender_role: senderRole,
+      user_id: user?.id,
+      created_at: new Date().toISOString()
+    };
+    // Optimistically add to UI
+    setMessages(prev => [...prev, newMsg]);
+
     const { error } = await supabase.from('team_chat').insert([{
       message,
       sender_name: senderName,
@@ -40,6 +51,8 @@ export const useTeamChat = () => {
     }]);
     if (error) {
       console.error('Team chat send error:', error);
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== newMsg.id));
       throw error;
     }
   };
