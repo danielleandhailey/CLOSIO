@@ -322,18 +322,18 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
         </div>
       )}
 
-      {/* Completed results */}
+      {/* Completed results — compact inline */}
       {!processing && progress.length > 0 && (
-        <div style={{ background: '#0d2010', border: '1px solid #22c55e', borderRadius: '8px', padding: '12px', marginTop: '10px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#22c55e', marginBottom: '8px' }}>✅ Processing complete!</div>
-          {progress.map((p, i) => (
-            <div key={i} style={{ fontSize: '12px', padding: '4px 0', color: '#b8b8d8' }}>
-              <strong style={{ color: '#f0f0ff' }}>{p.name}:</strong> {p.summary || p.error || 'Done'}
-            </div>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '8px', padding: '8px 12px', background: '#0d2010', border: '1px solid #22c55e', borderRadius: '6px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '11px', fontWeight: '700', color: '#22c55e', whiteSpace: 'nowrap' }}>✅ Done:</span>
+          <div style={{ flex: 1, fontSize: '11px', color: '#b8b8d8', lineHeight: 1.5 }}>
+            {progress.map((p, i) => (
+              <span key={i}>{p.name.length > 30 ? p.name.slice(0, 30) + '…' : p.name}{i < progress.length - 1 ? ' · ' : ''}</span>
+            ))}
+          </div>
           <button type="button" onClick={() => setProgress([])}
-            style={{ marginTop: '8px', padding: '4px 12px', background: 'transparent', border: '1px solid #22c55e', color: '#22c55e', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}>
-            Clear
+            style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #22c55e', color: '#22c55e', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '700', flexShrink: 0 }}>
+            ✕
           </button>
         </div>
       )}

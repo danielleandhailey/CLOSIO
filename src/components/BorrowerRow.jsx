@@ -326,6 +326,21 @@ const BorrowerRow = ({
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
+        {/* Expand toggle — right after stage for easy access */}
+        <button
+          type="button"
+          onClick={() => onExpand(borrower.id)}
+          title="Expand / Collapse"
+          style={{
+            width: '26px', height: '26px', borderRadius: '5px', border: '1px solid #50507a',
+            background: isExpanded ? '#8b4cf7' : '#28283a', color: '#fff',
+            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, fontSize: '13px', fontWeight: '900', transition: 'all 0.15s',
+          }}
+        >
+          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
+
         {/* Name */}
         <span className="borrower-name">{borrower.name}</span>
 
@@ -369,11 +384,7 @@ const BorrowerRow = ({
 
           <button type="button" className="btn-icon" onClick={() => onEdit(borrower)} title="Edit">✏</button>
 
-          <button type="button" className="btn-icon" onClick={() => onExpand(borrower.id)} title="Expand / Collapse">
-            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-
-          <button type="button" className="btn-icon" onClick={() => onDelete(borrower.id)} title="Delete" style={{ color: '#dc2626' }}>
+          <button type="button" className="btn-icon" onClick={() => onDelete(borrower.id)} title="Delete" style={{ color: '#f87171', borderColor: '#7f1d1d' }}>
             <Trash2 size={13} />
           </button>
         </div>
