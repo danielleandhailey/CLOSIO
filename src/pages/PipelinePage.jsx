@@ -61,14 +61,41 @@ const PipelinePage = ({ borrowers, ops }) => {
     if (expandedId === id) setExpandedId(null);
   }, [ops, expandedId]);
 
+  const [cxldDialog, setCxldDialog] = useState(null); // { id, fromStage }
+
   const handleMoveStage = useCallback(async (id, newStage, fromStage) => {
-    await ops.moveBorrower(id, newStage, fromStage);
-    // Push to Bonzo if borrower has bonzo_id
-    const borrower = borrowers.find(b => b.id === id);
-    if (borrower?.bonzo_id) {
-      bonzoService.pushStageChange(borrower, newStage).catch(console.error);
+    // Show reason dialog when moving to CXLD
+    if (newStage === 'CXLD') {
+      setCxldDialog({ id, fromStage });
+      return;
+    }
+    try {
+      await ops.moveBorrower(id, newStage, fromStage);
+      const borrower = borrowers.find(b => b.id === id);
+      if (borrower?.bonzo_id) {
+        bonzoService.pushStageChange(borrower, newStage).catch(console.error);
+      }
+    } catch (e) {
+      alert('Move failed: ' + e.message);
     }
   }, [ops, borrowers]);
+
+  const handleCxldConfirm = async (reason) => {
+    if (!cxldDialog) return;
+    try {
+      await ops.moveBorrower(cxldDialog.id, 'CXLD', cxldDialog.fromStage);
+      if (reason) {
+        const borrower = borrowers.find(b => b.id === cxldDialog.id);
+        const notes = borrower?.notes || '';
+        await ops.updateBorrower(cxldDialog.id, {
+          notes: notes + `\n\n❌ CXLD (${new Date().toLocaleDateString()}): ${reason}`
+        });
+      }
+    } catch (e) {
+      alert('Move failed: ' + e.message);
+    }
+    setCxldDialog(null);
+  };
 
   const handleBonzoPull = async () => {
     setBonzoPulling(true);
@@ -96,13 +123,27 @@ const PipelinePage = ({ borrowers, ops }) => {
           {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
 
-        <input
-          className="search-input"
-          type="text"
-          placeholder="Search borrowers, tags, lender…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <div style={{ position: 'relative', flex: 1, maxWidth: '240px' }}>
+          <input
+            className="search-input"
+            type="text"
+            placeholder="Search borrowers, tags, lender…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ width: '100%', paddingRight: search ? '26px' : '10px' }}
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              style={{
+                position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text3)', fontSize: '16px', lineHeight: 1, fontWeight: '700',
+              }}
+            >×</button>
+          )}
+        </div>
 
         {/* Bonzo Pull */}
         <button type="button" className="btn btn-ghost" onClick={handleBonzoPull} disabled={bonzoPulling} title="Sync leads from Bonzo CRM">
@@ -182,6 +223,15 @@ const PipelinePage = ({ borrowers, ops }) => {
         </div>
       </div>
 
+      {/* CXLD Reason Dialog */}
+      {cxldDialog && (
+        <CxldDialog
+          borrower={borrowers.find(b => b.id === cxldDialog.id)}
+          onConfirm={handleCxldConfirm}
+          onCancel={() => setCxldDialog(null)}
+        />
+      )}
+
       {/* Add Borrower Modal */}
       {showAddModal && (
         <AddBorrowerModal
@@ -203,6 +253,58 @@ const PipelinePage = ({ borrowers, ops }) => {
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+};
+
+// CXLD Reason Dialog
+const CxldDialog = ({ borrower, onConfirm, onCancel }) => {
+  const [reason, setReason] = React.useState('');
+  const REASONS = ['DNQ - Credit', 'DNQ - Income', 'DNQ - DTI', 'Property Issue', 'Borrower Withdrew', 'Went with Another Lender', 'Could Not Contact', 'Other'];
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal" style={{ maxWidth: '420px' }}>
+        <div className="modal-title">
+          ❌ Cancel — {borrower?.name}
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--text3)', marginBottom: '12px' }}>
+          Select a reason for cancelling this borrower.
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+          {REASONS.map(r => (
+            <button key={r} type="button"
+              onClick={() => setReason(r)}
+              style={{
+                padding: '8px 12px', borderRadius: '6px', border: '1px solid',
+                borderColor: reason === r ? '#ef4444' : 'var(--border)',
+                background: reason === r ? '#fee2e2' : 'var(--surface2)',
+                color: reason === r ? '#991b1b' : 'var(--text)',
+                cursor: 'pointer', fontSize: '12px', fontWeight: reason === r ? '700' : '400',
+                textAlign: 'left',
+              }}
+            >{r}</button>
+          ))}
+        </div>
+        <div style={{ marginBottom: '12px' }}>
+          <textarea
+            placeholder="Additional notes (optional)…"
+            value={reason && !REASONS.includes(reason) ? reason : ''}
+            onChange={e => setReason(e.target.value)}
+            style={{ width: '100%', background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px', borderRadius: '6px', fontSize: '12px', minHeight: '60px', outline: 'none', resize: 'vertical' }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" onClick={() => onConfirm(reason)}
+            style={{ flex: 1, padding: '9px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+            ❌ Confirm Cancel
+          </button>
+          <button type="button" onClick={onCancel}
+            style={{ padding: '9px 16px', background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+            Keep Active
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
