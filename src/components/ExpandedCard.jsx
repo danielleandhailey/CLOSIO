@@ -133,7 +133,7 @@ const TasksSection = ({ borrower, ops }) => {
 };
 
 // ---- Document Drop Zone ----
-const DocDropZone = ({ borrower, onDocAdded }) => {
+const DocDropZone = ({ borrower, onDocAdded, ops }) => {
   const [dragging, setDragging] = useState(false);
   const [queue, setQueue] = useState([]); // pending files not yet processed
   const [processing, setProcessing] = useState(false);
@@ -1237,7 +1237,7 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
         {openTabs.has('docs') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Upload Documents</div>
-            <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} />
+            <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} ops={ops} />
             {closeBtn('docs')}
           </div>
         )}
