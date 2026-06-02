@@ -241,7 +241,7 @@ const AddTagInline = ({ borrower, onAdd, sc }) => {
       <button type="button"
         onClick={e => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }}
         style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
-          border: '1px solid #60a5fa', background: '#1e3a5f', color: '#93c5fd', cursor: 'pointer' }}>
+          border: '1px dashed #50507a', background: 'transparent', color: '#8080a8', cursor: 'pointer' }}>
         + Tag
       </button>
       {open && (
@@ -287,10 +287,9 @@ const LenderBadge = ({ borrower, onUpdate }) => {
         <button type="button"
           onClick={e => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }}
           style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
-            border: lender ? '1px solid #22c55e' : '1px dashed #50507a',
-            background: lender ? '#14532d' : 'transparent',
-            color: lender ? '#86efac' : '#8080a8', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-          {lender || '+ Lender'}
+            border: '1px dashed #50507a', background: 'transparent',
+            color: '#8080a8', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          + Lender
         </button>
         {open && (
           <div style={dropStyle}>
@@ -325,6 +324,13 @@ const LenderBadge = ({ borrower, onUpdate }) => {
           </div>
         )}
       </div>
+      {lender && (
+        <span style={{ padding: '3px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+          background: '#14532d', color: '#86efac', border: '1px solid #22c55e', cursor: 'pointer' }}
+          onClick={e => { e.stopPropagation(); if (window.confirm(`Remove ${lender}?`)) onUpdate(borrower.id, { lender: null }); }}>
+          {lender} ×
+        </span>
+      )}
       {lender2 && (
         <span style={{ padding: '3px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
           background: '#78350f', color: '#fcd34d', border: '1px solid #d97706', cursor: 'pointer' }}
@@ -471,6 +477,7 @@ const BorrowerRow = ({
 
         {/* Tags */}
         <div className="tags-row">
+          <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
           {STAGES_WITH_AUTO_TAGS.includes(borrower.stage) ? (
             <AutoTagPills borrower={borrower} />
           ) : (
@@ -478,7 +485,6 @@ const BorrowerRow = ({
               <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
             ))
           )}
-          <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
           <LenderBadge borrower={borrower} onUpdate={onUpdate} />
         </div>
 
