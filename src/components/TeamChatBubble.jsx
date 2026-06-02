@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useTeamChat } from '../hooks/useTeamChat';
 import { useAuth } from '../hooks/useAuth';
 import { format, parseISO } from 'date-fns';
@@ -12,28 +12,29 @@ const TeamChatBubble = () => {
   const { messages, sendMessage } = useTeamChat();
   const { profile } = useAuth();
   const bottomRef = useRef();
-  const prevCount = useRef(messages.length);
+  const lastCountRef = useRef(0);
 
   const myName = profile?.full_name || profile?.email || '';
 
-  // Flash yellow when new message from teammate
+  // Flash yellow when new message from teammate - ALWAYS flash regardless of open state
   useEffect(() => {
-    if (messages.length > prevCount.current) {
+    if (lastCountRef.current > 0 && messages.length > lastCountRef.current) {
       const newMsg = messages[messages.length - 1];
-      if (newMsg?.sender_name !== myName) {
+      if (newMsg && newMsg.sender_name !== myName) {
         setFlash(true);
-        setTimeout(() => setFlash(false), 3000);
+        const timer = setTimeout(() => setFlash(false), 5000);
+        return () => clearTimeout(timer);
       }
     }
-    prevCount.current = messages.length;
-  }, [messages, myName]);
+    lastCountRef.current = messages.length;
+  }, [messages.length, myName]);
 
-  // Scroll to bottom when chat opens or new message
+  // Scroll to bottom
   useEffect(() => {
     if (open && !minimized) {
-      bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'auto' }), 100);
     }
-  }, [messages, open, minimized]);
+  }, [messages.length, open, minimized]);
 
   const send = async () => {
     const text = input.trim();
@@ -46,12 +47,21 @@ const TeamChatBubble = () => {
     }
   };
 
+  const handlePaste = (e) => {
+    const text = e.clipboardData.getData('text/plain');
+    e.preventDefault();
+    const start = e.target.selectionStart;
+    const end = e.target.selectionEnd;
+    const newValue = input.substring(0, start) + text + input.substring(end);
+    setInput(newValue);
+  };
+
   return (
     <div className="chat-bubble" style={{ right: '20px' }}>
       {open && (
         <div className="chat-window" style={{ height: minimized ? 'auto' : '380px' }}>
-          <div className="chat-header" style={{ background: '#0d9488', cursor: 'pointer' }} onClick={() => setMinimized(m => !m)}>
-            <span>💬 Team Chat</span>
+          <div className="chat-header" style={{ background: flash ? '#f59e0b' : '#0d9488', cursor: 'pointer' }} onClick={() => setMinimized(m => !m)}>
+            <span>💬 Team Chat {flash && '(NEW!)'}</span>
             <div style={{ display: 'flex', gap: '4px' }}>
               <button type="button" style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '16px', padding: '2px 6px' }}
                 onClick={e => { e.stopPropagation(); setMinimized(m => !m); }}>
@@ -73,7 +83,7 @@ const TeamChatBubble = () => {
                   </div>
                 )}
                 {messages.map(m => {
-                  const isMe = m.sender_name === (profile?.full_name || profile?.email);
+                  const isMe = m.sender_name === myName;
                   return (
                     <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', gap: '2px' }}>
                       {!isMe && (
@@ -99,14 +109,15 @@ const TeamChatBubble = () => {
               </div>
 
               <div className="chat-input-row" style={{ background: '#f0f9ff', borderTop: '1px solid #bae6fd' }}>
-                <textarea
+                <input
+                  type="text"
                   className="chat-input"
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                  onPaste={handlePaste}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send(); } }}
                   placeholder="Message the team…"
-                  rows={1}
-                  style={{ background: '#fff', color: '#1e293b', border: '1px solid #bae6fd' }}
+                  style={{ background: '#fff', color: '#1e293b', border: '1px solid #bae6fd', flex: 1, padding: '8px', borderRadius: '4px', fontSize: '13px' }}
                 />
                 <button
                   type="button"
@@ -121,7 +132,7 @@ const TeamChatBubble = () => {
         </div>
       )}
 
-      <button type="button" className="chat-trigger" style={{ background: flash ? '#f59e0b' : '#065f46', position: 'relative', animation: flash ? 'pulse 1s infinite' : 'none', border: flash ? '3px solid #fbbf24' : 'none' }} onClick={() => setOpen(o => !o)} title="Team Chat">
+      <button type="button" className="chat-trigger" style={{ background: flash ? '#f59e0b' : '#065f46', position: 'relative', animation: flash ? 'pulse 1s infinite' : 'none', border: flash ? '3px solid #fbbf24' : 'none' }} onClick={() => { setOpen(o => !o); setFlash(false); }} title="Team Chat">
         💬
         {flash && <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#ef4444', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#fff', fontWeight: '700' }}>!</span>}
       </button>
