@@ -31,10 +31,17 @@ export const useTeamChat = () => {
   }, []);
 
   const sendMessage = async (message, senderName, senderRole) => {
+    const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from('team_chat').insert([{
-      message, sender_name: senderName, sender_role: senderRole
+      message,
+      sender_name: senderName,
+      sender_role: senderRole,
+      user_id: user?.id
     }]);
-    if (error) throw error;
+    if (error) {
+      console.error('Team chat send error:', error);
+      throw error;
+    }
   };
 
   return { messages, loading, sendMessage };
