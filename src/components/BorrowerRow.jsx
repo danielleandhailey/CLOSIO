@@ -129,11 +129,11 @@ const AddTagInline = ({ borrower, onAdd, sc }) => {
         type="button"
         onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
         style={{
-          padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '700',
-          border: `1px dashed ${sc ? sc.bg : '#8b4cf7'}`,
-          background: 'transparent',
-          color: sc ? sc.bg : '#d4aaff',
-          cursor: 'pointer', whiteSpace: 'nowrap', letterSpacing: '0.03em',
+          padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+          border: '1px solid #60a5fa',
+          background: '#1e3a5f',
+          color: '#93c5fd',
+          cursor: 'pointer', whiteSpace: 'nowrap',
         }}
       >
         + Tag
@@ -260,10 +260,11 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
         onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: '3px',
-          padding: '2px 7px', borderRadius: '4px', border: 'none',
+          padding: '3px 9px', borderRadius: '5px', border: 'none',
           background: sc.bg, color: sc.text,
-          fontSize: '10px', fontWeight: '700', cursor: 'pointer',
-          whiteSpace: 'nowrap', letterSpacing: '0.02em',
+          fontSize: '11px', fontWeight: '800', cursor: 'pointer',
+          whiteSpace: 'nowrap', letterSpacing: '0.04em', textTransform: 'uppercase',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
         }}
       >
         {borrower.stage} ▾

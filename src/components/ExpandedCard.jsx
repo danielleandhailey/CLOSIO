@@ -135,8 +135,9 @@ const TasksSection = ({ borrower, ops }) => {
 // ---- Document Drop Zone ----
 const DocDropZone = ({ borrower, onDocAdded }) => {
   const [dragging, setDragging] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [status, setStatus] = useState('');
+  const [queue, setQueue] = useState([]); // pending files not yet processed
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState([]); // per-file status
   const [docs, setDocs] = useState([]);
   const [showDocs, setShowDocs] = useState(false);
   const inputRef = useRef();
@@ -148,24 +149,37 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
 
   React.useEffect(() => { loadDocs(); }, [loadDocs]);
 
-  const handleFile = async (file) => {
-    setUploading(true);
-    setStatus('Uploading…');
-    try {
-      // Upload to Supabase storage
-      const path = `${borrower.id}/${Date.now()}_${file.name}`;
-      const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
-      if (upErr) throw upErr;
+  const addFilesToQueue = (files) => {
+    const newFiles = Array.from(files).filter(f =>
+      f.type === 'application/pdf' || f.type.startsWith('image/')
+    );
+    setQueue(q => [...q, ...newFiles]);
+  };
 
-      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+  const removeFromQueue = (idx) => setQueue(q => q.filter((_, i) => i !== idx));
 
-      // AI analysis
-      setStatus('AI analyzing…');
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const base64 = ev.target.result.split(',')[1];
+  const processQueue = async () => {
+    if (queue.length === 0) return;
+    setProcessing(true);
+    setProgress(queue.map(f => ({ name: f.name, status: 'pending' })));
+
+    for (let i = 0; i < queue.length; i++) {
+      const file = queue[i];
+      setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'uploading' } : x));
+
+      try {
+        // Read file as base64
+        const base64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = ev => res(ev.target.result.split(',')[1]);
+          reader.onerror = rej;
+          reader.readAsDataURL(file);
+        });
+
         const mimeType = file.type || 'application/pdf';
-        
+
+        // AI analysis
+        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'analyzing' } : x));
         let aiSummary = '';
         let extracted = {};
         try {
@@ -176,63 +190,76 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
           aiSummary = 'AI analysis unavailable';
         }
 
-        // Save doc record
+        // Try Supabase storage upload (graceful fail if bucket not set up)
+        let filePath = '';
+        try {
+          const path = `${borrower.id}/${Date.now()}_${file.name}`;
+          const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+            filePath = urlData.publicUrl;
+          }
+        } catch (e) { /* storage not configured yet */ }
+
+        // Save doc record to DB
         await supabase.from('documents').insert([{
           borrower_id: borrower.id,
           name: file.name,
-          file_path: urlData.publicUrl,
+          file_path: filePath || file.name,
           file_type: file.type,
           file_size: file.size,
           ai_summary: aiSummary,
         }]);
 
-        // Append summary to notes
-        if (aiSummary) {
+        // Append AI summary to borrower notes
+        if (aiSummary && aiSummary !== 'AI analysis unavailable') {
           const currentNotes = borrower.notes || '';
           const newNote = `\n\n📄 ${file.name} (${new Date().toLocaleDateString()}):\n${aiSummary}`;
           await supabase.from('borrowers').update({ notes: currentNotes + newNote }).eq('id', borrower.id);
         }
 
-        // Auto-fill extracted fields
-        if (Object.keys(extracted).length > 0) {
-          const updates = {};
-          if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
-          if (extracted.coe_date) updates.coe_date = extracted.coe_date;
-          if (extracted.dti) updates.dti = extracted.dti;
-          if (extracted.ltv) updates.ltv = extracted.ltv;
-          if (Object.keys(updates).length > 0) {
-            await supabase.from('borrowers').update(updates).eq('id', borrower.id);
-          }
+        // Auto-fill extracted fields into borrower record
+        const updates = {};
+        if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
+        if (extracted.coe_date) updates.coe_date = extracted.coe_date;
+        if (extracted.dti) updates.dti = extracted.dti;
+        if (extracted.ltv) updates.ltv = extracted.ltv;
+        if (extracted.appraisal_value) updates.appraisal_value = extracted.appraisal_value;
+        if (Object.keys(updates).length > 0) {
+          await supabase.from('borrowers').update(updates).eq('id', borrower.id);
         }
 
-        setStatus(`✅ ${file.name} analyzed`);
-        loadDocs();
-        if (onDocAdded) onDocAdded();
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (e) {
-      setStatus(`❌ Error: ${e.message}`);
-      setUploading(false);
+        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary } : x));
+      } catch (e) {
+        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
+      }
     }
+
+    setProcessing(false);
+    setQueue([]);
+    loadDocs();
+    if (onDocAdded) onDocAdded();
   };
 
   const onDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    addFilesToQueue(e.dataTransfer.files);
   };
+
+  const statusColor = (s) => s === 'done' ? '#22c55e' : s === 'error' ? '#f87171' : s === 'analyzing' ? '#b07eff' : '#fbbf24';
+  const statusLabel = (s) => s === 'done' ? '✅ Done' : s === 'error' ? '❌ Error' : s === 'analyzing' ? '🤖 Analyzing…' : s === 'uploading' ? '⬆️ Uploading…' : '⏳ Pending';
 
   return (
     <div>
       <div className="section-heading">
         📎 Documents
         <button type="button" className="btn-xs btn-ghost" onClick={() => setShowDocs(s => !s)} style={{ marginLeft: 'auto' }}>
-          {showDocs ? 'Hide' : `Show (${docs.length})`}
+          {showDocs ? 'Hide' : `Show saved (${docs.length})`}
         </button>
       </div>
 
+      {/* Drop zone */}
       <div
         className={`doc-zone ${dragging ? 'drag-over' : ''}`}
         onDragOver={e => { e.preventDefault(); setDragging(true); }}
@@ -240,38 +267,94 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
       >
-        {uploading ? status : (
-          <>
-            <Upload size={20} style={{ marginBottom: '6px', opacity: 0.5 }} />
-            <div style={{ fontWeight: '500', marginBottom: '2px' }}>Drop PDF or image here</div>
-            <div style={{ fontSize: '11px', opacity: 0.7 }}>Pay stubs · Bank statements · Tax returns · AUS · Appraisal · PA</div>
-            <div style={{ fontSize: '11px', color: '#9f67f7', marginTop: '4px' }}>AI reads and extracts key data automatically</div>
-          </>
-        )}
+        <Upload size={22} style={{ marginBottom: '8px', opacity: 0.6 }} />
+        <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '13px' }}>Drop documents here or click to browse</div>
+        <div style={{ fontSize: '11px', opacity: 0.7 }}>Purchase Agreements · Counter Offers · Appraisals · AUS · Pay Stubs · Bank Statements · Tax Returns</div>
+        <div style={{ fontSize: '11px', color: '#b07eff', marginTop: '6px', fontWeight: '600' }}>🤖 AI extracts key data automatically — drop as many as you need</div>
       </div>
 
-      {status && !uploading && (
-        <div style={{ fontSize: '11px', color: status.startsWith('✅') ? '#16a34a' : '#dc2626', marginBottom: '8px' }}>
-          {status}
+      <input ref={inputRef} type="file" accept=".pdf,image/*" multiple style={{ display: 'none' }}
+        onChange={e => { addFilesToQueue(e.target.files); e.target.value = ''; }} />
+
+      {/* Pending queue */}
+      {queue.length > 0 && !processing && (
+        <div style={{ background: '#1e1e2a', border: '1px solid #3a3a55', borderRadius: '8px', padding: '12px', marginTop: '10px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f0ff', marginBottom: '8px' }}>
+            📋 Ready to process ({queue.length} file{queue.length > 1 ? 's' : ''})
+          </div>
+          {queue.map((f, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
+              <FileText size={13} style={{ color: '#93c5fd', flexShrink: 0 }} />
+              <span style={{ flex: 1, color: '#b8b8d8' }}>{f.name}</span>
+              <span style={{ color: '#8080a8', fontSize: '11px' }}>{(f.size / 1024).toFixed(0)} KB</span>
+              <button type="button" onClick={() => removeFromQueue(i)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: '16px', lineHeight: 1 }}>×</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={processQueue}
+            style={{
+              marginTop: '10px', width: '100%', padding: '9px', borderRadius: '6px',
+              background: '#8b4cf7', color: '#fff', border: 'none', cursor: 'pointer',
+              fontSize: '13px', fontWeight: '700', letterSpacing: '0.02em',
+            }}
+          >
+            🤖 Process {queue.length} Document{queue.length > 1 ? 's' : ''} with AI
+          </button>
         </div>
       )}
 
-      <input ref={inputRef} type="file" accept=".pdf,image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && handleFile(e.target.files[0])} />
-
-      {showDocs && docs.length > 0 && (
-        <div style={{ background: '#22222e', borderRadius: '5px', padding: '8px', marginTop: '6px' }}>
-          {docs.map(doc => (
-            <div key={doc.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '5px 0', borderBottom: '1px solid #333345', fontSize: '11px' }}>
-              <FileText size={12} style={{ color: '#6a6a80', flexShrink: 0, marginTop: '2px' }} />
+      {/* Processing progress */}
+      {processing && progress.length > 0 && (
+        <div style={{ background: '#1e1e2a', border: '1px solid #3a3a55', borderRadius: '8px', padding: '12px', marginTop: '10px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f0ff', marginBottom: '8px' }}>🤖 Processing documents…</div>
+          {progress.map((p, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
+              <FileText size={13} style={{ color: '#93c5fd', flexShrink: 0, marginTop: '2px' }} />
               <div style={{ flex: 1 }}>
-                <a href={doc.file_path} target="_blank" rel="noopener noreferrer" style={{ color: '#9f67f7', textDecoration: 'none', fontWeight: '500' }}>
+                <div style={{ color: '#f0f0ff', fontWeight: '600' }}>{p.name}</div>
+                {p.summary && <div style={{ color: '#b8b8d8', fontSize: '11px', marginTop: '2px', lineHeight: 1.4 }}>{p.summary}</div>}
+              </div>
+              <span style={{ color: statusColor(p.status), fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>{statusLabel(p.status)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Completed results */}
+      {!processing && progress.length > 0 && (
+        <div style={{ background: '#0d2010', border: '1px solid #22c55e', borderRadius: '8px', padding: '12px', marginTop: '10px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#22c55e', marginBottom: '8px' }}>✅ Processing complete!</div>
+          {progress.map((p, i) => (
+            <div key={i} style={{ fontSize: '12px', padding: '4px 0', color: '#b8b8d8' }}>
+              <strong style={{ color: '#f0f0ff' }}>{p.name}:</strong> {p.summary || p.error || 'Done'}
+            </div>
+          ))}
+          <button type="button" onClick={() => setProgress([])}
+            style={{ marginTop: '8px', padding: '4px 12px', background: 'transparent', border: '1px solid #22c55e', color: '#22c55e', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}>
+            Clear
+          </button>
+        </div>
+      )}
+
+      {/* Saved docs list */}
+      {showDocs && (
+        <div style={{ background: '#1e1e2a', border: '1px solid #3a3a55', borderRadius: '8px', padding: '10px', marginTop: '10px' }}>
+          {docs.length === 0 && <div style={{ color: '#8080a8', fontSize: '12px' }}>No documents saved yet.</div>}
+          {docs.map(doc => (
+            <div key={doc.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '7px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
+              <FileText size={13} style={{ color: '#93c5fd', flexShrink: 0, marginTop: '2px' }} />
+              <div style={{ flex: 1 }}>
+                <a href={doc.file_path} target="_blank" rel="noopener noreferrer"
+                  style={{ color: '#b07eff', textDecoration: 'none', fontWeight: '600', fontSize: '12px' }}>
                   {doc.name}
                 </a>
                 {doc.ai_summary && (
-                  <div style={{ color: '#a0a0b8', marginTop: '2px', lineHeight: 1.4 }}>{doc.ai_summary}</div>
+                  <div style={{ color: '#b8b8d8', marginTop: '3px', lineHeight: 1.5, fontSize: '11px' }}>{doc.ai_summary}</div>
                 )}
               </div>
-              <span style={{ color: '#6a6a80', flexShrink: 0 }}>{formatDate(doc.created_at)}</span>
+              <span style={{ color: '#8080a8', flexShrink: 0, fontSize: '11px', fontFamily: 'monospace' }}>{formatDate(doc.created_at)}</span>
             </div>
           ))}
         </div>
@@ -560,13 +643,11 @@ const ExpandedCard = ({ borrower, ops }) => {
   const tabs = [
     { id: 'notes',    label: 'Notes & Tasks' },
     { id: 'docs',     label: 'Documents' },
-    ...(hasFullDetails ? [
-      { id: 'terms',  label: 'Loan Terms' },
-      { id: 'contacts', label: 'Contacts' },
-      { id: 'stips',  label: 'Stipulations' },
-      { id: 'contingencies', label: 'Contingencies' },
-      { id: 'appraisal', label: 'Appraisal' },
-    ] : []),
+    { id: 'terms',    label: 'Loan Terms' },
+    { id: 'contacts', label: 'Contacts' },
+    { id: 'stips',    label: 'Stipulations' },
+    { id: 'contingencies', label: 'Contingencies' },
+    { id: 'appraisal', label: 'Appraisal' },
     { id: 'history',  label: 'History' },
   ];
 
@@ -592,11 +673,11 @@ const ExpandedCard = ({ borrower, ops }) => {
           <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} />
         )}
 
-        {tab === 'terms' && hasFullDetails && (
+        {tab === 'terms' && (
           <LoanTermsGrid borrower={borrower} onUpdate={ops.updateBorrower} />
         )}
 
-        {tab === 'contacts' && hasFullDetails && (
+        {tab === 'contacts' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {CONTACT_ROLES.map(r => (
               <ContactAccordion key={r.value} borrower={borrower} role={r.value} ops={ops} />
@@ -604,15 +685,15 @@ const ExpandedCard = ({ borrower, ops }) => {
           </div>
         )}
 
-        {tab === 'stips' && hasFullDetails && (
+        {tab === 'stips' && (
           <StipulationsSection borrower={borrower} ops={ops} />
         )}
 
-        {tab === 'contingencies' && hasFullDetails && (
+        {tab === 'contingencies' && (
           <ContingenciesSection borrower={borrower} ops={ops} />
         )}
 
-        {tab === 'appraisal' && hasFullDetails && (
+        {tab === 'appraisal' && (
           <AppraisalSection borrower={borrower} onUpdate={ops.updateBorrower} />
         )}
 
