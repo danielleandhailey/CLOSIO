@@ -236,7 +236,7 @@ body[data-theme="light"] .btn-ghost:hover {
   font-size: 12px;
   font-weight: 700;
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .btn-icon {
@@ -358,7 +358,7 @@ body[data-theme="light"] .btn-icon:hover {
 .borrower-name {
   font-weight: 700;
   font-size: 14px;
-  color: #ffffff;
+  color: var(--text);
   white-space: nowrap;
   flex-shrink: 0;
   min-width: 120px;
