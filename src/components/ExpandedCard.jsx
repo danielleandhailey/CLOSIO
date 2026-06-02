@@ -513,11 +513,8 @@ const StipulationsSection = ({ borrower, ops }) => {
   };
 
   const templates = [
-    { label: 'Base Docs', key: 'base' },
-    { label: 'Self-Employed', key: 'selfEmployed' },
-    { label: 'Self-Employed 5yr+', key: 'selfEmployed5yr' },
-    { label: 'S/E Extension Filed', key: 'selfEmployedExtension' },
     { label: 'Purchase', key: 'Purchase' },
+    { label: 'Self-Employed', key: 'selfEmployed' },
     { label: 'VA Loan', key: 'VA' },
     { label: 'Refi', key: 'Refi' },
     { label: 'SSI Income', key: 'SSI' },
@@ -526,7 +523,7 @@ const StipulationsSection = ({ borrower, ops }) => {
   ];
 
   return (
-    <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488' }}>
+    <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', maxWidth: '500px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>📋 NEEDS LIST</div>
         <button type="button" style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
@@ -548,10 +545,10 @@ const StipulationsSection = ({ borrower, ops }) => {
 
       <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #cbd5e1', maxHeight: '250px', overflowY: 'auto' }}>
         {stips.length === 0 && (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>No stips yet. Click Populate or add manually.</div>
+          <div style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>No needs yet. Click Populate or add manually.</div>
         )}
         {stips.map(s => (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderBottom: '1px solid #e2e8f0', background: s.received ? '#dcfce7' : '#fff' }}>
+          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderBottom: '1px solid #e2e8f0', background: s.received ? '#e5e7eb' : '#fff' }}>
             {s.received ? (
               <span style={{ fontSize: '16px' }}>✅</span>
             ) : (
@@ -561,7 +558,7 @@ const StipulationsSection = ({ borrower, ops }) => {
               </button>
             )}
             <span style={{ flex: 1, fontSize: '13px', color: '#1e293b', textDecoration: s.received ? 'line-through' : 'none' }}>{s.item}</span>
-            {s.received && <span style={{ fontSize: '10px', color: '#16a34a' }}>{s.received_date}</span>}
+            {s.received && <span style={{ fontSize: '10px', color: '#64748b' }}>{s.received_date}</span>}
             <button type="button" onClick={() => ops.removeStipulation(s.id)}
               style={{ background: '#fee2e2', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#dc2626', fontSize: '12px', padding: '2px 6px', fontWeight: '700' }}>×</button>
           </div>
@@ -690,7 +687,7 @@ const ExpandedCard = ({ borrower, ops }) => {
     { id: 'docs',     label: 'Documents' },
     { id: 'terms',    label: 'Loan Terms' },
     { id: 'contacts', label: 'Contacts' },
-    { id: 'stips',    label: 'Stipulations' },
+    { id: 'stips',    label: 'Needs List' },
     { id: 'contingencies', label: 'Contingencies' },
     { id: 'appraisal', label: 'Appraisal' },
     { id: 'history',  label: 'History' },

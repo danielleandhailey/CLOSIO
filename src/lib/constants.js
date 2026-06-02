@@ -365,44 +365,34 @@ export const INITIAL_TASKS = {
 
 // ---- Stipulation Templates by Loan Type ----
 export const STIP_TEMPLATES = {
-  base: [
+  Purchase: [
     '2024 & 2025 W-2 forms',
     'Most recent pay stubs (last 30 days)',
-    'Last 2 months bank statements (all pages)',
+    'Bank statements 12-24 months (all pages)',
+    'Investment/asset statements (if applicable)',
     'Copy of driver\'s license or photo ID',
+    'Copy of Purchase Agreement (if applicable)',
+    'Homeowners insurance declaration page (if applicable)',
+    'Current mortgage statements - other properties (if applicable)',
+    'Most recent HOA statement (if applicable)',
   ],
   selfEmployed: [
     '2023 & 2024 personal tax returns (all schedules)',
-    '2023 & 2024 business tax returns',
-    'K-1s for LLCs on Schedule E',
-    'Business verification (CPA letter, website, or license)',
-  ],
-  selfEmployed5yr: [
-    '2024 personal tax returns (all schedules)',
-    '2024 business tax returns',
-    'K-1s for LLCs on Schedule E',
-    'Business verification (CPA letter, website, or license)',
-  ],
-  selfEmployedExtension: [
-    'Tax extension filing',
-    '2022 & 2023 personal tax returns (all schedules)',
-    '2022 & 2023 business tax returns',
-    'K-1s for LLCs on Schedule E',
-    'Business verification (CPA letter, website, or license)',
-  ],
-  Purchase: [
-    'Copy of contract/offer on property',
-    'Homeowners insurance declaration page',
-    'Current mortgage statements (other properties)',
-    'Most recent HOA statement (if applicable)',
+    '2023 & 2024 business tax returns (if applicable)',
+    'K-1s for LLCs on Schedule E (if applicable)',
+    'Business verification - CPA letter, website, or license (if applicable)',
   ],
   VA: [
     'Certificate of Eligibility (COE)',
     'DD-214 (if discharged)',
     'VA Disability Award Letter (if applicable)',
-    'Proof of VA income receipt',
+    'Proof of VA income receipt (if applicable)',
   ],
   Refi: [
+    '2024 & 2025 W-2 forms',
+    'Most recent pay stubs (last 30 days)',
+    'Bank statements 12-24 months (all pages)',
+    'Copy of driver\'s license or photo ID',
     'Homeowners insurance declaration page',
     'Most recent utility bill',
     'Current mortgage statements (all properties)',
@@ -417,7 +407,7 @@ export const STIP_TEMPLATES = {
     'Proof of current receipt',
   ],
   Rental: [
-    'Lease agreements for rental properties',
+    'Lease agreements for rental properties (if applicable)',
     'Schedule E from tax returns',
   ],
 };
