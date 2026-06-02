@@ -66,6 +66,16 @@ export const CONTACT_ROLES = [
   { value: 'processor',     label: 'Processor' },
 ];
 
+export const EMPLOYMENT_TYPES = ['W2', 'Self-Employed', 'Retired', 'No Income (DSCR)', 'Other'];
+
+export const INCOME_TYPES = [
+  '401K/IRA', 'Alimony', 'Asset Depletion', 'Automobile Expense Account', 'Boarder',
+  'Capital Gains', 'Child Support', 'Dividends/Interest', 'Foster Care', 'Gambling Winnings',
+  'Mortgage Differential', 'Notes Receivable', 'Pension', 'Permanent Disability',
+  'Public Assistance', 'Royalty Payment', 'Social Security', 'Temporary Disability',
+  'Temporary Leave', 'Trust', 'Unemployment', 'VA Benefits Non Educational',
+];
+
 export const LENDER_OPTIONS = [
   'PRMG', 'PennyMac', 'Rocket', 'Champions', 'Figure', 'NFty',
   'Spring EQ', 'Click N Close', 'Button TLS', 'Kind', 'Deephaven',

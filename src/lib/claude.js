@@ -85,6 +85,7 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
    - appraisal_subject_to (string - any conditions or repairs the appraiser noted as "subject to")
    - appraisal_reinspection (boolean - true if a reinspection is required)
    - contingencies (array of objects with: name, due_date, fully_executed - for Purchase Agreements extract ALL contingencies including from counter offers. Mark fully_executed as false if signatures are missing or dates are blank)
+   - incomes (array of objects for VOE, paystubs, tax returns with: person (Borrower or Co-Borrower), employment_type (W2, Self-Employed, Retired, No Income (DSCR), Other), income_type (401K/IRA, Alimony, Social Security, Pension, etc.), employer, gross_monthly, pay_frequency (Monthly, Bi-Weekly, Weekly, Semi-Monthly, Annual))
 
 Document filename: ${fileName}
 

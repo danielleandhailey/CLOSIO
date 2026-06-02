@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Plus, X, Check, ChevronDown, ChevronRight, FileText, Upload } from 'lucide-react';
-import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES, STIP_TEMPLATES } from '../lib/constants';
+import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES, STIP_TEMPLATES, EMPLOYMENT_TYPES, INCOME_TYPES } from '../lib/constants';
 import { formatDate, formatCurrency, formatRate, calcPI, calcLTV, taskUrgency, urgencyColor } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { claudeService } from '../lib/claude';
@@ -232,6 +232,13 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
               const flagPrefix = c.fully_executed === false ? '🚩 ' : '';
               await ops.addContingency(borrower.id, flagPrefix + c.name, c.due_date || null);
             }
+          }
+
+          // Auto-add incomes from VOE/paystub/tax returns
+          if (extracted.incomes && Array.isArray(extracted.incomes)) {
+            const existingIncomes = borrower.incomes || [];
+            const newIncomes = extracted.incomes.map(inc => ({ ...inc, id: Date.now() + Math.random() }));
+            await supabase.from('borrowers').update({ incomes: [...existingIncomes, ...newIncomes] }).eq('id', borrower.id);
           }
 
           setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary } : x));
@@ -763,6 +770,107 @@ const APPRAISAL_TYPES = [
   'Other',
 ];
 
+// ---- Income/Employment Section ----
+const IncomeSection = ({ borrower, onUpdate }) => {
+  const incomes = borrower.incomes || [];
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ person: 'Borrower', employment_type: 'W2', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
+
+  const saveIncome = async () => {
+    const updated = [...incomes, { ...form, id: Date.now() }];
+    await onUpdate(borrower.id, { incomes: updated });
+    setForm({ person: 'Borrower', employment_type: 'W2', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
+    setAdding(false);
+  };
+
+  const removeIncome = async (id) => {
+    const updated = incomes.filter(i => i.id !== id);
+    await onUpdate(borrower.id, { incomes: updated });
+  };
+
+  const fieldStyle = { padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', width: '100%' };
+  const labelStyle = { fontSize: '10px', color: '#64748b', marginBottom: '2px' };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+        <button type="button" className="btn-xs btn-ghost" onClick={() => setAdding(a => !a)}>
+          <Plus size={10} /> Add Income
+        </button>
+      </div>
+
+      {incomes.length === 0 && !adding && (
+        <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', padding: '20px' }}>No income added yet. Drop a VOE, paystub, or tax return to auto-populate.</div>
+      )}
+
+      {incomes.map(inc => (
+        <div key={inc.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <div style={{ fontWeight: '600', fontSize: '12px', color: '#0d9488' }}>{inc.person} — {inc.employment_type}</div>
+            <button onClick={() => removeIncome(inc.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={14} /></button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '12px' }}>
+            {inc.income_type && <div><span style={{ color: '#64748b' }}>Type:</span> {inc.income_type}</div>}
+            {inc.employer && <div><span style={{ color: '#64748b' }}>Employer:</span> {inc.employer}</div>}
+            {inc.gross_monthly && <div><span style={{ color: '#64748b' }}>Gross Monthly:</span> ${Number(inc.gross_monthly).toLocaleString()}</div>}
+            {inc.pay_frequency && <div><span style={{ color: '#64748b' }}>Pay Freq:</span> {inc.pay_frequency}</div>}
+          </div>
+        </div>
+      ))}
+
+      {adding && (
+        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div>
+              <div style={labelStyle}>Person</div>
+              <select value={form.person} onChange={e => setForm(f => ({ ...f, person: e.target.value }))} style={fieldStyle}>
+                <option>Borrower</option>
+                <option>Co-Borrower</option>
+                <option>Co-Borrower 2</option>
+              </select>
+            </div>
+            <div>
+              <div style={labelStyle}>Employment Type</div>
+              <select value={form.employment_type} onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))} style={fieldStyle}>
+                {EMPLOYMENT_TYPES.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={labelStyle}>Income Type</div>
+              <select value={form.income_type} onChange={e => setForm(f => ({ ...f, income_type: e.target.value }))} style={fieldStyle}>
+                <option value="">Select...</option>
+                {INCOME_TYPES.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={labelStyle}>Employer/Source</div>
+              <input type="text" value={form.employer} onChange={e => setForm(f => ({ ...f, employer: e.target.value }))} style={fieldStyle} placeholder="Company name..." />
+            </div>
+            <div>
+              <div style={labelStyle}>Gross Monthly</div>
+              <input type="number" value={form.gross_monthly} onChange={e => setForm(f => ({ ...f, gross_monthly: e.target.value }))} style={fieldStyle} placeholder="$0.00" />
+            </div>
+            <div>
+              <div style={labelStyle}>Pay Frequency</div>
+              <select value={form.pay_frequency} onChange={e => setForm(f => ({ ...f, pay_frequency: e.target.value }))} style={fieldStyle}>
+                <option>Monthly</option>
+                <option>Bi-Weekly</option>
+                <option>Weekly</option>
+                <option>Semi-Monthly</option>
+                <option>Annual</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={saveIncome} style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Save</button>
+            <button onClick={() => setAdding(false)} style={{ background: '#e2e8f0', color: '#475569', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AppraisalSection = ({ borrower, onUpdate }) => {
   const [value, setValue] = useState(borrower.appraisal_value || '');
   const [waiver, setWaiver] = useState(borrower.appraisal_waiver || false);
@@ -893,6 +1001,7 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
     { id: 'notes',    label: 'Notes & Tasks' },
     { id: 'docs',     label: 'Documents' },
     { id: 'terms',    label: 'Loan Terms' },
+    { id: 'income',   label: 'Income' },
     { id: 'contacts', label: 'Contacts' },
     { id: 'stips',    label: 'Needs List' },
     { id: 'contingencies', label: 'Contingencies' },
@@ -943,6 +1052,14 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💰 Loan Terms</div>
             <LoanTermsGrid borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('terms')}
+          </div>
+        )}
+
+        {openTabs.has('income') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💵 Income / Employment</div>
+            <IncomeSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('income')}
           </div>
         )}
 
