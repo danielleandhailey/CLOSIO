@@ -167,77 +167,66 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
       const file = queue[i];
       setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'uploading' } : x));
 
-      try {
-        // Check file size — warn but still try up to 20MB
-        if (file.size > 20 * 1024 * 1024) {
-          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: 'File too large (max 20MB). Please compress or split the PDF.' } : x));
-          continue;
-        }
-
-        // Read file as base64
-        const base64 = await new Promise((res, rej) => {
-          const reader = new FileReader();
-          reader.onload = ev => res(ev.target.result.split(',')[1]);
-          reader.onerror = rej;
-          reader.readAsDataURL(file);
-        });
-
-        const mimeType = file.type || 'application/pdf';
-
-        // AI analysis
-        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'analyzing' } : x));
-        let aiSummary = '';
-        let extracted = {};
+      if (file.size > 20 * 1024 * 1024) {
+        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: 'File too large (max 20MB). Please compress the PDF.' } : x));
+      } else {
         try {
-          const result = await claudeService.analyzeDocument(base64, mimeType, file.name);
-          aiSummary = result.summary;
-          extracted = result.extracted;
-        } catch (e) {
-          aiSummary = 'AI analysis unavailable';
-        }
+          const base64 = await new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = ev => res(ev.target.result.split(',')[1]);
+            reader.onerror = rej;
+            reader.readAsDataURL(file);
+          });
 
-        // Try Supabase storage upload (graceful fail if bucket not set up)
-        let filePath = '';
-        try {
-          const path = `${borrower.id}/${Date.now()}_${file.name}`;
-          const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
-          if (!upErr) {
-            const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
-            filePath = urlData.publicUrl;
+          const mimeType = file.type || 'application/pdf';
+
+          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'analyzing' } : x));
+          let aiSummary = '';
+          let extracted = {};
+          try {
+            const result = await claudeService.analyzeDocument(base64, mimeType, file.name);
+            aiSummary = result.summary;
+            extracted = result.extracted;
+          } catch (e) {
+            aiSummary = 'AI analysis unavailable';
           }
-        } catch (e) { /* storage not configured yet */ }
 
-        // Save doc record to DB
-        await supabase.from('documents').insert([{
-          borrower_id: borrower.id,
-          name: file.name,
-          file_path: filePath || file.name,
-          file_type: file.type,
-          file_size: file.size,
-          ai_summary: aiSummary,
-        }]);
+          let filePath = '';
+          try {
+            const path = `${borrower.id}/${Date.now()}_${file.name}`;
+            const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
+            if (!upErr) {
+              const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+              filePath = urlData.publicUrl;
+            }
+          } catch (e) { /* storage not configured */ }
 
-        // Append AI summary to borrower notes
-        if (aiSummary && aiSummary !== 'AI analysis unavailable') {
-          const currentNotes = borrower.notes || '';
-          const newNote = `\n\n📄 ${file.name} (${new Date().toLocaleDateString()}):\n${aiSummary}`;
-          await supabase.from('borrowers').update({ notes: currentNotes + newNote }).eq('id', borrower.id);
+          await supabase.from('documents').insert([{
+            borrower_id: borrower.id, name: file.name,
+            file_path: filePath || file.name, file_type: file.type,
+            file_size: file.size, ai_summary: aiSummary,
+          }]);
+
+          if (aiSummary && aiSummary !== 'AI analysis unavailable') {
+            const currentNotes = borrower.notes || '';
+            const newNote = `\n\n📄 ${file.name} (${new Date().toLocaleDateString()}):\n${aiSummary}`;
+            await supabase.from('borrowers').update({ notes: currentNotes + newNote }).eq('id', borrower.id);
+          }
+
+          const updates = {};
+          if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
+          if (extracted.coe_date) updates.coe_date = extracted.coe_date;
+          if (extracted.dti) updates.dti = extracted.dti;
+          if (extracted.ltv) updates.ltv = extracted.ltv;
+          if (extracted.appraisal_value) updates.appraisal_value = extracted.appraisal_value;
+          if (Object.keys(updates).length > 0) {
+            await supabase.from('borrowers').update(updates).eq('id', borrower.id);
+          }
+
+          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary } : x));
+        } catch (e) {
+          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
         }
-
-        // Auto-fill extracted fields into borrower record
-        const updates = {};
-        if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
-        if (extracted.coe_date) updates.coe_date = extracted.coe_date;
-        if (extracted.dti) updates.dti = extracted.dti;
-        if (extracted.ltv) updates.ltv = extracted.ltv;
-        if (extracted.appraisal_value) updates.appraisal_value = extracted.appraisal_value;
-        if (Object.keys(updates).length > 0) {
-          await supabase.from('borrowers').update(updates).eq('id', borrower.id);
-        }
-
-        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary } : x));
-      } catch (e) {
-        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
       }
     }
 
