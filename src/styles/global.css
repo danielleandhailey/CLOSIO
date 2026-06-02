@@ -24,6 +24,27 @@
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
 }
 
+/* Light mode overrides */
+[data-theme="light"] {
+  --bg: #f4f4f8;
+  --surface: #ffffff;
+  --surface2: #f0f0f5;
+  --surface3: #e8e8f0;
+  --border: #d8d8e8;
+  --border2: #c0c0d8;
+  --text: #1a1a2e;
+  --text2: #3a3a5c;
+  --text3: #6a6a8c;
+  --accent: #7c3aed;
+  --accent2: #6d28d9;
+  --green: #16a34a;
+  --red: #dc2626;
+  --orange: #d97706;
+  --blue: #2563eb;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.15);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

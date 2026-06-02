@@ -10,11 +10,26 @@ import AIChatBubble from './components/AIChatBubble';
 import TeamChatBubble from './components/TeamChatBubble';
 import './styles/global.css';
 
+// Theme toggle — stores per user in localStorage
+const useTheme = (userId) => {
+  const key = `closio_theme_${userId || 'default'}`;
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem(key);
+    return saved ? saved === 'dark' : true; // default dark
+  });
+  useEffect(() => {
+    localStorage.setItem(key, dark ? 'dark' : 'light');
+    document.body.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }, [dark, key]);
+  return [dark, setDark];
+};
+
 const TABS = ['Pipeline', 'Calendar', 'Rate Retread', 'Matrix'];
 
 const AppInner = () => {
   const { user, profile, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('Pipeline');
+  const [dark, setDark] = useTheme(user?.id);
 
   const borrowerHook = useBorrowers();
   const { borrowers, loading: loadingBorrowers, seedInitialData, ...ops } = borrowerHook;
@@ -67,6 +82,30 @@ const AppInner = () => {
             <div style={{ color: '#a0a0b8', fontWeight: '500' }}>{profile?.full_name || user.email}</div>
             <div style={{ color: '#6a6a80' }}>{profile?.role || 'LOA'}</div>
           </div>
+          {/* Discrete day/night toggle */}
+          <button
+            type="button"
+            onClick={() => setDark(d => !d)}
+            title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            style={{
+              width: '32px', height: '18px', borderRadius: '9px', border: 'none',
+              background: dark ? '#3a3a55' : '#d4c5f9',
+              cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
+              flexShrink: 0,
+            }}
+          >
+            <span style={{
+              position: 'absolute', top: '2px',
+              left: dark ? '16px' : '2px',
+              width: '14px', height: '14px', borderRadius: '50%',
+              background: dark ? '#b07eff' : '#7c3aed',
+              transition: 'left 0.2s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '8px',
+            }}>
+              {dark ? '🌙' : '☀️'}
+            </span>
+          </button>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
