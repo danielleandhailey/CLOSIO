@@ -463,8 +463,8 @@ const BorrowerRow = ({
           onClick={() => onExpand(borrower.id)}
           title="Expand / Collapse"
           style={{
-            width: '26px', height: '26px', borderRadius: '5px', border: '1px solid #50507a',
-            background: isExpanded ? '#8b4cf7' : '#28283a', color: '#fff',
+            width: '26px', height: '26px', borderRadius: '5px', border: `1px solid ${STAGE_COLORS[borrower.stage]?.bg || '#50507a'}`,
+            background: isExpanded ? STAGE_COLORS[borrower.stage]?.bg : '#28283a', color: '#fff',
             cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, fontSize: '13px', fontWeight: '900', transition: 'all 0.15s',
           }}

@@ -218,12 +218,39 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
           if (extracted.coe_date) updates.coe_date = extracted.coe_date;
           if (extracted.dti) updates.dti = extracted.dti;
           if (extracted.ltv) updates.ltv = extracted.ltv;
+          if (extracted.earnest_money) updates.earnest_money = extracted.earnest_money;
+          if (extracted.seller_cc) updates.seller_cc = extracted.seller_cc;
           if (extracted.appraisal_value) updates.appraisal_value = extracted.appraisal_value;
           if (extracted.appraisal_type) updates.appraisal_type = extracted.appraisal_type;
           if (extracted.appraisal_subject_to) updates.appraisal_subject_to = extracted.appraisal_subject_to;
           if (extracted.appraisal_reinspection !== undefined) updates.appraisal_reinspection = extracted.appraisal_reinspection;
           if (Object.keys(updates).length > 0) {
             await supabase.from('borrowers').update(updates).eq('id', borrower.id);
+          }
+
+          // Auto-add contacts from PA
+          if (extracted.buyer_agent_name) {
+            await ops.upsertContact(borrower.id, 'buyers_agent', {
+              name: extracted.buyer_agent_name,
+              phone: extracted.buyer_agent_phone || '',
+              email: extracted.buyer_agent_email || '',
+              company: extracted.buyer_agent_company || ''
+            });
+          }
+          if (extracted.listing_agent_name) {
+            await ops.upsertContact(borrower.id, 'listing_agent', {
+              name: extracted.listing_agent_name,
+              phone: extracted.listing_agent_phone || '',
+              email: extracted.listing_agent_email || '',
+              company: extracted.listing_agent_company || ''
+            });
+          }
+          if (extracted.title_company) {
+            await ops.upsertContact(borrower.id, 'title_escrow', {
+              company: extracted.title_company,
+              phone: extracted.title_company_phone || '',
+              email: extracted.title_company_email || ''
+            });
           }
 
           // Auto-add contingencies from PA
@@ -788,6 +815,7 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
         <Field label="Funded Date" value={borrower.funded_date} dbKey="funded_date" type="date" />
         <Field label="Lender" value={borrower.lender} dbKey="lender" />
         <Field label="Loan Type" value={borrower.loan_type} dbKey="loan_type" />
+        <Field label="Earnest Money" value={borrower.earnest_money} dbKey="earnest_money" type="number" />
       </div>
     </div>
   );
