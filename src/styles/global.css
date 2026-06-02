@@ -27,6 +27,27 @@
 /* Apply theme immediately on page load */
 html { background: var(--bg); }
 
+/* Light mode — expand button softer */
+[data-theme="light"] .borrower-row button[style*="background: #28283a"],
+[data-theme="light"] .borrower-row button[style*="background:#28283a"] {
+  background: #e0e0f0 !important;
+  border-color: #9090b8 !important;
+  color: #1a1a2e !important;
+}
+
+/* Light mode — force dark text everywhere */
+[data-theme="light"] .borrower-name { color: #1a1a2e !important; }
+[data-theme="light"] .borrower-row { color: #1a1a2e !important; }
+[data-theme="light"] .touch-stamp { color: #6a6a8c !important; }
+[data-theme="light"] .nav-tab { color: #1a1a2e !important; }
+[data-theme="light"] .nav-tab.active { color: #7c3aed !important; background: #ede9fe !important; }
+[data-theme="light"] .top-nav { background: #ffffff !important; }
+[data-theme="light"] .toolbar { background: #f4f4f8 !important; }
+[data-theme="light"] .stage-bar { background: #ececf4 !important; }
+[data-theme="light"] .expanded-card { background: #f8f8fc !important; }
+[data-theme="light"] .expanded-tab { color: #3a3a5c !important; }
+[data-theme="light"] .expanded-tab.active { color: #7c3aed !important; }
+
 /* Light mode overrides */
 [data-theme="light"] {
   --bg: #f4f4f8;

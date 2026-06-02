@@ -99,20 +99,20 @@ const AppInner = () => {
             onClick={() => setDark(d => !d)}
             title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             style={{
-              width: '32px', height: '18px', borderRadius: '9px', border: 'none',
-              background: dark ? '#3a3a55' : '#d4c5f9',
+              width: '36px', height: '20px', borderRadius: '10px', border: 'none',
+              background: dark ? '#3a3a55' : '#c4b5fd',
               cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
               flexShrink: 0,
             }}
           >
             <span style={{
-              position: 'absolute', top: '2px',
-              left: dark ? '16px' : '2px',
+              position: 'absolute', top: '3px',
+              left: dark ? '18px' : '3px',
               width: '14px', height: '14px', borderRadius: '50%',
-              background: dark ? '#b07eff' : '#7c3aed',
+              background: '#fff',
               transition: 'left 0.2s',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '8px',
+              fontSize: '9px',
             }}>
               {dark ? '🌙' : '☀️'}
             </span>
