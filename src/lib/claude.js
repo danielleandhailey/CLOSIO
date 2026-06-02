@@ -101,13 +101,20 @@ JSON: [valid JSON object with only the fields you found]`;
 
       const data = await callClaude({
         model: CLAUDE_MODEL,
-        max_tokens: 1500,
+        max_tokens: 2000,
         isPDF,
         messages: [{
           role: 'user',
           content: [contentBlock, { type: 'text', text: docPrompt }],
         }],
       });
+
+      console.log('Claude API response:', data);
+
+      if (data.error) {
+        console.error('Claude API error:', data.error);
+        return { summary: `API Error: ${data.error}`, extracted: {} };
+      }
 
       const text = data.content?.[0]?.text || '';
 
