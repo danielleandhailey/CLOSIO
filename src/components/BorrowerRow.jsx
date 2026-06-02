@@ -165,6 +165,67 @@ const AddTagInline = ({ borrower, onAdd }) => {
   );
 };
 
+// Stage dropdown on each row
+const StageDropdown = ({ borrower, onMoveStage }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+  const sc = STAGE_COLORS[borrower.stage] || STAGE_COLORS['Working'];
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '3px',
+          padding: '2px 7px', borderRadius: '4px', border: 'none',
+          background: sc.bg, color: sc.text,
+          fontSize: '10px', fontWeight: '700', cursor: 'pointer',
+          whiteSpace: 'nowrap', letterSpacing: '0.02em',
+        }}
+      >
+        {borrower.stage} ▾
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, zIndex: 400,
+          background: '#fff', border: '1px solid #ddd', borderRadius: '6px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.15)', minWidth: '150px', padding: '4px',
+        }}>
+          {STAGES.filter(s => s !== borrower.stage).map(s => {
+            const c = STAGE_COLORS[s];
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={e => { e.stopPropagation(); onMoveStage(borrower.id, s, borrower.stage); setOpen(false); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  width: '100%', padding: '6px 10px', border: 'none',
+                  background: 'transparent', cursor: 'pointer', borderRadius: '4px',
+                  fontSize: '12px', fontWeight: '600', color: '#333',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: c.bg, flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }} />
+                {s}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Main condensed row
 const BorrowerRow = ({
   borrower, isExpanded, isSelected,
@@ -173,7 +234,6 @@ const BorrowerRow = ({
   onOpenCalendar,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
-  const sc = STAGE_COLORS[borrower.stage] || STAGE_COLORS['Working'];
   const tags = borrower.borrower_tags || [];
   const touched = touchedRecently(borrower.last_touched);
 
@@ -187,10 +247,8 @@ const BorrowerRow = ({
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 
-        {/* Stage badge */}
-        <span className="stage-badge" style={{ background: sc.bg, color: sc.text }}>
-          {borrower.stage}
-        </span>
+        {/* Stage dropdown */}
+        <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
         {/* Name */}
         <span className="borrower-name">{borrower.name}</span>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { INITIAL_BORROWERS, INITIAL_TAGS } from '../lib/constants';
+import { INITIAL_BORROWERS, INITIAL_TAGS, INITIAL_TASKS, INITIAL_CONTINGENCIES, INITIAL_CONTACTS } from '../lib/constants';
 
 export const useBorrowers = () => {
   const [borrowers, setBorrowers] = useState([]);
@@ -190,37 +190,34 @@ export const useBorrowers = () => {
 
     for (const b of INITIAL_BORROWERS) {
       const { data: newB } = await supabase.from('borrowers').insert([b]).select().single();
-      if (newB && INITIAL_TAGS[b.name]) {
+      if (!newB) continue;
+
+      // Seed tags
+      if (INITIAL_TAGS[b.name]) {
         for (const tag of INITIAL_TAGS[b.name]) {
           await supabase.from('borrower_tags').insert([{ borrower_id: newB.id, tag }]);
         }
       }
-      // Seed Chris Saxon contacts
-      if (b.name === 'Chris Saxon') {
-        await supabase.from('contacts').insert([
-          {
-            borrower_id: newB.id, role: 'buyers_agent',
-            name: 'Marina Anderson', company: 'eXp Realty',
-            phone: '', email: ''
-          },
-          {
-            borrower_id: newB.id, role: 'title_escrow',
-            name: 'Titan Title Company', company: 'Titan Title',
-            phone: '', email: ''
-          }
-        ]);
-        // Saxon contingencies
-        await supabase.from('contingencies').insert([
-          { borrower_id: newB.id, name: 'Inspection Contingency', due_date: '2025-06-10' },
-          { borrower_id: newB.id, name: 'Appraisal Contingency', due_date: '2025-06-14' },
-          { borrower_id: newB.id, name: 'Loan Contingency', due_date: '2025-06-16' },
-        ]);
+
+      // Seed tasks
+      if (INITIAL_TASKS[b.name]) {
+        for (const task of INITIAL_TASKS[b.name]) {
+          await supabase.from('tasks').insert([{ borrower_id: newB.id, ...task }]);
+        }
       }
-      // Watts rescore contingency
-      if (b.name === 'Watts') {
-        await supabase.from('contingencies').insert([
-          { borrower_id: newB.id, name: 'Rescore Required', due_date: '2025-07-01' }
-        ]);
+
+      // Seed contacts
+      if (INITIAL_CONTACTS[b.name]) {
+        for (const contact of INITIAL_CONTACTS[b.name]) {
+          await supabase.from('contacts').insert([{ borrower_id: newB.id, ...contact }]);
+        }
+      }
+
+      // Seed contingencies
+      if (INITIAL_CONTINGENCIES[b.name]) {
+        for (const c of INITIAL_CONTINGENCIES[b.name]) {
+          await supabase.from('contingencies').insert([{ borrower_id: newB.id, ...c }]);
+        }
       }
     }
     console.log('✅ Initial data seeded');
