@@ -8,32 +8,29 @@ const TeamChatBubble = () => {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [input, setInput] = useState('');
-  const [unread, setUnread] = useState(0);
+  const [lastSeenId, setLastSeenId] = useState(() => localStorage.getItem('chat_last_seen') || '');
   const { messages, sendMessage } = useTeamChat();
   const { profile } = useAuth();
   const bottomRef = useRef();
-  const prevMsgCount = useRef(messages.length);
+
+  // Count unread = messages after lastSeenId that aren't from me
+  const myName = profile?.full_name || profile?.email || '';
+  const lastSeenIndex = messages.findIndex(m => m.id === lastSeenId);
+  const newMessages = lastSeenIndex >= 0 ? messages.slice(lastSeenIndex + 1) : (lastSeenId ? messages : []);
+  const unread = newMessages.filter(m => m.sender_name !== myName).length;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Track unread and change bubble color when new message arrives
+  // Mark as seen when chat is open
   useEffect(() => {
-    if (prevMsgCount.current > 0 && messages.length > prevMsgCount.current) {
-      const newMsg = messages[messages.length - 1];
-      const isFromMe = newMsg?.sender_name === (profile?.full_name || profile?.email);
-      if (!isFromMe && (!open || minimized)) {
-        setUnread(u => u + 1);
-      }
+    if (open && !minimized && messages.length > 0) {
+      const lastId = messages[messages.length - 1].id;
+      setLastSeenId(lastId);
+      localStorage.setItem('chat_last_seen', lastId);
     }
-    prevMsgCount.current = messages.length;
-  }, [messages, profile, open, minimized]);
-
-  // Clear unread when opened
-  useEffect(() => {
-    if (open && !minimized) setUnread(0);
-  }, [open, minimized]);
+  }, [open, minimized, messages]);
 
   const send = async () => {
     const text = input.trim();
