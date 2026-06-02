@@ -5,7 +5,7 @@
 export const STAGES = [
   'Working',
   'Shopping',
-  "In Processing",
+  "Processing",
   'Funded',
   'LP Ready',
   'Paycom',
@@ -17,7 +17,7 @@ export const STAGES = [
 export const STAGE_COLORS = {
   'Working':       { bg: '#a855f7', text: '#fff', light: '#f3e8ff' },
   'Shopping':      { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
-  "In Processing":         { bg: '#f59e0b', text: '#fff', light: '#fef3c7' },
+  "Processing":         { bg: '#f59e0b', text: '#fff', light: '#fef3c7' },
   'Funded':        { bg: '#10b981', text: '#fff', light: '#d1fae5' },
   'LP Ready':      { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
   'Paycom':        { bg: '#f97316', text: '#fff', light: '#ffedd5' },
@@ -81,9 +81,9 @@ export const LOAN_TYPE_OPTIONS = [
 ];
 
 // Stages where auto-tags show on condensed row
-export const STAGES_WITH_AUTO_TAGS = ["In Processing", 'Funded', 'LP Ready', 'Paycom'];
+export const STAGES_WITH_AUTO_TAGS = ["Processing", 'Funded', 'LP Ready', 'Paycom'];
 
-export const STAGES_WITH_FULL_DETAILS = ["In Processing", 'Funded', 'LP Ready', 'Paycom'];
+export const STAGES_WITH_FULL_DETAILS = ["Processing", 'Funded', 'LP Ready', 'Paycom'];
 
 export const BONZO_AUTO_PULL_INTERVALS = [
   { value: 900000,  label: 'Every 15 min' },
@@ -229,7 +229,7 @@ export const INITIAL_BORROWERS = [
   // ========== LIP'S ==========
   {
     name: 'Rhodes',
-    stage: "In Processing",
+    stage: "Processing",
     loan_purpose: 'Purchase',
     lender: 'PRMG',
     rate_status: 'Floating',
@@ -238,7 +238,7 @@ export const INITIAL_BORROWERS = [
   },
   {
     name: 'Watts',
-    stage: "In Processing",
+    stage: "Processing",
     loan_purpose: 'Purchase',
     loan_type: 'Conventional',
     lender: 'Rocket',
@@ -254,7 +254,7 @@ export const INITIAL_BORROWERS = [
   },
   {
     name: 'Chris Saxon',
-    stage: "In Processing",
+    stage: "Processing",
     loan_type: 'Conventional',
     loan_purpose: 'Purchase',
     lender: 'PRMG',

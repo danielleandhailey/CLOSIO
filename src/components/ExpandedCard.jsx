@@ -384,7 +384,7 @@ const StageHistory = ({ borrowerId }) => {
   );
 };
 
-// ---- Contingencies (for In Processing, Funded, LP Ready, Paycom) ----
+// ---- Contingencies (for Processing, Funded, LP Ready, Paycom) ----
 const ContingenciesSection = ({ borrower, ops }) => {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
