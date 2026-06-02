@@ -49,14 +49,14 @@ export const PRESET_TAGS = [
 ];
 
 export const SORT_OPTIONS = [
-  { value: 'stage',         label: 'Stage Order' },
-  { value: 'coe_date',      label: 'COE Date (Soonest)' },
+  { value: 'stage',         label: 'Sort by Stage' },
+  { value: 'last_name',     label: 'Sort by Last Name' },
+  { value: 'first_name',    label: 'Sort by First Name' },
+  { value: 'coe_date',      label: 'Sort by COE Date' },
   { value: 'floating',      label: 'Floating First' },
   { value: 'contingencies', label: 'Contingencies Due' },
   { value: 'tasks',         label: 'Tasks by Date' },
   { value: 'last_touched',  label: 'Last Touched' },
-  { value: 'last_name',     label: 'Last Name A–Z' },
-  { value: 'first_name',    label: 'First Name A–Z' },
 ];
 
 export const CONTACT_ROLES = [

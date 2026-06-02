@@ -376,6 +376,48 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
   );
 };
 
+// ---- Document Storage (all docs with delete) ----
+const DocumentStorage = ({ borrower }) => {
+  const [docs, setDocs] = useState([]);
+
+  const loadDocs = useCallback(async () => {
+    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
+    setDocs(data || []);
+  }, [borrower.id]);
+
+  React.useEffect(() => { loadDocs(); }, [loadDocs]);
+
+  const deleteDoc = async (doc) => {
+    if (!window.confirm(`Delete "${doc.name}"?`)) return;
+    await supabase.from('documents').delete().eq('id', doc.id);
+    if (doc.file_path && doc.file_path.includes('supabase')) {
+      const path = doc.file_path.split('/documents/')[1];
+      if (path) await supabase.storage.from('documents').remove([path]);
+    }
+    loadDocs();
+  };
+
+  return (
+    <div>
+      {docs.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', padding: '20px' }}>No documents uploaded yet.</div>}
+      {docs.map(doc => (
+        <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '6px' }}>
+          <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <a href={doc.file_path} target="_blank" rel="noopener noreferrer" style={{ color: '#0d9488', textDecoration: 'none', fontWeight: '600', fontSize: '12px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {doc.name}
+            </a>
+            <div style={{ fontSize: '10px', color: '#64748b' }}>{formatDate(doc.created_at)} · {doc.file_size ? `${(doc.file_size / 1024).toFixed(0)} KB` : ''}</div>
+          </div>
+          <button type="button" onClick={() => deleteDoc(doc)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px' }} title="Delete">
+            <X size={16} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // ---- Stage History ----
 const StageHistory = ({ borrowerId }) => {
   const [history, setHistory] = useState([]);
@@ -812,6 +854,64 @@ const BorrowersSection = ({ borrower, onUpdate }) => {
   );
 };
 
+// ---- Preapproval Section ----
+const PreapprovalSection = ({ borrower, onUpdate }) => {
+  const [valApproved, setValApproved] = useState(borrower.val_approved || false);
+  const [preapprovalSent, setPreapprovalSent] = useState(borrower.preapproval_sent || false);
+  const [preapprovalAmount, setPreapprovalAmount] = useState(borrower.preapproval_amount || '');
+  const [preapprovalExpires, setPreapprovalExpires] = useState(borrower.preapproval_expires || '');
+
+  const fieldStyle = { width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', background: '#fff' };
+  const labelStyle = { fontSize: '11px', color: '#64748b', marginBottom: '4px', fontWeight: '600' };
+
+  const save = (field, val) => onUpdate(borrower.id, { [field]: val });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* VAL Toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: valApproved ? '#dcfce7' : '#f8fafc', borderRadius: '6px', border: `1px solid ${valApproved ? '#22c55e' : '#e2e8f0'}` }}>
+        <input type="checkbox" checked={valApproved} onChange={e => { setValApproved(e.target.checked); save('val_approved', e.target.checked); }}
+          style={{ width: '18px', height: '18px', accentColor: '#22c55e' }} />
+        <div>
+          <div style={{ fontWeight: '700', fontSize: '12px', color: valApproved ? '#166534' : '#475569' }}>VAL — Verified Approval Letter</div>
+          <div style={{ fontSize: '11px', color: '#64748b' }}>Actual lender approval received</div>
+        </div>
+      </div>
+
+      {/* Preapproval Letter */}
+      <div style={{ padding: '10px', background: preapprovalSent ? '#dbeafe' : '#f8fafc', borderRadius: '6px', border: `1px solid ${preapprovalSent ? '#3b82f6' : '#e2e8f0'}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+          <input type="checkbox" checked={preapprovalSent} onChange={e => { setPreapprovalSent(e.target.checked); save('preapproval_sent', e.target.checked); }}
+            style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }} />
+          <div style={{ fontWeight: '700', fontSize: '12px', color: preapprovalSent ? '#1d4ed8' : '#475569' }}>Preapproval Letter Sent</div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <div style={labelStyle}>Preapproval Amount</div>
+            <input type="number" style={fieldStyle} value={preapprovalAmount} onChange={e => setPreapprovalAmount(e.target.value)}
+              onBlur={() => save('preapproval_amount', preapprovalAmount)} placeholder="$0" />
+          </div>
+          <div>
+            <div style={labelStyle}>Expires</div>
+            <input type="date" style={fieldStyle} value={preapprovalExpires} onChange={e => { setPreapprovalExpires(e.target.value); save('preapproval_expires', e.target.value); }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button type="button" style={{ flex: 1, padding: '10px', background: '#0d9488', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+          📧 Email Preapproval Letter
+        </button>
+        <button type="button" style={{ flex: 1, padding: '10px', background: '#8b5cf6', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+          📱 Text Preapproval Letter
+        </button>
+      </div>
+      <div style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>Template coming soon — provide a sample to customize</div>
+    </div>
+  );
+};
+
 // ---- Appraisal Section ----
 const APPRAISAL_TYPES = [
   '2075 Drive By (exterior inspection with no value)',
@@ -1063,7 +1163,8 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
 
   const tabs = [
     { id: 'notes',    label: 'Notes & Tasks' },
-    { id: 'docs',     label: 'Documents' },
+    { id: 'docs',     label: 'Upload Docs' },
+    { id: 'storage',  label: 'Doc Storage' },
     { id: 'borrowers', label: 'Borrowers' },
     { id: 'terms',    label: 'Loan Terms' },
     { id: 'income',   label: 'Income' },
@@ -1071,6 +1172,7 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
     { id: 'stips',    label: 'Needs List' },
     { id: 'contingencies', label: 'Contingencies' },
     { id: 'appraisal', label: 'Appraisal' },
+    { id: 'preapproval', label: 'Preapproval' },
     { id: 'history',  label: 'History' },
   ];
 
@@ -1106,9 +1208,17 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
 
         {openTabs.has('docs') && (
           <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Documents</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Upload Documents</div>
             <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} />
             {closeBtn('docs')}
+          </div>
+        )}
+
+        {openTabs.has('storage') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📁 Document Storage</div>
+            <DocumentStorage borrower={borrower} />
+            {closeBtn('storage')}
           </div>
         )}
 
@@ -1178,6 +1288,14 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
             </div>
             <AppraisalSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('appraisal')}
+          </div>
+        )}
+
+        {openTabs.has('preapproval') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>✅ Preapproval</div>
+            <PreapprovalSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('preapproval')}
           </div>
         )}
 

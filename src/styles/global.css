@@ -319,9 +319,9 @@ body[data-theme="light"] .btn-icon:hover {
   gap: 5px;
   padding: 4px 8px;
   border-radius: 20px;
-  width: 110px;
-  min-width: 110px;
-  font-size: 11px;
+  width: 115px;
+  min-width: 115px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;

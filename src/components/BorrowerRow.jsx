@@ -491,6 +491,16 @@ const BorrowerRow = ({
           <LenderBadge borrower={borrower} onUpdate={onUpdate} />
         </div>
 
+        {/* Preapproved indicators */}
+        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+          {borrower.val_approved && (
+            <span title="VAL - Verified Approval Letter" style={{ background: '#22c55e', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700' }}>VAL</span>
+          )}
+          {borrower.preapproval_sent && (
+            <span title="Preapproval Letter Sent" style={{ background: '#3b82f6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700' }}>PA</span>
+          )}
+        </div>
+
         {/* Touch stamp */}
         <span className={`touch-stamp ${touched ? 'touched' : ''}`}>
           {touchLabel}
