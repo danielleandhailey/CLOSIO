@@ -84,6 +84,7 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
    - appraisal_type (string - e.g. "Conventional 1004 Single family residence", "2075 Drive By", "FHA 1004 Single family residence", etc.)
    - appraisal_subject_to (string - any conditions or repairs the appraiser noted as "subject to")
    - appraisal_reinspection (boolean - true if a reinspection is required)
+   - contingencies (array of objects with: name, due_date, fully_executed - for Purchase Agreements extract ALL contingencies including from counter offers. Mark fully_executed as false if signatures are missing or dates are blank)
 
 Document filename: ${fileName}
 

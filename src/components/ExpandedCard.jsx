@@ -226,6 +226,14 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
             await supabase.from('borrowers').update(updates).eq('id', borrower.id);
           }
 
+          // Auto-add contingencies from PA
+          if (extracted.contingencies && Array.isArray(extracted.contingencies)) {
+            for (const c of extracted.contingencies) {
+              const flagPrefix = c.fully_executed === false ? '🚩 ' : '';
+              await ops.addContingency(borrower.id, flagPrefix + c.name, c.due_date || null);
+            }
+          }
+
           setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary } : x));
         } catch (e) {
           setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
@@ -397,9 +405,8 @@ const ContingenciesSection = ({ borrower, ops }) => {
 
   return (
     <div>
-      <div className="section-heading">
-        ⚠️ Contingencies
-        <button type="button" className="btn-xs btn-ghost" onClick={() => setAdding(a => !a)} style={{ marginLeft: 'auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+        <button type="button" className="btn-xs btn-ghost" onClick={() => setAdding(a => !a)}>
           <Plus size={10} /> Add
         </button>
       </div>
