@@ -34,7 +34,6 @@ const TeamChatBubble = () => {
       bottomRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages, open, minimized]);
-  }, [open, minimized, messages]);
 
   const send = async () => {
     const text = input.trim();
@@ -122,8 +121,9 @@ const TeamChatBubble = () => {
         </div>
       )}
 
-      <button type="button" className="chat-trigger" style={{ background: flash ? '#f59e0b' : '#065f46', position: 'relative', animation: flash ? 'pulse 1s infinite' : 'none' }} onClick={() => setOpen(o => !o)} title="Team Chat">
+      <button type="button" className="chat-trigger" style={{ background: flash ? '#f59e0b' : '#065f46', position: 'relative', animation: flash ? 'pulse 1s infinite' : 'none', border: flash ? '3px solid #fbbf24' : 'none' }} onClick={() => setOpen(o => !o)} title="Team Chat">
         💬
+        {flash && <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#ef4444', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#fff', fontWeight: '700' }}>!</span>}
       </button>
     </div>
   );
