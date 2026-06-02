@@ -392,7 +392,7 @@ body[data-theme="light"] .btn-icon:hover {
   display: flex;
   gap: 4px;
   flex-wrap: nowrap;
-  overflow: hidden;
+  overflow: visible;
   flex: 1;
 }
 
@@ -408,9 +408,9 @@ body[data-theme="light"] .btn-icon:hover {
 }
 
 .touch-stamp {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text2);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
   white-space: nowrap;
   flex-shrink: 0;
   font-family: var(--mono);
