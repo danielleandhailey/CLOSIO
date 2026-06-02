@@ -1,15 +1,20 @@
-const CLAUDE_API_KEY = process.env.REACT_APP_CLAUDE_API_KEY;
 const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
+
+// Use serverless function to avoid CORS
+const callClaude = async (body) => {
+  const response = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return response.json();
+};
 
 export const claudeService = {
   // AI Chat with pipeline context
   async chat(messages, pipelineContext = '') {
-    if (!CLAUDE_API_KEY) {
-      return 'Claude API key not configured. Please add REACT_APP_CLAUDE_API_KEY to your environment.';
-    }
-
     try {
-      const systemPrompt = `You are the CLOSIO™ AI assistant for a mortgage pipeline management platform. 
+      const systemPrompt = `You are the CLOSIO™ AI assistant for a mortgage pipeline management platform.
 You have access to the following live pipeline data:
 
 ${pipelineContext}
@@ -26,25 +31,13 @@ You help Loan Officers and Loan Officer Assistants (LOAs) by:
 Be concise, professional, and use mortgage industry terminology correctly.
 If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Retread" or "NAVIGATE:Matrix").`;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: CLAUDE_MODEL,
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: messages.map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
+      const data = await callClaude({
+        model: CLAUDE_MODEL,
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
       });
 
-      const data = await response.json();
       return data.content?.[0]?.text || 'No response received.';
     } catch (e) {
       console.error('Claude chat error:', e);
@@ -54,10 +47,6 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
 
   // Analyze uploaded document and extract mortgage data
   async analyzeDocument(base64Data, mimeType, fileName) {
-    if (!CLAUDE_API_KEY) {
-      return { summary: 'AI analysis not available — Claude API key not configured.', extracted: {} };
-    }
-
     const docPrompt = `You are analyzing a mortgage document. Extract all relevant information and provide:
 
 1. A SUMMARY (2-3 sentences) of what this document is and key findings
@@ -74,6 +63,7 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
    - appraisal_value (number)
    - repairs_required (array of strings)
    - purchase_price (number)
+   - loan_amount (number)
    - earnest_money (number - earnest money deposit amount)
    - seller_cc (number - seller credits/concessions)
    - buyer_agent_name (string)
@@ -109,27 +99,16 @@ JSON: [valid JSON object with only the fields you found]`;
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
         : { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Data } };
 
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-      };
-      if (isPDF) headers['anthropic-beta'] = 'pdfs-2024-09-25';
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          model: CLAUDE_MODEL,
-          max_tokens: 1500,
-          messages: [{
-            role: 'user',
-            content: [contentBlock, { type: 'text', text: docPrompt }],
-          }],
-        }),
+      const data = await callClaude({
+        model: CLAUDE_MODEL,
+        max_tokens: 1500,
+        isPDF,
+        messages: [{
+          role: 'user',
+          content: [contentBlock, { type: 'text', text: docPrompt }],
+        }],
       });
 
-      const data = await response.json();
       const text = data.content?.[0]?.text || '';
 
       // Parse response
@@ -155,30 +134,17 @@ JSON: [valid JSON object with only the fields you found]`;
 
   // Matrix Q&A
   async matrixQuery(question, matrixContext) {
-    if (!CLAUDE_API_KEY) {
-      return 'Claude API key not configured.';
-    }
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: CLAUDE_MODEL,
-        max_tokens: 800,
-        system: `You are a mortgage lender guideline expert. Answer questions based on the following lender matrix data:
+    const data = await callClaude({
+      model: CLAUDE_MODEL,
+      max_tokens: 800,
+      system: `You are a mortgage lender guideline expert. Answer questions based on the following lender matrix data:
 
 ${matrixContext}
 
 Give clear, specific answers with guideline details. Use plain English.`,
-        messages: [{ role: 'user', content: question }],
-      }),
+      messages: [{ role: 'user', content: question }],
     });
 
-    const data = await response.json();
     return data.content?.[0]?.text || 'No response.';
   },
 };
