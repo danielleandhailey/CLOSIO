@@ -65,7 +65,7 @@ const QuickSummaryPanel = ({ borrower, onMoveStage, onClose }) => {
     <div ref={panelRef} className="quick-summary-panel" style={{ width: '340px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <span style={{ fontSize: '13px', fontWeight: '800', color: '#f0f0ff' }}>{formatBorrowerName(borrower.name, borrower.co_borrower)}</span>
+        <span style={{ fontSize: '13px', fontWeight: '800', color: '#f0f0ff' }}>{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
         <button
           type="button"
           onClick={() => setShowStageSelect(s => !s)}
@@ -473,7 +473,7 @@ const BorrowerRow = ({
         </button>
 
         {/* Name */}
-        <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower)}</span>
+        <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
         {/* Tags */}
         <div className="tags-row">

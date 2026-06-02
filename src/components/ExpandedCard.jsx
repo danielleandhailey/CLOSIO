@@ -754,10 +754,29 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
 // ---- Borrowers Section ----
 const BorrowersSection = ({ borrower, onUpdate }) => {
   const [name, setName] = useState(borrower.name || '');
-  const [coBorrower, setCoBorrower] = useState(borrower.co_borrower || '');
+  const [coBorrowers, setCoBorrowers] = useState(borrower.co_borrowers || (borrower.co_borrower ? [borrower.co_borrower] : []));
   const [nbs, setNbs] = useState(borrower.non_borrowing_spouse || '');
 
   const save = (field, val) => onUpdate(borrower.id, { [field]: val || null });
+
+  const updateCoBorrower = (idx, val) => {
+    const updated = [...coBorrowers];
+    updated[idx] = val;
+    setCoBorrowers(updated);
+  };
+
+  const saveCoBorrowers = () => {
+    const filtered = coBorrowers.filter(c => c.trim());
+    onUpdate(borrower.id, { co_borrowers: filtered, co_borrower: filtered[0] || null });
+  };
+
+  const addCoBorrower = () => setCoBorrowers([...coBorrowers, '']);
+
+  const removeCoBorrower = (idx) => {
+    const updated = coBorrowers.filter((_, i) => i !== idx);
+    setCoBorrowers(updated);
+    onUpdate(borrower.id, { co_borrowers: updated, co_borrower: updated[0] || null });
+  };
 
   const fieldStyle = { width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', background: '#fff' };
   const labelStyle = { fontSize: '11px', color: '#64748b', marginBottom: '4px', fontWeight: '600' };
@@ -769,8 +788,21 @@ const BorrowersSection = ({ borrower, onUpdate }) => {
         <input style={fieldStyle} value={name} onChange={e => setName(e.target.value)} onBlur={() => save('name', name)} placeholder="LASTNAME, First" />
       </div>
       <div>
-        <div style={labelStyle}>Co-Borrower</div>
-        <input style={fieldStyle} value={coBorrower} onChange={e => setCoBorrower(e.target.value)} onBlur={() => save('co_borrower', coBorrower)} placeholder="LASTNAME, First (leave blank if none)" />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <div style={labelStyle}>Co-Borrower(s)</div>
+          <button type="button" onClick={addCoBorrower} style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+            <Plus size={10} /> Add
+          </button>
+        </div>
+        {coBorrowers.length === 0 && (
+          <div style={{ color: '#94a3b8', fontSize: '11px' }}>No co-borrowers. Click + Add to add one.</div>
+        )}
+        {coBorrowers.map((cb, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+            <input style={{ ...fieldStyle, flex: 1 }} value={cb} onChange={e => updateCoBorrower(idx, e.target.value)} onBlur={saveCoBorrowers} placeholder="LASTNAME, First" />
+            <button type="button" onClick={() => removeCoBorrower(idx)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={16} /></button>
+          </div>
+        ))}
       </div>
       <div>
         <div style={labelStyle}>Non-Borrowing Spouse (for title)</div>
@@ -806,8 +838,9 @@ const IncomeSection = ({ borrower, onUpdate }) => {
   const [form, setForm] = useState({ person: 'Borrower', employment_type: 'W2', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
 
   const personOptions = ['Borrower'];
-  if (borrower.co_borrower) personOptions.push(`Co-Borrower (${borrower.co_borrower})`);
-  else personOptions.push('Co-Borrower');
+  const allCoBorrowers = borrower.co_borrowers?.length ? borrower.co_borrowers : (borrower.co_borrower ? [borrower.co_borrower] : []);
+  allCoBorrowers.forEach((cb, i) => personOptions.push(`Co-Borrower ${i + 1} (${cb})`));
+  if (allCoBorrowers.length === 0) personOptions.push('Co-Borrower');
 
   const saveIncome = async () => {
     const updated = [...incomes, { ...form, id: Date.now() }];

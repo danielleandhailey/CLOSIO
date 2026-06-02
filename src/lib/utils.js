@@ -108,8 +108,8 @@ export const getFirstName = (name) => {
   return parts[0];
 };
 
-// Format name as "LASTNAME, First" with co-borrower
-export const formatBorrowerName = (name, coBorrower) => {
+// Format name as "LASTNAME, First" with co-borrower(s)
+export const formatBorrowerName = (name, coBorrower, coBorrowers) => {
   if (!name) return '';
   let lastName, firstName;
   if (name.includes(',')) {
@@ -120,7 +120,9 @@ export const formatBorrowerName = (name, coBorrower) => {
     lastName = parts[parts.length - 1];
   }
   let display = `${lastName.toUpperCase()}, ${firstName}`;
-  if (coBorrower) display += ` & ${coBorrower}`;
+  const allCoBorrowers = coBorrowers?.length ? coBorrowers : (coBorrower ? [coBorrower] : []);
+  if (allCoBorrowers.length === 1) display += ` & ${allCoBorrowers[0]}`;
+  else if (allCoBorrowers.length > 1) display += ` + ${allCoBorrowers.length} co-borrowers`;
   return display;
 };
 
