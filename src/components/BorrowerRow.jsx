@@ -109,7 +109,7 @@ const TagPill = ({ tag, tagId, onRemove }) => {
 };
 
 // Inline add tag
-const AddTagInline = ({ borrower, onAdd }) => {
+const AddTagInline = ({ borrower, onAdd, sc }) => {
   const [open, setOpen] = useState(false);
   const [custom, setCustom] = useState('');
   const ref = useRef();
@@ -129,9 +129,11 @@ const AddTagInline = ({ borrower, onAdd }) => {
         type="button"
         onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
         style={{
-          padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
-          border: '1px solid #8b4cf7', background: '#3a2060', color: '#d4aaff',
-          cursor: 'pointer', whiteSpace: 'nowrap',
+          padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '700',
+          border: `1px dashed ${sc ? sc.bg : '#8b4cf7'}`,
+          background: 'transparent',
+          color: sc ? sc.bg : '#d4aaff',
+          cursor: 'pointer', whiteSpace: 'nowrap', letterSpacing: '0.03em',
         }}
       >
         + Tag
@@ -331,7 +333,7 @@ const BorrowerRow = ({
           {tags.map(t => (
             <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
           ))}
-          <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} />
+          <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
           <LenderBadge borrower={borrower} onUpdate={onUpdate} />
         </div>
 

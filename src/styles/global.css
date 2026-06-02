@@ -49,11 +49,12 @@ body {
   align-items: center;
   gap: 0;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 16px;
-  height: 48px;
+  border-bottom: 2px solid var(--accent);
+  padding: 0 20px;
+  height: 50px;
   flex-shrink: 0;
   z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
 }
 
 .brand {
@@ -109,7 +110,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 8px 20px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -225,9 +226,9 @@ body {
 .stage-bar {
   display: flex;
   gap: 6px;
-  padding: 8px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  padding: 8px 20px;
+  background: var(--bg);
+  border-bottom: 2px solid var(--border);
   flex-wrap: wrap;
   flex-shrink: 0;
 }
@@ -236,18 +237,21 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
+  padding: 4px 11px;
   border-radius: 20px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid transparent;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
 
 .stage-pill.active {
-  outline: 2px solid white;
-  outline-offset: 1px;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
 /* ---- Borrower list ---- */
@@ -266,17 +270,17 @@ body {
 .borrower-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 10px;
+  padding: 7px 20px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  transition: background 0.1s;
-  min-height: 48px;
+  transition: background 0.15s;
+  min-height: 46px;
   position: relative;
 }
 
 .borrower-row:hover { background: var(--surface2); }
-.borrower-row.expanded { background: var(--surface2); }
+.borrower-row.expanded { background: var(--surface2); border-left: 3px solid var(--accent); }
 
 .borrower-checkbox {
   width: 14px;
@@ -289,22 +293,25 @@ body {
 .stage-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 800;
   white-space: nowrap;
   flex-shrink: 0;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .borrower-name {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  color: #ffffff;
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: 100px;
+  min-width: 120px;
+  letter-spacing: 0.01em;
 }
 
 .tags-row {
@@ -327,19 +334,22 @@ body {
 }
 
 .touch-stamp {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text3);
   white-space: nowrap;
   flex-shrink: 0;
   font-family: var(--mono);
+  font-weight: 600;
+  min-width: 32px;
+  text-align: center;
 }
 
-.touch-stamp.touched { color: var(--red); }
+.touch-stamp.touched { color: var(--red); font-weight: 800; }
 
 .card-actions {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   flex-shrink: 0;
   margin-left: auto;
 }
