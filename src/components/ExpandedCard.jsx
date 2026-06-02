@@ -551,20 +551,20 @@ const StipulationsSection = ({ borrower, ops }) => {
 
       {showTemplates && (
         <div style={{ background: '#fff', border: '2px solid #0d9488', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>STEP 1: LOAN TYPE</div>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>STEP 1: INCOME TYPE</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-            {loanTypeTemplates.map(t => (
+            {incomeTemplates.map(t => (
               <button key={t.label} type="button" onClick={() => addMultiple(t.keys)}
-                style={{ background: '#3b82f6', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                 {t.label}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>STEP 2: INCOME TYPE</div>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>STEP 2: LOAN TYPE</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {incomeTemplates.map(t => (
+            {loanTypeTemplates.map(t => (
               <button key={t.label} type="button" onClick={() => addMultiple(t.keys)}
-                style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                style={{ background: '#3b82f6', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                 {t.label}
               </button>
             ))}
