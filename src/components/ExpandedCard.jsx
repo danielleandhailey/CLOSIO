@@ -747,12 +747,34 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
         <Field label="Lender" value={borrower.lender} dbKey="lender" />
         <Field label="Loan Type" value={borrower.loan_type} dbKey="loan_type" />
       </div>
-      {/* Co-Borrower & Non-Borrowing Spouse */}
-      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <Field label="Co-Borrower" value={borrower.co_borrower} dbKey="co_borrower" />
-          <Field label="Non-Borrowing Spouse (Title)" value={borrower.non_borrowing_spouse} dbKey="non_borrowing_spouse" />
-        </div>
+    </div>
+  );
+};
+
+// ---- Borrowers Section ----
+const BorrowersSection = ({ borrower, onUpdate }) => {
+  const [name, setName] = useState(borrower.name || '');
+  const [coBorrower, setCoBorrower] = useState(borrower.co_borrower || '');
+  const [nbs, setNbs] = useState(borrower.non_borrowing_spouse || '');
+
+  const save = (field, val) => onUpdate(borrower.id, { [field]: val || null });
+
+  const fieldStyle = { width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', background: '#fff' };
+  const labelStyle = { fontSize: '11px', color: '#64748b', marginBottom: '4px', fontWeight: '600' };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div>
+        <div style={labelStyle}>Primary Borrower</div>
+        <input style={fieldStyle} value={name} onChange={e => setName(e.target.value)} onBlur={() => save('name', name)} placeholder="LASTNAME, First" />
+      </div>
+      <div>
+        <div style={labelStyle}>Co-Borrower</div>
+        <input style={fieldStyle} value={coBorrower} onChange={e => setCoBorrower(e.target.value)} onBlur={() => save('co_borrower', coBorrower)} placeholder="LASTNAME, First (leave blank if none)" />
+      </div>
+      <div>
+        <div style={labelStyle}>Non-Borrowing Spouse (for title)</div>
+        <input style={fieldStyle} value={nbs} onChange={e => setNbs(e.target.value)} onBlur={() => save('non_borrowing_spouse', nbs)} placeholder="Full name (leave blank if none)" />
       </div>
     </div>
   );
@@ -1009,6 +1031,7 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
   const tabs = [
     { id: 'notes',    label: 'Notes & Tasks' },
     { id: 'docs',     label: 'Documents' },
+    { id: 'borrowers', label: 'Borrowers' },
     { id: 'terms',    label: 'Loan Terms' },
     { id: 'income',   label: 'Income' },
     { id: 'contacts', label: 'Contacts' },
@@ -1053,6 +1076,14 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Documents</div>
             <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} />
             {closeBtn('docs')}
+          </div>
+        )}
+
+        {openTabs.has('borrowers') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>👤 Borrowers</div>
+            <BorrowersSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('borrowers')}
           </div>
         )}
 
