@@ -88,7 +88,9 @@ export const useBorrowers = () => {
   };
 
   const touchBorrower = async (id) => {
-    return updateBorrower(id, { last_touched: new Date().toISOString() });
+    const result = await updateBorrower(id, { last_touched: new Date().toISOString() });
+    await fetchBorrowers(); // force refresh to show updated date
+    return result;
   };
 
   const moveBorrower = async (id, newStage, fromStage) => {
