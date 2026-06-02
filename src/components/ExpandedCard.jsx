@@ -445,6 +445,85 @@ const ContingenciesSection = ({ borrower, ops }) => {
 };
 
 // ---- Contact Accordion ----
+// ---- Contacts Card (all contacts on one clean card) ----
+const ContactsCard = ({ borrower, ops }) => {
+  const contacts = borrower.contacts || [];
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({});
+
+  const startEdit = (role) => {
+    const contact = contacts.find(c => c.role === role) || {};
+    setForm({ name: contact.name || '', company: contact.company || '', address: contact.address || '', phone: contact.phone || '', email: contact.email || '' });
+    setEditing(role);
+  };
+
+  const saveEdit = async () => {
+    await ops.upsertContact(borrower.id, editing, form);
+    setEditing(null);
+  };
+
+  const cardStyle = { background: '#fff', borderRadius: '8px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', color: '#1e293b' };
+  const sectionStyle = { marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #e2e8f0' };
+  const labelStyle = { fontSize: '10px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px' };
+  const valueStyle = { fontSize: '13px', color: '#1e293b', fontWeight: '500' };
+
+  return (
+    <div style={cardStyle}>
+      <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '16px', color: '#0d9488', borderBottom: '2px solid #0d9488', paddingBottom: '8px' }}>
+        Contact Information
+      </div>
+      {CONTACT_ROLES.map(r => {
+        const contact = contacts.find(c => c.role === r.value) || {};
+        const hasData = contact.name || contact.company;
+        if (editing === r.value) {
+          return (
+            <div key={r.value} style={sectionStyle}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px' }}>{r.label}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                {['name', 'company', 'phone', 'email'].map(k => (
+                  <div key={k}>
+                    <div style={labelStyle}>{k}</div>
+                    <input type="text" value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))}
+                      style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} />
+                  </div>
+                ))}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={labelStyle}>address</div>
+                  <input type="text" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                    style={{ width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                <button onClick={saveEdit} style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Save</button>
+                <button onClick={() => setEditing(null)} style={{ background: '#e2e8f0', color: '#475569', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div key={r.value} style={sectionStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#475569' }}>{r.label}</div>
+              <button onClick={() => startEdit(r.value)} style={{ background: 'none', border: 'none', color: '#0d9488', fontSize: '11px', cursor: 'pointer' }}>Edit</button>
+            </div>
+            {hasData ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px', marginTop: '6px' }}>
+                {contact.name && <div><div style={labelStyle}>Name</div><div style={valueStyle}>{contact.name}</div></div>}
+                {contact.company && <div><div style={labelStyle}>Company</div><div style={valueStyle}>{contact.company}</div></div>}
+                {contact.phone && <div><div style={labelStyle}>Phone</div><div style={valueStyle}>{contact.phone}</div></div>}
+                {contact.email && <div><div style={labelStyle}>Email</div><div style={valueStyle}>{contact.email}</div></div>}
+                {contact.address && <div style={{ gridColumn: '1 / -1' }}><div style={labelStyle}>Address</div><div style={valueStyle}>{contact.address}</div></div>}
+              </div>
+            ) : (
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>No contact info</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const ContactAccordion = ({ borrower, role, ops }) => {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -784,6 +863,7 @@ const AppraisalSection = ({ borrower, onUpdate }) => {
 // ---- Main Expanded Card ----
 const ExpandedCard = ({ borrower, ops, onClose }) => {
   const [openTabs, setOpenTabs] = useState(new Set(['notes']));
+  const [contactsExpanded, setContactsExpanded] = useState(false);
   const hasFullDetails = STAGES_WITH_FULL_DETAILS.includes(borrower.stage);
 
   const toggleTab = (id) => {
@@ -861,10 +941,20 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
 
         {openTabs.has('contacts') && (
           <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>👥 Contacts</div>
-            {CONTACT_ROLES.map(r => (
-              <ContactAccordion key={r.value} borrower={borrower} role={r.value} ops={ops} />
-            ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>👥 Contacts</div>
+              <button type="button" onClick={() => setContactsExpanded(e => !e)}
+                style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>
+                {contactsExpanded ? 'Collapse' : 'View Card'}
+              </button>
+            </div>
+            {contactsExpanded ? (
+              <ContactsCard borrower={borrower} ops={ops} />
+            ) : (
+              CONTACT_ROLES.map(r => (
+                <ContactAccordion key={r.value} borrower={borrower} role={r.value} ops={ops} />
+              ))
+            )}
             {closeBtn('contacts')}
           </div>
         )}
