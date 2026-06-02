@@ -167,28 +167,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
       const file = queue[i];
       setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'uploading' } : x));
 
-      if (file.size > 4 * 1024 * 1024) {
-        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: 'File too large (max 4MB for AI analysis). Uploading without AI...' } : x));
-        // Still upload the file, just skip AI
-        try {
-          let filePath = '';
-          const path = `${borrower.id}/${Date.now()}_${file.name}`;
-          const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
-          if (!upErr) {
-            const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
-            filePath = urlData.publicUrl;
-          }
-          await supabase.from('documents').insert([{
-            borrower_id: borrower.id, name: file.name,
-            file_path: filePath || file.name, file_type: file.type,
-            file_size: file.size, ai_summary: 'File too large for AI analysis',
-          }]);
-          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: 'Uploaded (no AI - file too large)' } : x));
-        } catch (e) {
-          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
-        }
-      } else {
-        try {
+      try {
           const base64 = await new Promise((res, rej) => {
             const reader = new FileReader();
             reader.onload = ev => res(ev.target.result.split(',')[1]);
@@ -291,7 +270,6 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
         } catch (e) {
           setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
         }
-      }
     }
 
     setProcessing(false);

@@ -1,3 +1,8 @@
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set worker path
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
 
 // Use serverless function to avoid CORS
@@ -8,6 +13,32 @@ const callClaude = async (body) => {
     body: JSON.stringify(body),
   });
   return response.json();
+};
+
+// Extract text from PDF using PDF.js
+const extractPDFText = async (base64Data) => {
+  try {
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+    let fullText = '';
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += `\n--- Page ${i} ---\n${pageText}`;
+    }
+
+    return fullText;
+  } catch (e) {
+    console.error('PDF text extraction error:', e);
+    return null;
+  }
 };
 
 export const claudeService = {
@@ -81,11 +112,11 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
    - loan_contingency_date (date string)
    - appraisal_contingency_date (date string)
    - coe_date (date string)
-   - appraisal_type (string - e.g. "Conventional 1004 Single family residence", "2075 Drive By", "FHA 1004 Single family residence", etc.)
-   - appraisal_subject_to (string - any conditions or repairs the appraiser noted as "subject to")
-   - appraisal_reinspection (boolean - true if a reinspection is required)
-   - contingencies (array of objects with: name, due_date, fully_executed - for Purchase Agreements extract ALL contingencies including from counter offers. Mark fully_executed as false if signatures are missing or dates are blank)
-   - incomes (array of objects for VOE, paystubs, tax returns with: person (Borrower or Co-Borrower), employment_type (W2, Self-Employed, Retired, No Income (DSCR), Other), income_type (401K/IRA, Alimony, Social Security, Pension, etc.), employer, gross_monthly, pay_frequency (Monthly, Bi-Weekly, Weekly, Semi-Monthly, Annual))
+   - appraisal_type (string)
+   - appraisal_subject_to (string)
+   - appraisal_reinspection (boolean)
+   - contingencies (array of objects with: name, due_date, fully_executed)
+   - incomes (array of objects with: person, employment_type, income_type, employer, gross_monthly, pay_frequency)
 
 Document filename: ${fileName}
 
@@ -95,18 +126,47 @@ JSON: [valid JSON object with only the fields you found]`;
 
     try {
       const isPDF = mimeType === 'application/pdf';
-      const contentBlock = isPDF
-        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
-        : { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Data } };
+      let messages;
+
+      if (isPDF) {
+        // Extract text from PDF first (avoids size limits)
+        console.log('Extracting text from PDF...');
+        const pdfText = await extractPDFText(base64Data);
+
+        if (pdfText && pdfText.length > 100) {
+          console.log(`Extracted ${pdfText.length} chars from PDF`);
+          // Send text instead of PDF binary
+          messages = [{
+            role: 'user',
+            content: `${docPrompt}\n\n--- DOCUMENT TEXT ---\n${pdfText.slice(0, 50000)}`, // Limit to 50k chars
+          }];
+        } else {
+          // Fallback to sending PDF if text extraction failed
+          console.log('Text extraction failed, sending PDF binary...');
+          messages = [{
+            role: 'user',
+            content: [
+              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } },
+              { type: 'text', text: docPrompt }
+            ],
+          }];
+        }
+      } else {
+        // Image - send as-is
+        messages = [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Data } },
+            { type: 'text', text: docPrompt }
+          ],
+        }];
+      }
 
       const data = await callClaude({
         model: CLAUDE_MODEL,
         max_tokens: 2000,
-        isPDF,
-        messages: [{
-          role: 'user',
-          content: [contentBlock, { type: 'text', text: docPrompt }],
-        }],
+        isPDF: isPDF && (!messages[0].content || typeof messages[0].content === 'string'),
+        messages,
       });
 
       console.log('Claude API response:', data);
