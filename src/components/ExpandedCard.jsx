@@ -219,6 +219,9 @@ const DocDropZone = ({ borrower, onDocAdded }) => {
           if (extracted.dti) updates.dti = extracted.dti;
           if (extracted.ltv) updates.ltv = extracted.ltv;
           if (extracted.appraisal_value) updates.appraisal_value = extracted.appraisal_value;
+          if (extracted.appraisal_type) updates.appraisal_type = extracted.appraisal_type;
+          if (extracted.appraisal_subject_to) updates.appraisal_subject_to = extracted.appraisal_subject_to;
+          if (extracted.appraisal_reinspection !== undefined) updates.appraisal_reinspection = extracted.appraisal_reinspection;
           if (Object.keys(updates).length > 0) {
             await supabase.from('borrowers').update(updates).eq('id', borrower.id);
           }
@@ -810,9 +813,9 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
     { id: 'history',  label: 'History' },
   ];
 
-  const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '400px', flexShrink: 0 };
+  const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '400px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '200px' };
   const closeBtn = (id) => (
-    <div style={{ textAlign: 'center', marginTop: '12px' }}>
+    <div style={{ textAlign: 'center', marginTop: 'auto', paddingTop: '12px' }}>
       <button type="button" onClick={() => closeTab(id)}
         style={{ background: '#64748b', color: '#fff', border: 'none', padding: '4px 16px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
         Close

@@ -81,6 +81,9 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
    - loan_contingency_date (date string)
    - appraisal_contingency_date (date string)
    - coe_date (date string)
+   - appraisal_type (string - e.g. "Conventional 1004 Single family residence", "2075 Drive By", "FHA 1004 Single family residence", etc.)
+   - appraisal_subject_to (string - any conditions or repairs the appraiser noted as "subject to")
+   - appraisal_reinspection (boolean - true if a reinspection is required)
 
 Document filename: ${fileName}
 
