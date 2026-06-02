@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Plus, X, Check, ChevronDown, ChevronRight, FileText, Upload } from 'lucide-react';
-import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES } from '../lib/constants';
+import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES, STIP_TEMPLATES } from '../lib/constants';
 import { formatDate, formatCurrency, formatRate, calcPI, calcLTV, taskUrgency, urgencyColor } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { claudeService } from '../lib/claude';
@@ -499,36 +499,85 @@ const ContactAccordion = ({ borrower, role, ops }) => {
 // ---- Stipulations ----
 const StipulationsSection = ({ borrower, ops }) => {
   const [newItem, setNewItem] = useState('');
+  const [showTemplates, setShowTemplates] = useState(false);
   const stips = borrower.stipulations || [];
+  const existingItems = stips.map(s => s.item);
+
+  const addFromTemplate = async (items) => {
+    for (const item of items) {
+      if (!existingItems.includes(item)) {
+        await ops.addStipulation(borrower.id, item);
+      }
+    }
+    setShowTemplates(false);
+  };
+
+  const templates = [
+    { label: 'Base Docs', key: 'base' },
+    { label: 'Self-Employed', key: 'selfEmployed' },
+    { label: 'Self-Employed 5yr+', key: 'selfEmployed5yr' },
+    { label: 'S/E Extension Filed', key: 'selfEmployedExtension' },
+    { label: 'Purchase', key: 'Purchase' },
+    { label: 'VA Loan', key: 'VA' },
+    { label: 'Refi', key: 'Refi' },
+    { label: 'SSI Income', key: 'SSI' },
+    { label: 'Retirement', key: 'Retirement' },
+    { label: 'Rental Income', key: 'Rental' },
+  ];
 
   return (
     <div>
-      <div className="section-heading">📋 Stipulations / Needs List</div>
-      {stips.map(s => (
-        <div key={s.id} className={`stip-item ${s.received ? 'received' : ''}`}>
-          <span style={{ flex: 1 }}>{s.item}</span>
-          {s.received ? (
-            <span style={{ fontSize: '10px', color: '#16a34a' }}>✅ {s.received_date ? formatDate(s.received_date) : 'Received'}</span>
-          ) : (
-            <button type="button" className="btn-xs btn-ghost" onClick={() => ops.markStipReceived(s.id, null)} style={{ color: '#16a34a', borderColor: '#16a34a' }}>
-              Got it
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div className="section-heading" style={{ margin: 0 }}>📋 Stipulations / Needs List</div>
+        <button type="button" className="btn btn-sm" style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '11px' }}
+          onClick={() => setShowTemplates(t => !t)}>
+          + Auto-Populate
+        </button>
+      </div>
+
+      {showTemplates && (
+        <div style={{ background: '#242d36', border: '1px solid #3a454f', borderRadius: '6px', padding: '10px', marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {templates.map(t => (
+            <button key={t.key} type="button" onClick={() => addFromTemplate(STIP_TEMPLATES[t.key])}
+              style={{ background: '#1a2027', border: '1px solid #4a5660', color: '#e8eaed', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+              {t.label}
             </button>
-          )}
-          <button type="button" onClick={() => ops.removeStipulation(s.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>
-            <X size={12} />
-          </button>
+          ))}
         </div>
-      ))}
+      )}
+
+      <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #3a454f', borderRadius: '6px', background: '#1a2027' }}>
+        {stips.length === 0 && (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#6b7785', fontSize: '12px' }}>No stips yet. Click Auto-Populate or add manually.</div>
+        )}
+        {stips.map(s => (
+          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #2e3842', background: s.received ? '#14532d22' : 'transparent' }}>
+            <span style={{ flex: 1, fontSize: '12px', color: s.received ? '#86efac' : '#e8eaed', textDecoration: s.received ? 'line-through' : 'none' }}>{s.item}</span>
+            {s.received ? (
+              <span style={{ fontSize: '10px', color: '#22c55e', whiteSpace: 'nowrap' }}>✓ {s.received_date || 'Received'}</span>
+            ) : (
+              <button type="button" onClick={() => ops.markStipReceived(s.id, null)}
+                style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                Received
+              </button>
+            )}
+            <button type="button" onClick={() => ops.removeStipulation(s.id)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7785', fontSize: '14px' }}>×</button>
+          </div>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
         <input
           type="text"
-          placeholder="Add stipulation…"
+          placeholder="Add custom stip…"
           value={newItem}
           onChange={e => setNewItem(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && newItem.trim()) { ops.addStipulation(borrower.id, newItem.trim()); setNewItem(''); } }}
-          style={{ flex: 1, background: '#1a1a23', border: '1px solid #333345', color: '#e8e8f0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
+          style={{ flex: 1, background: '#1a2027', border: '1px solid #3a454f', color: '#e8eaed', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
         />
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => { if (newItem.trim()) { ops.addStipulation(borrower.id, newItem.trim()); setNewItem(''); } }}>
+        <button type="button" onClick={() => { if (newItem.trim()) { ops.addStipulation(borrower.id, newItem.trim()); setNewItem(''); } }}
+          style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
           Add
         </button>
       </div>

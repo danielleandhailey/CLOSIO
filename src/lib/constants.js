@@ -362,3 +362,62 @@ export const INITIAL_TASKS = {
     { title: 'Check Bonzo notes for stips', type: 'task', due_date: '2026-06-01' },
   ],
 };
+
+// ---- Stipulation Templates by Loan Type ----
+export const STIP_TEMPLATES = {
+  base: [
+    '2024 & 2025 W-2 forms',
+    'Most recent pay stubs (last 30 days)',
+    'Last 2 months bank statements (all pages)',
+    'Copy of driver\'s license or photo ID',
+  ],
+  selfEmployed: [
+    '2023 & 2024 personal tax returns (all schedules)',
+    '2023 & 2024 business tax returns',
+    'K-1s for LLCs on Schedule E',
+    'Business verification (CPA letter, website, or license)',
+  ],
+  selfEmployed5yr: [
+    '2024 personal tax returns (all schedules)',
+    '2024 business tax returns',
+    'K-1s for LLCs on Schedule E',
+    'Business verification (CPA letter, website, or license)',
+  ],
+  selfEmployedExtension: [
+    'Tax extension filing',
+    '2022 & 2023 personal tax returns (all schedules)',
+    '2022 & 2023 business tax returns',
+    'K-1s for LLCs on Schedule E',
+    'Business verification (CPA letter, website, or license)',
+  ],
+  Purchase: [
+    'Copy of contract/offer on property',
+    'Homeowners insurance declaration page',
+    'Current mortgage statements (other properties)',
+    'Most recent HOA statement (if applicable)',
+  ],
+  VA: [
+    'Certificate of Eligibility (COE)',
+    'DD-214 (if discharged)',
+    'VA Disability Award Letter (if applicable)',
+    'Proof of VA income receipt',
+  ],
+  Refi: [
+    'Homeowners insurance declaration page',
+    'Most recent utility bill',
+    'Current mortgage statements (all properties)',
+    'Most recent HOA statement (if applicable)',
+  ],
+  SSI: [
+    'Social Security Award Letter',
+    'Proof of current receipt (bank statement)',
+  ],
+  Retirement: [
+    'Retirement/pension statements',
+    'Proof of current receipt',
+  ],
+  Rental: [
+    'Lease agreements for rental properties',
+    'Schedule E from tax returns',
+  ],
+};

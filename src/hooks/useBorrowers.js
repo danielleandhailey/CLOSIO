@@ -175,6 +175,7 @@ export const useBorrowers = () => {
   const addStipulation = async (borrowerId, item) => {
     const { error } = await supabase.from('stipulations').insert([{ borrower_id: borrowerId, item }]);
     if (error) throw error;
+    await fetchBorrowers();
   };
 
   const markStipReceived = async (id, docDate) => {
@@ -182,11 +183,13 @@ export const useBorrowers = () => {
       received: true, received_date: new Date().toISOString().split('T')[0], doc_date: docDate
     }).eq('id', id);
     if (error) throw error;
+    await fetchBorrowers();
   };
 
   const removeStipulation = async (id) => {
     const { error } = await supabase.from('stipulations').delete().eq('id', id);
     if (error) throw error;
+    await fetchBorrowers();
   };
 
   // ---- Seed initial data ----
