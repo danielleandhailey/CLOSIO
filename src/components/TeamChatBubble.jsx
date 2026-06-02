@@ -103,12 +103,12 @@ const TeamChatBubble = () => {
               <div className="chat-input-row" style={{ background: '#f0f9ff', borderTop: '1px solid #bae6fd' }}>
                 <input
                   type="text"
-                  className="chat-input"
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send(); } }}
                   placeholder="Message the team…"
-                  style={{ background: '#fff', color: '#1e293b', border: '1px solid #bae6fd', flex: 1, padding: '8px', borderRadius: '4px', fontSize: '13px' }}
+                  autoComplete="off"
+                  style={{ background: '#fff', color: '#1e293b', border: '1px solid #bae6fd', flex: 1, padding: '8px', borderRadius: '4px', fontSize: '13px', outline: 'none' }}
                 />
                 <button
                   type="button"
