@@ -19,9 +19,12 @@ const TeamChatBubble = () => {
   const newMessages = lastSeenIndex >= 0 ? messages.slice(lastSeenIndex + 1) : (lastSeenId ? messages : []);
   const unread = newMessages.filter(m => m.sender_name !== myName).length;
 
+  // Scroll to bottom when chat opens or new message
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (open && !minimized) {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+    }
+  }, [messages, open, minimized]);
 
   // Mark as seen when chat is open
   useEffect(() => {
@@ -100,11 +103,6 @@ const TeamChatBubble = () => {
                   className="chat-input"
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  onPaste={e => {
-                    e.preventDefault();
-                    const text = e.clipboardData.getData('text');
-                    setInput(prev => prev + text);
-                  }}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
                   placeholder="Message the team…"
                   rows={1}
