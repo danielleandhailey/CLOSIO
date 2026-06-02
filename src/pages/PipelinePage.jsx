@@ -172,6 +172,7 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onAddTag={ops.addTag}
                 onRemoveTag={ops.removeTag}
                 onOpenCalendar={() => {}} // handled at app level
+                onUpdate={ops.updateBorrower}
               />
               {expandedId === borrower.id && (
                 <ExpandedCard borrower={borrower} ops={ops} />

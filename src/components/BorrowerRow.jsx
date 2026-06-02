@@ -125,39 +125,112 @@ const AddTagInline = ({ borrower, onAdd }) => {
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button type="button" className="btn-xs btn-ghost" onClick={e => { e.stopPropagation(); setOpen(o => !o); }} style={{ border: '1px dashed #44445a', color: '#6a6a80' }}>
-        + tag
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        style={{
+          padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+          border: '1px solid #8b4cf7', background: '#3a2060', color: '#d4aaff',
+          cursor: 'pointer', whiteSpace: 'nowrap',
+        }}
+      >
+        + Tag
       </button>
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, zIndex: 300,
-          background: '#22222e', border: '1px solid #44445a', borderRadius: '6px',
-          padding: '8px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+          background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
+          padding: '10px', minWidth: '200px', boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
         }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Preset Tags</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '10px' }}>
             {PRESET_TAGS.filter(t => !existingTags.includes(t.label)).map(t => (
               <button
                 key={t.label}
                 type="button"
-                className="tag-pill"
-                style={{ ...getTagStyle(t.label), cursor: 'pointer', border: 'none' }}
+                style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', border: 'none', cursor: 'pointer', background: t.bg, color: t.color }}
                 onClick={() => { onAdd(t.label); setOpen(false); }}
               >
                 {t.label}
               </button>
             ))}
           </div>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Custom Tag</div>
           <div style={{ display: 'flex', gap: '4px' }}>
             <input
               value={custom}
               onChange={e => setCustom(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) { onAdd(custom.trim()); setCustom(''); setOpen(false); } }}
-              placeholder="Custom tag…"
-              style={{ flex: 1, background: '#0f0f13', border: '1px solid #333345', color: '#e8e8f0', padding: '3px 7px', borderRadius: '4px', fontSize: '11px', outline: 'none' }}
+              placeholder="Type & press Enter…"
+              style={{ flex: 1, background: '#f5f5f5', border: '1px solid #ddd', color: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
             />
-            <button type="button" className="btn-xs btn-primary" onClick={() => { if (custom.trim()) { onAdd(custom.trim()); setCustom(''); setOpen(false); } }}>
+            <button type="button" onClick={() => { if (custom.trim()) { onAdd(custom.trim()); setCustom(''); setOpen(false); } }}
+              style={{ padding: '4px 10px', background: '#8b4cf7', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
               Add
             </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Lender badge with dropdown
+const LENDER_OPTIONS = ['Rocket', 'PRMG', 'UWM', 'PennyMac', 'Click & Close', 'LoanDepot', 'Flagstar', 'NewRez', 'Freedom', 'Other'];
+
+const LenderBadge = ({ borrower, onUpdate }) => {
+  const [open, setOpen] = useState(false);
+  const [custom, setCustom] = useState('');
+  const ref = useRef();
+  const lender = borrower.lender;
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        style={{
+          padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+          border: lender ? '1px solid #60a5fa' : '1px dashed #50507a',
+          background: lender ? '#1e3a5f' : 'transparent',
+          color: lender ? '#93c5fd' : '#8080a8',
+          cursor: 'pointer', whiteSpace: 'nowrap',
+        }}
+      >
+        {lender || '+ Lender'}
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, zIndex: 300,
+          background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
+          padding: '8px', minWidth: '170px', boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+        }}>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Select Lender</div>
+          {LENDER_OPTIONS.map(l => (
+            <button key={l} type="button"
+              onClick={e => { e.stopPropagation(); onUpdate(borrower.id, { lender: l }); setOpen(false); }}
+              style={{ display: 'block', width: '100%', padding: '6px 10px', border: 'none', background: borrower.lender === l ? '#ede9fe' : 'transparent', color: borrower.lender === l ? '#6d28d9' : '#333', cursor: 'pointer', borderRadius: '4px', fontSize: '12px', fontWeight: borrower.lender === l ? '700' : '500', textAlign: 'left' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+              onMouseLeave={e => e.currentTarget.style.background = borrower.lender === l ? '#ede9fe' : 'transparent'}
+            >
+              {l}
+            </button>
+          ))}
+          <div style={{ borderTop: '1px solid #eee', marginTop: '6px', paddingTop: '6px' }}>
+            <input
+              value={custom}
+              onChange={e => setCustom(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) { onUpdate(borrower.id, { lender: custom.trim() }); setCustom(''); setOpen(false); } }}
+              placeholder="Other lender…"
+              style={{ width: '100%', background: '#f5f5f5', border: '1px solid #ddd', color: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', outline: 'none' }}
+            />
           </div>
         </div>
       )}
@@ -231,7 +304,7 @@ const BorrowerRow = ({
   borrower, isExpanded, isSelected,
   onSelect, onExpand, onEdit, onDelete,
   onTouch, onMoveStage, onAddTag, onRemoveTag,
-  onOpenCalendar,
+  onOpenCalendar, onUpdate,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
   const tags = borrower.borrower_tags || [];
@@ -259,6 +332,7 @@ const BorrowerRow = ({
             <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
           ))}
           <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} />
+          <LenderBadge borrower={borrower} onUpdate={onUpdate} />
         </div>
 
         {/* Touch stamp */}
