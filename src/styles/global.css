@@ -391,7 +391,8 @@ body[data-theme="light"] .btn-icon:hover {
   color: var(--text);
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: 120px;
+  width: 140px;
+  min-width: 140px;
   letter-spacing: 0.01em;
 }
 
@@ -401,6 +402,7 @@ body[data-theme="light"] .btn-icon:hover {
   flex-wrap: nowrap;
   overflow: visible;
   flex: 1;
+  min-width: 200px;
 }
 
 .lender-row {
@@ -408,7 +410,6 @@ body[data-theme="light"] .btn-icon:hover {
   gap: 4px;
   align-items: center;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .tag-pill {

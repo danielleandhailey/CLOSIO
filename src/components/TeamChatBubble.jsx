@@ -20,21 +20,19 @@ const TeamChatBubble = () => {
 
   // Auto-open and show unread count when new message arrives
   useEffect(() => {
-    if (messages.length > prevMsgCount.current) {
+    if (prevMsgCount.current > 0 && messages.length > prevMsgCount.current) {
       const newMsg = messages[messages.length - 1];
       const isFromMe = newMsg?.sender_name === (profile?.full_name || profile?.email);
       if (!isFromMe) {
-        if (!open) {
-          setOpen(true);
-          setMinimized(false);
-        }
-        if (!open || minimized) {
-          setUnread(u => u + (messages.length - prevMsgCount.current));
-        }
+        // Always open chat when teammate sends message
+        setOpen(true);
+        setMinimized(false);
+        // Play sound
+        try { new Audio('data:audio/wav;base64,UklGRl9vT19teleXBhdmVmbXQgEAAAABAAEARKwAAESsAAABAAgAZGF0YU').play(); } catch(e) {}
       }
     }
     prevMsgCount.current = messages.length;
-  }, [messages, open, minimized, profile]);
+  }, [messages, profile]);
 
   // Clear unread when opened
   useEffect(() => {
