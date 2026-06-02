@@ -9,7 +9,7 @@ import { bonzoService } from '../lib/bonzo';
 import { format } from 'date-fns';
 
 const PipelinePage = ({ borrowers, ops }) => {
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(new Set());
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [filterStage, setFilterStage] = useState('All');
   const [sortBy, setSortBy] = useState('stage');
@@ -52,14 +52,26 @@ const PipelinePage = ({ borrowers, ops }) => {
   }, []);
 
   const handleExpand = useCallback((id) => {
-    setExpandedId(prev => prev === id ? null : id);
+    setExpandedIds(prev => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  }, []);
+
+  const handleClose = useCallback((id) => {
+    setExpandedIds(prev => {
+      const n = new Set(prev);
+      n.delete(id);
+      return n;
+    });
   }, []);
 
   const handleDelete = useCallback(async (id) => {
     if (!window.confirm('Delete this borrower? This cannot be undone.')) return;
     await ops.deleteBorrower(id);
-    if (expandedId === id) setExpandedId(null);
-  }, [ops, expandedId]);
+    handleClose(id);
+  }, [ops, handleClose]);
 
   const [cxldDialog, setCxldDialog] = useState(null); // { id, fromStage }
 
@@ -202,7 +214,7 @@ const PipelinePage = ({ borrowers, ops }) => {
             <React.Fragment key={borrower.id}>
               <BorrowerRow
                 borrower={borrower}
-                isExpanded={expandedId === borrower.id}
+                isExpanded={expandedIds.has(borrower.id)}
                 isSelected={selectedIds.has(borrower.id)}
                 onSelect={handleSelect}
                 onExpand={handleExpand}
@@ -215,8 +227,8 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onOpenCalendar={() => {}} // handled at app level
                 onUpdate={ops.updateBorrower}
               />
-              {expandedId === borrower.id && (
-                <ExpandedCard borrower={borrower} ops={ops} />
+              {expandedIds.has(borrower.id) && (
+                <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} />
               )}
             </React.Fragment>
           ))}

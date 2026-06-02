@@ -707,7 +707,7 @@ const AppraisalSection = ({ borrower, onUpdate }) => {
 };
 
 // ---- Main Expanded Card ----
-const ExpandedCard = ({ borrower, ops }) => {
+const ExpandedCard = ({ borrower, ops, onClose }) => {
   const [tab, setTab] = useState('notes');
   const hasFullDetails = STAGES_WITH_FULL_DETAILS.includes(borrower.stage);
 
@@ -772,6 +772,15 @@ const ExpandedCard = ({ borrower, ops }) => {
           <StageHistory borrowerId={borrower.id} />
         )}
       </div>
+      {/* Close button */}
+      {onClose && (
+        <div style={{ textAlign: 'center', paddingTop: '12px', borderTop: '1px solid #3a454f', marginTop: '12px' }}>
+          <button type="button" onClick={onClose}
+            style={{ background: '#4a5660', color: '#e8eaed', border: 'none', padding: '6px 20px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+            Close
+          </button>
+        </div>
+      )}
     </div>
   );
 };
