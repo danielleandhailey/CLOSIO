@@ -342,7 +342,7 @@ const LenderBadge = ({ borrower, onUpdate }) => {
   );
 };
 
-// Auto-tags for Lip's+ stages
+// Auto-tags for In Processing+ stages
 const AutoTagPills = ({ borrower }) => {
   const pills = [];
   const add = (label, bg, color) => pills.push({ label, bg, color });

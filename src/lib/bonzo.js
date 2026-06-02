@@ -9,7 +9,7 @@ const BONZO_STAGE_MAP = {
   'active': 'Working',
   'working': 'Working',
   'shopping': 'Shopping',
-  'in escrow': "Lip's",
+  'in escrow': "In Processing",
   'funded': 'Funded',
 };
 
