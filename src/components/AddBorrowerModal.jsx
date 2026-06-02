@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { STAGES, PRESET_TAGS } from '../lib/constants';
-
-const LOAN_TYPES = ['Conventional', 'FHA', 'VA', 'USDA', 'DPA', 'Jumbo', 'Reverse', 'Non-QM'];
+import { STAGES, LENDER_OPTIONS, LOAN_TYPE_OPTIONS } from '../lib/constants';
 
 const AddBorrowerModal = ({ onClose, onSave }) => {
   const [form, setForm] = useState({
@@ -68,7 +66,7 @@ const AddBorrowerModal = ({ onClose, onSave }) => {
           <div className="form-field">
             <label>Loan Type</label>
             <select className="form-input" value={form.loan_type} onChange={e => set('loan_type', e.target.value)}>
-              {LOAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              {LOAN_TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
         </div>

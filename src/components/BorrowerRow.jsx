@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Trash2, Clock } from 'lucide-react';
-import { STAGE_COLORS, STAGES, PRESET_TAGS } from '../lib/constants';
-import { formatCurrency, formatRate, calcPI, calcLTV, getTagStyle, touchedRecently } from '../lib/utils';
+import { STAGE_COLORS, STAGES, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS } from '../lib/constants';
+import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
@@ -205,68 +205,68 @@ const TagPill = ({ tag, tagId, onRemove }) => {
   );
 };
 
-// Inline add tag
-const AddTagInline = ({ borrower, onAdd, sc }) => {
+// Generic dropdown hook
+const useDropdown = () => {
   const [open, setOpen] = useState(false);
-  const [custom, setCustom] = useState('');
   const ref = useRef();
-
   useEffect(() => {
     if (!open) return;
     const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, [open]);
+  return [open, setOpen, ref];
+};
 
+// Dropdown panel style
+const dropStyle = {
+  position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 9999,
+  background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
+  padding: '8px', minWidth: '180px', boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+};
+
+// Inline add tag
+const AddTagInline = ({ borrower, onAdd, sc }) => {
+  const [open, setOpen, ref] = useDropdown();
+  const [custom, setCustom] = useState('');
   const existingTags = (borrower.borrower_tags || []).map(t => t.tag);
+
+  const handleAdd = (tag) => {
+    onAdd(tag);
+    setOpen(false);
+  };
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button
-        type="button"
-        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
-        style={{
-          padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
-          border: '1px solid #60a5fa',
-          background: '#1e3a5f',
-          color: '#93c5fd',
-          cursor: 'pointer', whiteSpace: 'nowrap',
-        }}
-      >
+      <button type="button"
+        onClick={e => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }}
+        style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+          border: '1px solid #60a5fa', background: '#1e3a5f', color: '#93c5fd', cursor: 'pointer' }}>
         + Tag
       </button>
       {open && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, zIndex: 300,
-          background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
-          padding: '10px', minWidth: '200px', boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-        }}>
-          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Preset Tags</div>
+        <div style={{ ...dropStyle, minWidth: '220px' }}>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Tags</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '10px' }}>
             {PRESET_TAGS.filter(t => !existingTags.includes(t.label)).map(t => (
-              <button
-                key={t.label}
-                type="button"
+              <button key={t.label} type="button"
                 style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', border: 'none', cursor: 'pointer', background: t.bg, color: t.color }}
-                onClick={() => { onAdd(t.label); setOpen(false); }}
-              >
+                onClick={e => { e.stopPropagation(); handleAdd(t.label); }}>
                 {t.label}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Custom Tag</div>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <input
-              value={custom}
-              onChange={e => setCustom(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) { onAdd(custom.trim()); setCustom(''); setOpen(false); } }}
-              placeholder="Type & press Enter…"
-              style={{ flex: 1, background: '#f5f5f5', border: '1px solid #ddd', color: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
-            />
-            <button type="button" onClick={() => { if (custom.trim()) { onAdd(custom.trim()); setCustom(''); setOpen(false); } }}
-              style={{ padding: '4px 10px', background: '#8b4cf7', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
-              Add
-            </button>
+          <div style={{ borderTop: '1px solid #eee', paddingTop: '8px' }}>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <input value={custom} onChange={e => setCustom(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) { handleAdd(custom.trim()); setCustom(''); } }}
+                placeholder="Custom tag…"
+                style={{ flex: 1, background: '#f5f5f5', border: '1px solid #ddd', color: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', outline: 'none' }} />
+              <button type="button" onClick={e => { e.stopPropagation(); if (custom.trim()) { handleAdd(custom.trim()); setCustom(''); } }}
+                style={{ padding: '4px 10px', background: '#8b4cf7', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+                Add
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -274,66 +274,94 @@ const AddTagInline = ({ borrower, onAdd, sc }) => {
   );
 };
 
-// Lender badge with dropdown
-const LENDER_OPTIONS = ['Rocket', 'PRMG', 'UWM', 'PennyMac', 'Click & Close', 'LoanDepot', 'Flagstar', 'NewRez', 'Freedom', 'Other'];
-
+// Lender badge with dropdown + Flyhomes secondary
 const LenderBadge = ({ borrower, onUpdate }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen, ref] = useDropdown();
   const [custom, setCustom] = useState('');
-  const ref = useRef();
   const lender = borrower.lender;
-
-  useEffect(() => {
-    if (!open) return;
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
+  const lender2 = borrower.lender_2;
 
   return (
-    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
-      <button
-        type="button"
-        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
-        style={{
-          padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
-          border: lender ? '1px solid #60a5fa' : '1px dashed #50507a',
-          background: lender ? '#1e3a5f' : 'transparent',
-          color: lender ? '#93c5fd' : '#8080a8',
-          cursor: 'pointer', whiteSpace: 'nowrap',
-        }}
-      >
-        {lender || '+ Lender'}
-      </button>
-      {open && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, zIndex: 300,
-          background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
-          padding: '8px', minWidth: '170px', boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-        }}>
-          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Select Lender</div>
-          {LENDER_OPTIONS.map(l => (
-            <button key={l} type="button"
-              onClick={e => { e.stopPropagation(); onUpdate(borrower.id, { lender: l }); setOpen(false); }}
-              style={{ display: 'block', width: '100%', padding: '6px 10px', border: 'none', background: borrower.lender === l ? '#ede9fe' : 'transparent', color: borrower.lender === l ? '#6d28d9' : '#333', cursor: 'pointer', borderRadius: '4px', fontSize: '12px', fontWeight: borrower.lender === l ? '700' : '500', textAlign: 'left' }}
-              onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-              onMouseLeave={e => e.currentTarget.style.background = borrower.lender === l ? '#ede9fe' : 'transparent'}
-            >
-              {l}
-            </button>
-          ))}
-          <div style={{ borderTop: '1px solid #eee', marginTop: '6px', paddingTop: '6px' }}>
-            <input
-              value={custom}
-              onChange={e => setCustom(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) { onUpdate(borrower.id, { lender: custom.trim() }); setCustom(''); setOpen(false); } }}
-              placeholder="Other lender…"
-              style={{ width: '100%', background: '#f5f5f5', border: '1px solid #ddd', color: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', outline: 'none' }}
-            />
+    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+      <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+        <button type="button"
+          onClick={e => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }}
+          style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+            border: lender ? '1px solid #22c55e' : '1px dashed #50507a',
+            background: lender ? '#14532d' : 'transparent',
+            color: lender ? '#86efac' : '#8080a8', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          {lender || '+ Lender'}
+        </button>
+        {open && (
+          <div style={dropStyle}>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Lender</div>
+            {[...LENDER_OPTIONS, SECONDARY_LENDER].map(l => (
+              <button key={l} type="button"
+                onClick={e => { e.stopPropagation();
+                  if (l === SECONDARY_LENDER) {
+                    onUpdate(borrower.id, { lender_2: l });
+                  } else {
+                    onUpdate(borrower.id, { lender: l });
+                  }
+                  setOpen(false); }}
+                style={{ display: 'block', width: '100%', padding: '6px 10px', border: 'none',
+                  background: (lender === l || lender2 === l) ? '#ede9fe' : 'transparent',
+                  color: l === SECONDARY_LENDER ? '#d97706' : ((lender === l || lender2 === l) ? '#6d28d9' : '#333'),
+                  cursor: 'pointer', borderRadius: '4px', fontSize: '12px',
+                  fontWeight: (lender === l || lender2 === l) ? '700' : '500', textAlign: 'left',
+                  borderTop: l === SECONDARY_LENDER ? '1px solid #eee' : 'none', marginTop: l === SECONDARY_LENDER ? '4px' : '0' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                onMouseLeave={e => e.currentTarget.style.background = (lender === l || lender2 === l) ? '#ede9fe' : 'transparent'}
+              >
+                {l === SECONDARY_LENDER ? `+ ${l} (2nd)` : l}
+              </button>
+            ))}
+            <div style={{ borderTop: '1px solid #eee', marginTop: '6px', paddingTop: '6px' }}>
+              <input value={custom} onChange={e => setCustom(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) { onUpdate(borrower.id, { lender: custom.trim() }); setCustom(''); setOpen(false); } }}
+                placeholder="Other lender…"
+                style={{ width: '100%', background: '#f5f5f5', border: '1px solid #ddd', color: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', outline: 'none' }} />
+            </div>
           </div>
-        </div>
+        )}
+      </div>
+      {lender2 && (
+        <span style={{ padding: '3px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+          background: '#78350f', color: '#fcd34d', border: '1px solid #d97706', cursor: 'pointer' }}
+          onClick={e => { e.stopPropagation(); if (window.confirm('Remove Flyhomes?')) onUpdate(borrower.id, { lender_2: null }); }}>
+          {lender2} ×
+        </span>
       )}
     </div>
+  );
+};
+
+// Auto-tags for Lip's+ stages
+const AutoTagPills = ({ borrower }) => {
+  const pills = [];
+  const add = (label, bg, color) => pills.push({ label, bg, color });
+
+  if (borrower.coe_date) add(`COE ${format(parseISO(borrower.coe_date), 'M/d')}`, '#fee2e2', '#991b1b');
+  if (borrower.loan_type) add(borrower.loan_type, '#ede9fe', '#6d28d9');
+  if (borrower.rate_status === 'Locked') add('LOCKED', '#dcfce7', '#14532d');
+  if (borrower.rate_status === 'Floating') add('FLOATING', '#ffedd5', '#9a3412');
+  if (borrower.ltv || (borrower.loan_amount && borrower.purchase_price)) {
+    const ltv = calcLTV(borrower.loan_amount, borrower.purchase_price) || borrower.ltv;
+    if (ltv) add(`LTV ${ltv}%`, '#dbeafe', '#1e40af');
+  }
+  if (borrower.seller_cc) add(`SC $${Math.round(borrower.seller_cc / 1000)}k`, '#f1f5f9', '#475569');
+  if (borrower.appraisal_value) add('Appraisal ✓', '#dcfce7', '#14532d');
+  if (borrower.appraisal_waiver) add('PIW', '#dbeafe', '#1e40af');
+
+  return (
+    <>
+      {pills.map((p, i) => (
+        <span key={i} style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '10px', fontWeight: '700',
+          background: p.bg, color: p.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          {p.label}
+        </span>
+      ))}
+    </>
   );
 };
 
@@ -443,9 +471,13 @@ const BorrowerRow = ({
 
         {/* Tags */}
         <div className="tags-row">
-          {tags.map(t => (
-            <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
-          ))}
+          {STAGES_WITH_AUTO_TAGS.includes(borrower.stage) ? (
+            <AutoTagPills borrower={borrower} />
+          ) : (
+            tags.map(t => (
+              <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
+            ))
+          )}
           <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
           <LenderBadge borrower={borrower} onUpdate={onUpdate} />
         </div>

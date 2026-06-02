@@ -60,10 +60,28 @@ export const SORT_OPTIONS = [
 
 export const CONTACT_ROLES = [
   { value: 'buyers_agent',  label: "Buyer's Agent" },
+  { value: 'listing_agent', label: "Listing Agent" },
   { value: 'title_escrow',  label: 'Title & Escrow' },
   { value: 'lender',        label: 'Lender' },
   { value: 'processor',     label: 'Processor' },
 ];
+
+export const LENDER_OPTIONS = [
+  'PRMG', 'PennyMac', 'Rocket', 'Champions', 'Figure', 'NFty',
+  'Spring EQ', 'Click N Close', 'Button TLS', 'Kind', 'Deephaven',
+  'Newrez', 'Loan Stream', 'EPM', 'Quantum Reverse', 'Smartifi Reverse',
+  'First American',
+];
+
+export const SECONDARY_LENDER = 'Flyhomes';
+
+export const LOAN_TYPE_OPTIONS = [
+  'Conventional', 'FHA', 'DPA', 'VA', 'Reverse',
+  'Jumbo', 'OTC', 'Streamline', 'Other',
+];
+
+// Stages where auto-tags show on condensed row
+export const STAGES_WITH_AUTO_TAGS = ["Lip's", 'Funded', 'LP Ready', 'Paycom'];
 
 export const STAGES_WITH_FULL_DETAILS = ["Lip's", 'Funded', 'LP Ready', 'Paycom'];
 

@@ -102,12 +102,14 @@ export const useBorrowers = () => {
   // ---- Tags ----
   const addTag = async (borrowerId, tag) => {
     const { error } = await supabase.from('borrower_tags').insert([{ borrower_id: borrowerId, tag }]);
-    if (error) throw error;
+    if (error) { console.error('addTag error:', error); throw error; }
+    await fetchBorrowers(); // force refresh
   };
 
   const removeTag = async (tagId) => {
     const { error } = await supabase.from('borrower_tags').delete().eq('id', tagId);
-    if (error) throw error;
+    if (error) { console.error('removeTag error:', error); throw error; }
+    await fetchBorrowers();
   };
 
   // ---- Tasks ----
