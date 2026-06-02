@@ -202,6 +202,13 @@ body {
 }
 .btn-ghost:hover { background: var(--surface2); color: var(--text); }
 
+[data-theme="light"] .btn-ghost {
+  background: #e8e8f0;
+  color: #1a1a2e;
+  border-color: #b0b0cc;
+}
+[data-theme="light"] .btn-ghost:hover { background: #d0d0e8; color: #0a0a1e; }
+
 .btn-danger {
   background: transparent;
   color: var(--red);
@@ -234,7 +241,7 @@ body {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border2);
   background: var(--surface3);
-  color: #ffffff;
+  color: var(--text);
   cursor: pointer;
   transition: all 0.15s;
   font-size: 15px;
@@ -242,6 +249,18 @@ body {
 }
 
 .btn-icon:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+[data-theme="light"] .btn-icon {
+  background: #e8e8f0;
+  border-color: #b0b0cc;
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .btn-icon:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
 
 /* ---- Stage pills ---- */
 .stage-bar {
