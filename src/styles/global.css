@@ -396,6 +396,14 @@ body[data-theme="light"] .btn-icon:hover {
   flex: 1;
 }
 
+.lender-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .tag-pill {
   display: inline-flex;
   align-items: center;

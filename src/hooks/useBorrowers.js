@@ -79,6 +79,7 @@ export const useBorrowers = () => {
       .select()
       .single();
     if (error) throw error;
+    await fetchBorrowers();
     return data;
   };
 

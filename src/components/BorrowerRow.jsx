@@ -485,6 +485,10 @@ const BorrowerRow = ({
               <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
             ))
           )}
+        </div>
+
+        {/* Lender - separate section */}
+        <div className="lender-row">
           <LenderBadge borrower={borrower} onUpdate={onUpdate} />
         </div>
 
