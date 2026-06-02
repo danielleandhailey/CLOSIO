@@ -167,8 +167,26 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
       const file = queue[i];
       setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'uploading' } : x));
 
-      if (file.size > 20 * 1024 * 1024) {
-        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: 'File too large (max 20MB). Please compress the PDF.' } : x));
+      if (file.size > 4 * 1024 * 1024) {
+        setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: 'File too large (max 4MB for AI analysis). Uploading without AI...' } : x));
+        // Still upload the file, just skip AI
+        try {
+          let filePath = '';
+          const path = `${borrower.id}/${Date.now()}_${file.name}`;
+          const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+            filePath = urlData.publicUrl;
+          }
+          await supabase.from('documents').insert([{
+            borrower_id: borrower.id, name: file.name,
+            file_path: filePath || file.name, file_type: file.type,
+            file_size: file.size, ai_summary: 'File too large for AI analysis',
+          }]);
+          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: 'Uploaded (no AI - file too large)' } : x));
+        } catch (e) {
+          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
+        }
       } else {
         try {
           const base64 = await new Promise((res, rej) => {
@@ -379,7 +397,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
         </div>
       )}
 
-      {/* Saved docs list */}
+      {/* Saved docs list with delete */}
       {showDocs && (
         <div style={{ background: '#1e1e2a', border: '1px solid #3a3a55', borderRadius: '8px', padding: '10px', marginTop: '10px' }}>
           {docs.length === 0 && <div style={{ color: '#8080a8', fontSize: '12px' }}>No documents saved yet.</div>}
@@ -396,6 +414,13 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
                 )}
               </div>
               <span style={{ color: '#8080a8', flexShrink: 0, fontSize: '11px', fontFamily: 'monospace' }}>{formatDate(doc.created_at)}</span>
+              <button type="button" onClick={async () => {
+                if (!window.confirm(`Delete "${doc.name}"?`)) return;
+                await supabase.from('documents').delete().eq('id', doc.id);
+                loadDocs();
+              }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }} title="Delete">
+                <X size={14} />
+              </button>
             </div>
           ))}
         </div>
@@ -1192,8 +1217,7 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
 
   const tabs = [
     { id: 'notes',    label: 'Notes & Tasks' },
-    { id: 'docs',     label: 'Upload Docs' },
-    { id: 'storage',  label: 'Doc Storage' },
+    { id: 'docs',     label: 'Documents' },
     { id: 'borrowers', label: 'Borrowers' },
     { id: 'terms',    label: 'Loan Terms' },
     { id: 'income',   label: 'Income' },
@@ -1240,14 +1264,6 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Upload Documents</div>
             <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} ops={ops} />
             {closeBtn('docs')}
-          </div>
-        )}
-
-        {openTabs.has('storage') && (
-          <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📁 Document Storage</div>
-            <DocumentStorage borrower={borrower} />
-            {closeBtn('storage')}
           </div>
         )}
 
