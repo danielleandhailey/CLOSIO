@@ -478,13 +478,12 @@ const BorrowerRow = ({
         {/* Tags */}
         <div className="tags-row">
           <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
-          {STAGES_WITH_AUTO_TAGS.includes(borrower.stage) ? (
+          {STAGES_WITH_AUTO_TAGS.includes(borrower.stage) && (
             <AutoTagPills borrower={borrower} />
-          ) : (
-            tags.map(t => (
-              <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
-            ))
           )}
+          {tags.map(t => (
+            <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
+          ))}
         </div>
 
         {/* Lender - separate section */}

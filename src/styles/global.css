@@ -310,9 +310,11 @@ body[data-theme="light"] .btn-icon:hover {
 .stage-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  padding: 4px 11px;
+  padding: 4px 8px;
   border-radius: 20px;
+  min-width: 95px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
