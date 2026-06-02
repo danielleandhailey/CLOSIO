@@ -540,7 +540,7 @@ const StipulationsSection = ({ borrower, ops }) => {
   ];
 
   return (
-    <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', maxWidth: '500px' }}>
+    <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>📋 NEEDS LIST</div>
         <button type="button" style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
@@ -732,7 +732,7 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
         ))}
       </div>
 
-      <div>
+      <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', maxWidth: '500px' }}>
         {tab === 'notes' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <NotesSection borrower={borrower} onUpdate={ops.updateBorrower} />
