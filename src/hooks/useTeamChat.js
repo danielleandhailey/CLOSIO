@@ -23,7 +23,12 @@ export const useTeamChat = () => {
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'team_chat'
       }, (payload) => {
-        setMessages(prev => [...prev, payload.new]);
+        // Only add if not already in list (avoid duplicates from optimistic update)
+        setMessages(prev => {
+          const exists = prev.some(m => m.id === payload.new.id || m.message === payload.new.message && m.sender_name === payload.new.sender_name);
+          if (exists) return prev;
+          return [...prev, payload.new];
+        });
       })
       .subscribe();
 
