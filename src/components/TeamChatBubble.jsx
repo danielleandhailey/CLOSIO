@@ -47,14 +47,6 @@ const TeamChatBubble = () => {
     }
   };
 
-  const handlePaste = (e) => {
-    const text = e.clipboardData.getData('text/plain');
-    e.preventDefault();
-    const start = e.target.selectionStart;
-    const end = e.target.selectionEnd;
-    const newValue = input.substring(0, start) + text + input.substring(end);
-    setInput(newValue);
-  };
 
   return (
     <div className="chat-bubble" style={{ right: '20px' }}>
@@ -114,7 +106,6 @@ const TeamChatBubble = () => {
                   className="chat-input"
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  onPaste={handlePaste}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send(); } }}
                   placeholder="Message the team…"
                   style={{ background: '#fff', color: '#1e293b', border: '1px solid #bae6fd', flex: 1, padding: '8px', borderRadius: '4px', fontSize: '13px' }}
