@@ -119,7 +119,7 @@ export const formatBorrowerName = (name, coBorrower, coBorrowers) => {
     firstName = parts.slice(0, -1).join(' ');
     lastName = parts[parts.length - 1];
   }
-  let display = `${lastName.toUpperCase()}, ${firstName}`;
+  let display = `${lastName}, ${firstName}`;
   const allCoBorrowers = coBorrowers?.length ? coBorrowers : (coBorrower ? [coBorrower] : []);
   if (allCoBorrowers.length === 1) display += ` & ${allCoBorrowers[0]}`;
   else if (allCoBorrowers.length > 1) display += ` + ${allCoBorrowers.length} co-borrowers`;
