@@ -27,7 +27,7 @@ const RateTreadPage = ({ borrowers }) => {
     }
   };
 
-  useEffect(() => { if (fundedBorrowers.length > 0) analyze(); }, []);
+  useEffect(() => { if (fundedBorrowers.length > 0) analyze(); }, [fundedBorrowers.length, analyze]);
 
   const triggerBonzo = async (borrower, currentRate, savings) => {
     setTriggering(s => new Set([...s, borrower.id]));

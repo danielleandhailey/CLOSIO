@@ -24,7 +24,7 @@ const AppInner = () => {
     if (user && !loadingBorrowers) {
       seedInitialData().catch(console.error);
     }
-  }, [user, loadingBorrowers]);
+  }, [user, loadingBorrowers, seedInitialData]);
 
   if (loading) {
     return (

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, MessageSquare, Loader } from 'lucide-react';
+import { X, Send, Loader } from 'lucide-react';
 import { claudeService } from '../lib/claude';
 import { formatCurrency, formatDate, formatRate } from '../lib/utils';
 
