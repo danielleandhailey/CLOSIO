@@ -368,16 +368,18 @@ body[data-theme="light"] .btn-icon:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 9px;
+  padding: 3px 0;
   border-radius: 5px;
   font-size: 9px;
   font-weight: 800;
   white-space: nowrap;
   flex-shrink: 0;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  width: 95px;
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
 }
 
 .borrower-name {
