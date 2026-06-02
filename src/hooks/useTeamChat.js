@@ -5,36 +5,21 @@ export const useTeamChat = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Load recent messages
-    supabase
+  const fetchMessages = async () => {
+    const { data } = await supabase
       .from('team_chat')
       .select('*')
       .order('created_at', { ascending: true })
-      .limit(100)
-      .then(({ data }) => {
-        setMessages(data || []);
-        setLoading(false);
-      });
+      .limit(100);
+    setMessages(data || []);
+    setLoading(false);
+  };
 
-    // Real-time subscription
-    const channel = supabase
-      .channel('team-chat-channel')
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'team_chat'
-      }, (payload) => {
-        console.log('New chat message received:', payload.new);
-        setMessages(prev => {
-          const exists = prev.some(m => m.id === payload.new.id);
-          if (exists) return prev;
-          return [...prev, payload.new];
-        });
-      })
-      .subscribe((status) => {
-        console.log('Chat subscription status:', status);
-      });
-
-    return () => supabase.removeChannel(channel);
+  useEffect(() => {
+    fetchMessages();
+    // Poll every 3 seconds for new messages
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const sendMessage = async (message, senderName, senderRole) => {

@@ -18,21 +18,17 @@ const TeamChatBubble = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-open and show unread count when new message arrives
+  // Track unread and change bubble color when new message arrives
   useEffect(() => {
     if (prevMsgCount.current > 0 && messages.length > prevMsgCount.current) {
       const newMsg = messages[messages.length - 1];
       const isFromMe = newMsg?.sender_name === (profile?.full_name || profile?.email);
-      if (!isFromMe) {
-        // Always open chat when teammate sends message
-        setOpen(true);
-        setMinimized(false);
-        // Play sound
-        try { new Audio('data:audio/wav;base64,UklGRl9vT19teleXBhdmVmbXQgEAAAABAAEARKwAAESsAAABAAgAZGF0YU').play(); } catch(e) {}
+      if (!isFromMe && (!open || minimized)) {
+        setUnread(u => u + 1);
       }
     }
     prevMsgCount.current = messages.length;
-  }, [messages, profile]);
+  }, [messages, profile, open, minimized]);
 
   // Clear unread when opened
   useEffect(() => {
@@ -125,7 +121,7 @@ const TeamChatBubble = () => {
         </div>
       )}
 
-      <button type="button" className="chat-trigger" style={{ background: '#065f46', position: 'relative' }} onClick={() => setOpen(o => !o)} title="Team Chat">
+      <button type="button" className="chat-trigger" style={{ background: unread > 0 ? '#f59e0b' : '#065f46', position: 'relative', animation: unread > 0 ? 'pulse 1s infinite' : 'none' }} onClick={() => setOpen(o => !o)} title="Team Chat">
         💬
         {unread > 0 && (
           <span style={{
