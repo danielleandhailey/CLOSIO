@@ -58,7 +58,7 @@ const LoginPage = () => {
             fontFamily: 'Space Mono, monospace',
             fontSize: '22px',
             fontWeight: '700',
-            color: '#9f67f7',
+            color: '#14b8a6',
             letterSpacing: '0.05em',
             marginBottom: '4px',
           }}>CLOSIO™</div>
@@ -153,7 +153,7 @@ const LoginPage = () => {
             style={{
               width: '100%',
               padding: '10px',
-              background: '#7c3aed',
+              background: '#0d9488',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
@@ -172,13 +172,13 @@ const LoginPage = () => {
         <div style={{ textAlign: 'center', fontSize: '12px', color: '#6a6a80' }}>
           {mode === 'login' ? (
             <>Don't have an account?{' '}
-              <button onClick={() => setMode('signup')} style={{ color: '#9f67f7', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>
+              <button onClick={() => setMode('signup')} style={{ color: '#14b8a6', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>
                 Sign up
               </button>
             </>
           ) : (
             <>Already have an account?{' '}
-              <button onClick={() => setMode('login')} style={{ color: '#9f67f7', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>
+              <button onClick={() => setMode('login')} style={{ color: '#14b8a6', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>
                 Sign in
               </button>
             </>
