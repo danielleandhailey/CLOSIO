@@ -83,12 +83,45 @@ export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
         if (!a.last_touched) return 1;
         if (!b.last_touched) return -1;
         return new Date(b.last_touched) - new Date(a.last_touched);
-      case 'name':
-        return a.name.localeCompare(b.name);
+      case 'last_name':
+        return getLastName(a.name).localeCompare(getLastName(b.name));
+      case 'first_name':
+        return getFirstName(a.name).localeCompare(getFirstName(b.name));
       default:
         return stageIdx(a.stage) - stageIdx(b.stage);
     }
   });
+};
+
+// Parse name to get last name (handles "Last, First" or "First Last")
+export const getLastName = (name) => {
+  if (!name) return '';
+  if (name.includes(',')) return name.split(',')[0].trim();
+  const parts = name.trim().split(' ');
+  return parts[parts.length - 1];
+};
+
+export const getFirstName = (name) => {
+  if (!name) return '';
+  if (name.includes(',')) return name.split(',')[1]?.trim() || '';
+  const parts = name.trim().split(' ');
+  return parts[0];
+};
+
+// Format name as "LASTNAME, First" with co-borrower
+export const formatBorrowerName = (name, coBorrower) => {
+  if (!name) return '';
+  let lastName, firstName;
+  if (name.includes(',')) {
+    [lastName, firstName] = name.split(',').map(s => s.trim());
+  } else {
+    const parts = name.trim().split(' ');
+    firstName = parts.slice(0, -1).join(' ');
+    lastName = parts[parts.length - 1];
+  }
+  let display = `${lastName.toUpperCase()}, ${firstName}`;
+  if (coBorrower) display += ` & ${coBorrower}`;
+  return display;
 };
 
 // ---- Annual savings from rate retread ----

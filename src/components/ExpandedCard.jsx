@@ -747,6 +747,13 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
         <Field label="Lender" value={borrower.lender} dbKey="lender" />
         <Field label="Loan Type" value={borrower.loan_type} dbKey="loan_type" />
       </div>
+      {/* Co-Borrower & Non-Borrowing Spouse */}
+      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <Field label="Co-Borrower" value={borrower.co_borrower} dbKey="co_borrower" />
+          <Field label="Non-Borrowing Spouse (Title)" value={borrower.non_borrowing_spouse} dbKey="non_borrowing_spouse" />
+        </div>
+      </div>
     </div>
   );
 };
@@ -775,6 +782,10 @@ const IncomeSection = ({ borrower, onUpdate }) => {
   const incomes = borrower.incomes || [];
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ person: 'Borrower', employment_type: 'W2', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
+
+  const personOptions = ['Borrower'];
+  if (borrower.co_borrower) personOptions.push(`Co-Borrower (${borrower.co_borrower})`);
+  else personOptions.push('Co-Borrower');
 
   const saveIncome = async () => {
     const updated = [...incomes, { ...form, id: Date.now() }];
@@ -824,9 +835,7 @@ const IncomeSection = ({ borrower, onUpdate }) => {
             <div>
               <div style={labelStyle}>Person</div>
               <select value={form.person} onChange={e => setForm(f => ({ ...f, person: e.target.value }))} style={fieldStyle}>
-                <option>Borrower</option>
-                <option>Co-Borrower</option>
-                <option>Co-Borrower 2</option>
+                {personOptions.map(p => <option key={p}>{p}</option>)}
               </select>
             </div>
             <div>

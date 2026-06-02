@@ -55,7 +55,8 @@ export const SORT_OPTIONS = [
   { value: 'contingencies', label: 'Contingencies Due' },
   { value: 'tasks',         label: 'Tasks by Date' },
   { value: 'last_touched',  label: 'Last Touched' },
-  { value: 'name',          label: 'Name A–Z' },
+  { value: 'last_name',     label: 'Last Name A–Z' },
+  { value: 'first_name',    label: 'First Name A–Z' },
 ];
 
 export const CONTACT_ROLES = [

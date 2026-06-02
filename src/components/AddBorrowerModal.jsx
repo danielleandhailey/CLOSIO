@@ -4,7 +4,8 @@ import { STAGES, LENDER_OPTIONS, LOAN_TYPE_OPTIONS } from '../lib/constants';
 
 const AddBorrowerModal = ({ onClose, onSave }) => {
   const [form, setForm] = useState({
-    name: '', stage: 'Working', loan_type: 'Conventional',
+    name: '', co_borrower: '', non_borrowing_spouse: '',
+    stage: 'Working', loan_type: 'Conventional',
     lender: '', rate: '', purchase_price: '', loan_amount: '',
     rate_status: 'Floating', coe_date: '', date_submitted: '',
     last_touched: '', notes: '', phone: '', email: '',
@@ -50,9 +51,20 @@ const AddBorrowerModal = ({ onClose, onSave }) => {
         )}
 
         <div className="form-row">
-          <div className="form-field" style={{ gridColumn: '1 / -1' }}>
+          <div className="form-field">
             <label>Borrower Name *</label>
-            <input className="form-input" type="text" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Full Name" />
+            <input className="form-input" type="text" value={form.name} onChange={e => set('name', e.target.value)} placeholder="LAST, First" />
+          </div>
+          <div className="form-field">
+            <label>Co-Borrower</label>
+            <input className="form-input" type="text" value={form.co_borrower} onChange={e => set('co_borrower', e.target.value)} placeholder="LAST, First" />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-field">
+            <label>Non-Borrowing Spouse (for title)</label>
+            <input className="form-input" type="text" value={form.non_borrowing_spouse} onChange={e => set('non_borrowing_spouse', e.target.value)} placeholder="Full name" />
           </div>
         </div>
 
