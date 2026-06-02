@@ -51,10 +51,14 @@ const QuickSummaryPanel = ({ borrower, onMoveStage, onClose }) => {
     if (!note.trim()) return;
     setSaving(true);
     const updated = appendLog(borrower.notes, note.trim());
-    await supabase.from('borrowers').update({ notes: updated, last_touched: new Date().toISOString() }).eq('id', borrower.id);
+    const { error } = await supabase.from('borrowers')
+      .update({ notes: updated, last_touched: new Date().toISOString() })
+      .eq('id', borrower.id);
+    if (error) console.error('Note save error:', error);
+    // Optimistically update the local display
+    borrower.notes = updated;
     setNote('');
     setSaving(false);
-    // Refresh happens via realtime subscription
   };
 
   return (
@@ -62,9 +66,14 @@ const QuickSummaryPanel = ({ borrower, onMoveStage, onClose }) => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <span style={{ fontSize: '13px', fontWeight: '800', color: '#f0f0ff' }}>{borrower.name}</span>
-        <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', background: sc.bg, color: sc.text, textTransform: 'uppercase' }}>
-          {borrower.stage}
-        </span>
+        <button
+          type="button"
+          onClick={() => setShowStageSelect(s => !s)}
+          title="Click to move stage"
+          style={{ padding: '3px 10px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', background: sc.bg, color: sc.text, textTransform: 'uppercase', border: 'none', cursor: 'pointer', letterSpacing: '0.04em' }}
+        >
+          {borrower.stage} ▾
+        </button>
       </div>
 
       {/* Key stats — compact 3-col */}
@@ -470,7 +479,7 @@ const BorrowerRow = ({
             )}
           </div>
 
-          <button type="button" className="btn-icon" onClick={() => onEdit(borrower)} title="Edit">✏</button>
+          <button type="button" className="btn-icon" onClick={() => onEdit(borrower)} title="Edit Borrower" style={{ fontSize: '13px' }}>✎</button>
 
           <button type="button" className="btn-icon" onClick={() => onDelete(borrower.id)} title="Delete" style={{ color: '#f87171', borderColor: '#7f1d1d' }}>
             <Trash2 size={13} />

@@ -91,10 +91,11 @@ export const useBorrowers = () => {
     return updateBorrower(id, { last_touched: new Date().toISOString() });
   };
 
-  const moveBorrower = async (id, newStage, fromStage, userId) => {
-    await supabase.from('stage_history').insert([{
-      borrower_id: id, from_stage: fromStage, to_stage: newStage, user_id: userId
-    }]);
+  const moveBorrower = async (id, newStage, fromStage) => {
+    // Log stage history — non-blocking, don't let failure stop the move
+    supabase.from('stage_history').insert([{
+      borrower_id: id, from_stage: fromStage, to_stage: newStage
+    }]).then(() => {}).catch(() => {});
     return updateBorrower(id, { stage: newStage });
   };
 
