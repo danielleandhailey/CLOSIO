@@ -213,6 +213,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
             await supabase.from('borrowers').update({ notes: currentNotes + newNote }).eq('id', borrower.id);
           }
 
+          console.log('AI Extracted:', extracted);
           const updates = {};
           if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
           if (extracted.coe_date) updates.coe_date = extracted.coe_date;
