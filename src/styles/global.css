@@ -194,15 +194,17 @@ body {
 }
 
 .btn-xs {
-  height: 18px;
-  padding: 1px 6px;
-  font-size: 10px;
-  border-radius: 3px;
+  height: 28px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 4px;
+  color: #ffffff;
 }
 
 .btn-icon {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -210,11 +212,11 @@ body {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border2);
   background: var(--surface3);
-  color: var(--text2);
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.15s;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 900;
 }
 
 .btn-icon:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -264,12 +266,12 @@ body {
 .borrower-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
+  gap: 8px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   transition: background 0.1s;
-  min-height: 38px;
+  min-height: 48px;
   position: relative;
 }
 
