@@ -363,40 +363,43 @@ export const INITIAL_TASKS = {
   ],
 };
 
-// ---- Stipulation Templates by Loan Type ----
+// ---- Stipulation Templates ----
 export const STIP_TEMPLATES = {
+  // Loan Purpose
   Purchase: [
-    '2024 & 2025 W-2 forms',
-    'Most recent pay stubs (last 30 days)',
-    'Bank statements 12-24 months (all pages)',
-    'Investment/asset statements (if applicable)',
-    'Copy of driver\'s license or photo ID',
     'Copy of Purchase Agreement (if applicable)',
     'Homeowners insurance declaration page (if applicable)',
     'Current mortgage statements - other properties (if applicable)',
     'Most recent HOA statement (if applicable)',
   ],
-  selfEmployed: [
+  Refi: [
+    'Homeowners insurance declaration page',
+    'Most recent utility bill',
+    'Current mortgage statements (all properties)',
+    'Most recent HOA statement (if applicable)',
+  ],
+  // Income Types
+  W2: [
+    '2024 & 2025 W-2 forms',
+    'Most recent pay stubs (last 30 days)',
+    'Bank statements 12-24 months (all pages)',
+    'Investment/asset statements (if applicable)',
+    'Copy of driver\'s license or photo ID',
+  ],
+  SelfEmployed: [
     '2023 & 2024 personal tax returns (all schedules)',
     '2023 & 2024 business tax returns (if applicable)',
     'K-1s for LLCs on Schedule E (if applicable)',
     'Business verification - CPA letter, website, or license (if applicable)',
+    'Bank statements 12-24 months (all pages)',
+    'Investment/asset statements (if applicable)',
+    'Copy of driver\'s license or photo ID',
   ],
   VA: [
     'Certificate of Eligibility (COE)',
     'DD-214 (if discharged)',
     'VA Disability Award Letter (if applicable)',
     'Proof of VA income receipt (if applicable)',
-  ],
-  Refi: [
-    '2024 & 2025 W-2 forms',
-    'Most recent pay stubs (last 30 days)',
-    'Bank statements 12-24 months (all pages)',
-    'Copy of driver\'s license or photo ID',
-    'Homeowners insurance declaration page',
-    'Most recent utility bill',
-    'Current mortgage statements (all properties)',
-    'Most recent HOA statement (if applicable)',
   ],
   SSI: [
     'Social Security Award Letter',
@@ -411,3 +414,5 @@ export const STIP_TEMPLATES = {
     'Schedule E from tax returns',
   ],
 };
+
+export const INCOME_TYPE_OPTIONS = ['W2', 'Self-Employed', 'VA', 'SSI', 'Retirement', 'Rental', 'Mixed'];

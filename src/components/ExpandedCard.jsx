@@ -496,7 +496,7 @@ const ContactAccordion = ({ borrower, role, ops }) => {
   );
 };
 
-// ---- Stipulations ----
+// ---- Needs List ----
 const StipulationsSection = ({ borrower, ops }) => {
   const [newItem, setNewItem] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
@@ -509,17 +509,34 @@ const StipulationsSection = ({ borrower, ops }) => {
         await ops.addStipulation(borrower.id, item);
       }
     }
+  };
+
+  const addMultiple = async (keys) => {
+    for (const key of keys) {
+      if (STIP_TEMPLATES[key]) {
+        await addFromTemplate(STIP_TEMPLATES[key]);
+      }
+    }
     setShowTemplates(false);
   };
 
-  const templates = [
-    { label: 'Purchase', key: 'Purchase' },
-    { label: 'Self-Employed', key: 'selfEmployed' },
-    { label: 'VA Loan', key: 'VA' },
-    { label: 'Refi', key: 'Refi' },
-    { label: 'SSI Income', key: 'SSI' },
-    { label: 'Retirement', key: 'Retirement' },
-    { label: 'Rental Income', key: 'Rental' },
+  // Smart suggestions based on loan_purpose and income_type
+  const isPurchase = borrower.loan_purpose === 'Purchase';
+  const isRefi = borrower.loan_purpose === 'Refinance' || borrower.loan_purpose === 'Refi';
+  const incomeType = borrower.income_type || 'W2';
+
+  const loanTypeTemplates = [
+    { label: '🏠 Purchase Docs', keys: ['Purchase'], show: true },
+    { label: '🔄 Refi Docs', keys: ['Refi'], show: true },
+  ];
+
+  const incomeTemplates = [
+    { label: '💼 W2 Employee', keys: ['W2'], show: true },
+    { label: '📊 Self-Employed', keys: ['SelfEmployed'], show: true },
+    { label: '🎖️ VA Income', keys: ['VA'], show: true },
+    { label: '💳 SSI Income', keys: ['SSI'], show: true },
+    { label: '🏖️ Retirement', keys: ['Retirement'], show: true },
+    { label: '🏘️ Rental Income', keys: ['Rental'], show: true },
   ];
 
   return (
@@ -533,13 +550,25 @@ const StipulationsSection = ({ borrower, ops }) => {
       </div>
 
       {showTemplates && (
-        <div style={{ background: '#fff', border: '2px solid #0d9488', borderRadius: '8px', padding: '12px', marginBottom: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {templates.map(t => (
-            <button key={t.key} type="button" onClick={() => addFromTemplate(STIP_TEMPLATES[t.key])}
-              style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
-              {t.label}
-            </button>
-          ))}
+        <div style={{ background: '#fff', border: '2px solid #0d9488', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>STEP 1: LOAN TYPE</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+            {loanTypeTemplates.map(t => (
+              <button key={t.label} type="button" onClick={() => addMultiple(t.keys)}
+                style={{ background: '#3b82f6', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>STEP 2: INCOME TYPE</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {incomeTemplates.map(t => (
+              <button key={t.label} type="button" onClick={() => addMultiple(t.keys)}
+                style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
