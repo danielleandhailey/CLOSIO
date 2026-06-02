@@ -380,9 +380,9 @@ body[data-theme="light"] .btn-icon:hover {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
+  width: 105px !important;
+  min-width: 105px !important;
+  max-width: 105px !important;
 }
 
 .borrower-name {
