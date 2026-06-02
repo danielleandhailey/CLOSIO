@@ -103,6 +103,11 @@ const TeamChatBubble = () => {
                   className="chat-input"
                   value={input}
                   onChange={e => setInput(e.target.value)}
+                  onPaste={e => {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData('text');
+                    setInput(prev => prev + text);
+                  }}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
                   placeholder="Message the team…"
                   rows={1}
