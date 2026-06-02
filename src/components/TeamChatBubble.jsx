@@ -8,13 +8,38 @@ const TeamChatBubble = () => {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [input, setInput] = useState('');
+  const [unread, setUnread] = useState(0);
   const { messages, sendMessage } = useTeamChat();
   const { profile } = useAuth();
   const bottomRef = useRef();
+  const prevMsgCount = useRef(messages.length);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-open and show unread count when new message arrives
+  useEffect(() => {
+    if (messages.length > prevMsgCount.current) {
+      const newMsg = messages[messages.length - 1];
+      const isFromMe = newMsg?.sender_name === (profile?.full_name || profile?.email);
+      if (!isFromMe) {
+        if (!open) {
+          setOpen(true);
+          setMinimized(false);
+        }
+        if (!open || minimized) {
+          setUnread(u => u + (messages.length - prevMsgCount.current));
+        }
+      }
+    }
+    prevMsgCount.current = messages.length;
+  }, [messages, open, minimized, profile]);
+
+  // Clear unread when opened
+  useEffect(() => {
+    if (open && !minimized) setUnread(0);
+  }, [open, minimized]);
 
   const send = async () => {
     const text = input.trim();
@@ -102,8 +127,16 @@ const TeamChatBubble = () => {
         </div>
       )}
 
-      <button type="button" className="chat-trigger" style={{ background: '#065f46' }} onClick={() => setOpen(o => !o)} title="Team Chat">
+      <button type="button" className="chat-trigger" style={{ background: '#065f46', position: 'relative' }} onClick={() => setOpen(o => !o)} title="Team Chat">
         💬
+        {unread > 0 && (
+          <span style={{
+            position: 'absolute', top: '-5px', right: '-5px',
+            background: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: '700',
+            borderRadius: '50%', width: '18px', height: '18px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>{unread}</span>
+        )}
       </button>
     </div>
   );
