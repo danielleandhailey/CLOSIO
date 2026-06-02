@@ -708,8 +708,24 @@ const AppraisalSection = ({ borrower, onUpdate }) => {
 
 // ---- Main Expanded Card ----
 const ExpandedCard = ({ borrower, ops, onClose }) => {
-  const [tab, setTab] = useState('notes');
+  const [openTabs, setOpenTabs] = useState(new Set(['notes']));
   const hasFullDetails = STAGES_WITH_FULL_DETAILS.includes(borrower.stage);
+
+  const toggleTab = (id) => {
+    setOpenTabs(prev => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  };
+
+  const closeTab = (id) => {
+    setOpenTabs(prev => {
+      const n = new Set(prev);
+      n.delete(id);
+      return n;
+    });
+  };
 
   const tabs = [
     { id: 'notes',    label: 'Notes & Tasks' },
@@ -722,57 +738,94 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
     { id: 'history',  label: 'History' },
   ];
 
+  const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '400px', flexShrink: 0 };
+  const closeBtn = (id) => (
+    <div style={{ textAlign: 'center', marginTop: '12px' }}>
+      <button type="button" onClick={() => closeTab(id)}
+        style={{ background: '#64748b', color: '#fff', border: 'none', padding: '4px 16px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+        Close
+      </button>
+    </div>
+  );
+
   return (
     <div className="expanded-card">
       <div className="expanded-tabs">
         {tabs.map(t => (
-          <button key={t.id} type="button" className={`expanded-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} type="button" className={`expanded-tab ${openTabs.has(t.id) ? 'active' : ''}`} onClick={() => toggleTab(t.id)}>
             {t.label}
           </button>
         ))}
       </div>
 
-      <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', maxWidth: '500px' }}>
-        {tab === 'notes' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
+        {openTabs.has('notes') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📝 Notes & Tasks</div>
             <NotesSection borrower={borrower} onUpdate={ops.updateBorrower} />
             <TasksSection borrower={borrower} ops={ops} />
+            {closeBtn('notes')}
           </div>
         )}
 
-        {tab === 'docs' && (
-          <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} />
+        {openTabs.has('docs') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Documents</div>
+            <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} />
+            {closeBtn('docs')}
+          </div>
         )}
 
-        {tab === 'terms' && (
-          <LoanTermsGrid borrower={borrower} onUpdate={ops.updateBorrower} />
+        {openTabs.has('terms') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💰 Loan Terms</div>
+            <LoanTermsGrid borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('terms')}
+          </div>
         )}
 
-        {tab === 'contacts' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {openTabs.has('contacts') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>👥 Contacts</div>
             {CONTACT_ROLES.map(r => (
               <ContactAccordion key={r.value} borrower={borrower} role={r.value} ops={ops} />
             ))}
+            {closeBtn('contacts')}
           </div>
         )}
 
-        {tab === 'stips' && (
-          <StipulationsSection borrower={borrower} ops={ops} />
+        {openTabs.has('stips') && (
+          <div style={boxStyle}>
+            <StipulationsSection borrower={borrower} ops={ops} />
+            {closeBtn('stips')}
+          </div>
         )}
 
-        {tab === 'contingencies' && (
-          <ContingenciesSection borrower={borrower} ops={ops} />
+        {openTabs.has('contingencies') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>⚠️ Contingencies</div>
+            <ContingenciesSection borrower={borrower} ops={ops} />
+            {closeBtn('contingencies')}
+          </div>
         )}
 
-        {tab === 'appraisal' && (
-          <AppraisalSection borrower={borrower} onUpdate={ops.updateBorrower} />
+        {openTabs.has('appraisal') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>🏠 Appraisal</div>
+            <AppraisalSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('appraisal')}
+          </div>
         )}
 
-        {tab === 'history' && (
-          <StageHistory borrowerId={borrower.id} />
+        {openTabs.has('history') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📜 History</div>
+            <StageHistory borrowerId={borrower.id} />
+            {closeBtn('history')}
+          </div>
         )}
       </div>
-      {/* Close button */}
+      {/* Close borrower button */}
       {onClose && (
         <div style={{ textAlign: 'center', paddingTop: '12px', borderTop: '1px solid #3a454f', marginTop: '12px' }}>
           <button type="button" onClick={onClose}
