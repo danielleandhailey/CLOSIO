@@ -656,23 +656,57 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
 };
 
 // ---- Appraisal Section ----
+const APPRAISAL_TYPES = [
+  '2075 Drive By (exterior inspection with no value)',
+  'Conv 1004 + 1007',
+  'Conventional 1004 SFR with 1007 rent schedule & 216 Operating income statement',
+  'Conventional 1004 SFR with 216 Operating income statement',
+  'Conventional 1004 Single family residence',
+  'Conventional 1004C Manufactured home',
+  'Conventional 1004C Manufactured home with 1007 rent schedule',
+  'Conventional 1004C Manufactured home with 1007 rent schedule & 216 Operating income statement',
+  'Conventional 1073 Condo',
+  'FHA 1004 SFR with 1007 Rent schedule',
+  'FHA 1004 SFR with 1007 Rent schedule & 216 Operating income statement',
+  'FHA 1004 SFR with 216 Operating income statement',
+  'FHA 1004 Single family residence',
+  'FHA 1073 Condo',
+  'Other',
+];
+
 const AppraisalSection = ({ borrower, onUpdate }) => {
   const [value, setValue] = useState(borrower.appraisal_value || '');
   const [waiver, setWaiver] = useState(borrower.appraisal_waiver || false);
   const [waiverReason, setWaiverReason] = useState(borrower.appraisal_waiver_reason || '');
+  const [appraisalType, setAppraisalType] = useState(borrower.appraisal_type || '');
+  const [subjectTo, setSubjectTo] = useState(borrower.appraisal_subject_to || '');
+  const [reinspection, setReinspection] = useState(borrower.appraisal_reinspection || false);
+  const [reinspectionDate, setReinspectionDate] = useState(borrower.appraisal_reinspection_date || '');
 
   return (
     <div>
-      <div className="section-heading">🏠 Appraisal</div>
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      {/* Appraisal Type Dropdown */}
+      <div style={{ marginBottom: '12px' }}>
+        <select
+          value={appraisalType}
+          onChange={e => { setAppraisalType(e.target.value); onUpdate(borrower.id, { appraisal_type: e.target.value }); }}
+          style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#fff', color: '#1e293b' }}
+        >
+          <option value="">Select Appraisal Type...</option>
+          {APPRAISAL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '12px' }}>
         <div className="loan-field" style={{ minWidth: '140px' }}>
-          <label>Appraised Value</label>
+          <label style={{ color: '#1e293b', fontSize: '11px', fontWeight: '600' }}>Appraised Value</label>
           <input
             type="number"
             value={value}
             onChange={e => setValue(e.target.value)}
             onBlur={() => onUpdate(borrower.id, { appraisal_value: value || null })}
             placeholder="450000"
+            style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '6px 8px', borderRadius: '4px', fontSize: '12px' }}
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '20px' }}>
@@ -680,28 +714,66 @@ const AppraisalSection = ({ borrower, onUpdate }) => {
             setWaiver(e.target.checked);
             onUpdate(borrower.id, { appraisal_waiver: e.target.checked });
           }} />
-          <label htmlFor={`waiver-${borrower.id}`} style={{ fontSize: '12px', cursor: 'pointer' }}>Appraisal Waiver</label>
+          <label htmlFor={`waiver-${borrower.id}`} style={{ fontSize: '12px', cursor: 'pointer', color: '#1e293b' }}>Appraisal Waiver (PIW)</label>
         </div>
-        {waiver && (
-          <div className="loan-field" style={{ flex: 1, minWidth: '160px' }}>
-            <label>AUS Waiver Reason</label>
+      </div>
+
+      {waiver && (
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ color: '#1e293b', fontSize: '11px', fontWeight: '600', display: 'block', marginBottom: '4px' }}>AUS Waiver Reason</label>
+          <input
+            type="text"
+            value={waiverReason}
+            onChange={e => setWaiverReason(e.target.value)}
+            onBlur={() => onUpdate(borrower.id, { appraisal_waiver_reason: waiverReason })}
+            placeholder="AUS approval reason…"
+            style={{ width: '100%', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '6px 8px', borderRadius: '4px', fontSize: '12px' }}
+          />
+        </div>
+      )}
+
+      {/* Subject To */}
+      <div style={{ marginBottom: '12px' }}>
+        <label style={{ color: '#1e293b', fontSize: '11px', fontWeight: '600', display: 'block', marginBottom: '4px' }}>Subject To (conditions/repairs)</label>
+        <textarea
+          value={subjectTo}
+          onChange={e => setSubjectTo(e.target.value)}
+          onBlur={() => onUpdate(borrower.id, { appraisal_subject_to: subjectTo })}
+          placeholder="Any conditions or repairs required..."
+          rows={2}
+          style={{ width: '100%', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '6px 8px', borderRadius: '4px', fontSize: '12px', resize: 'vertical' }}
+        />
+      </div>
+
+      {/* Reinspection */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input type="checkbox" id={`reinspect-${borrower.id}`} checked={reinspection} onChange={e => {
+            setReinspection(e.target.checked);
+            onUpdate(borrower.id, { appraisal_reinspection: e.target.checked });
+          }} />
+          <label htmlFor={`reinspect-${borrower.id}`} style={{ fontSize: '12px', cursor: 'pointer', color: '#1e293b' }}>Reinspection Required</label>
+        </div>
+        {reinspection && (
+          <div>
+            <label style={{ color: '#1e293b', fontSize: '11px', fontWeight: '600', marginRight: '6px' }}>Completed:</label>
             <input
-              type="text"
-              value={waiverReason}
-              onChange={e => setWaiverReason(e.target.value)}
-              onBlur={() => onUpdate(borrower.id, { appraisal_waiver_reason: waiverReason })}
-              placeholder="AUS approval reason…"
+              type="date"
+              value={reinspectionDate}
+              onChange={e => { setReinspectionDate(e.target.value); onUpdate(borrower.id, { appraisal_reinspection_date: e.target.value }); }}
+              style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}
             />
           </div>
         )}
-        {borrower.appraisal_value && (
-          <div style={{ paddingTop: '20px' }}>
-            <span style={{ background: '#dcfce7', color: '#14532d', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
-              ✅ {formatCurrency(borrower.appraisal_value)}
-            </span>
-          </div>
-        )}
       </div>
+
+      {borrower.appraisal_value && (
+        <div style={{ marginTop: '12px' }}>
+          <span style={{ background: '#dcfce7', color: '#14532d', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+            ✅ {formatCurrency(borrower.appraisal_value)}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
@@ -811,7 +883,9 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
 
         {openTabs.has('appraisal') && (
           <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>🏠 Appraisal</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>
+              🏠 Appraisal {borrower.appraisal_type && <span style={{ fontWeight: '400', color: '#1e293b' }}>— {borrower.appraisal_type}</span>}
+            </div>
             <AppraisalSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('appraisal')}
           </div>
