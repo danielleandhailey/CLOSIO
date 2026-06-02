@@ -23,14 +23,16 @@ export const useTeamChat = () => {
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'team_chat'
       }, (payload) => {
-        // Only add if not already in list (avoid duplicates from optimistic update)
+        console.log('New chat message received:', payload.new);
         setMessages(prev => {
-          const exists = prev.some(m => m.id === payload.new.id || m.message === payload.new.message && m.sender_name === payload.new.sender_name);
+          const exists = prev.some(m => m.id === payload.new.id);
           if (exists) return prev;
           return [...prev, payload.new];
         });
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Chat subscription status:', status);
+      });
 
     return () => supabase.removeChannel(channel);
   }, []);
