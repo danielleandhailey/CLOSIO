@@ -10,17 +10,28 @@ import AIChatBubble from './components/AIChatBubble';
 import TeamChatBubble from './components/TeamChatBubble';
 import './styles/global.css';
 
-// Theme toggle — stores per user in localStorage
+// Theme toggle — stores per user in localStorage, persists across refreshes
 const useTheme = (userId) => {
-  const key = `closio_theme_${userId || 'default'}`;
+  const key = userId ? `closio_theme_${userId}` : 'closio_theme_default';
+
   const [dark, setDark] = useState(() => {
+    // Always read from localStorage on init
     const saved = localStorage.getItem(key);
-    return saved ? saved === 'dark' : true; // default dark
+    if (saved) return saved === 'dark';
+    // Also check the generic key as fallback
+    const generic = localStorage.getItem('closio_theme_default');
+    if (generic) return generic === 'dark';
+    return true; // default dark
   });
+
+  // Apply theme to both html and body
   useEffect(() => {
     localStorage.setItem(key, dark ? 'dark' : 'light');
+    localStorage.setItem('closio_theme_default', dark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     document.body.setAttribute('data-theme', dark ? 'dark' : 'light');
   }, [dark, key]);
+
   return [dark, setDark];
 };
 

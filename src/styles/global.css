@@ -24,6 +24,9 @@
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
 }
 
+/* Apply theme immediately on page load */
+html { background: var(--bg); }
+
 /* Light mode overrides */
 [data-theme="light"] {
   --bg: #f4f4f8;
@@ -202,12 +205,17 @@ body {
 }
 .btn-ghost:hover { background: var(--surface2); color: var(--text); }
 
-[data-theme="light"] .btn-ghost {
-  background: #e8e8f0;
-  color: #1a1a2e;
-  border-color: #b0b0cc;
+[data-theme="light"] .btn-ghost,
+body[data-theme="light"] .btn-ghost {
+  background: #dcdcec !important;
+  color: #1a1a2e !important;
+  border-color: #9090b8 !important;
 }
-[data-theme="light"] .btn-ghost:hover { background: #d0d0e8; color: #0a0a1e; }
+[data-theme="light"] .btn-ghost:hover,
+body[data-theme="light"] .btn-ghost:hover {
+  background: #c8c8e0 !important;
+  color: #0a0a1e !important;
+}
 
 .btn-danger {
   background: transparent;
@@ -250,16 +258,19 @@ body {
 
 .btn-icon:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-[data-theme="light"] .btn-icon {
-  background: #e8e8f0;
-  border-color: #b0b0cc;
-  color: #1a1a2e;
+[data-theme="light"] .btn-icon,
+body[data-theme="light"] .btn-icon,
+html[data-theme="light"] .btn-icon {
+  background: #dcdcec !important;
+  border-color: #9090b8 !important;
+  color: #1a1a2e !important;
 }
 
-[data-theme="light"] .btn-icon:hover {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+[data-theme="light"] .btn-icon:hover,
+body[data-theme="light"] .btn-icon:hover {
+  background: #7c3aed !important;
+  color: #fff !important;
+  border-color: #7c3aed !important;
 }
 
 /* ---- Stage pills ---- */
