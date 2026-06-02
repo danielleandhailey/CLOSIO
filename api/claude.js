@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const CLAUDE_API_KEY = process.env.REACT_APP_CLAUDE_API_KEY;
+  const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || process.env.REACT_APP_CLAUDE_API_KEY;
   if (!CLAUDE_API_KEY) {
     return res.status(500).json({ error: 'Claude API key not configured' });
   }
