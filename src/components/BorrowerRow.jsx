@@ -1,13 +1,39 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Pencil, Trash2, Calendar, ArrowRight, Plus, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Clock } from 'lucide-react';
 import { STAGE_COLORS, STAGES, PRESET_TAGS } from '../lib/constants';
-import { formatDate, formatCurrency, formatRate, calcPI, calcLTV, getTagStyle, touchedRecently } from '../lib/utils';
+import { formatCurrency, formatRate, calcPI, calcLTV, getTagStyle, touchedRecently } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
+import { supabase } from '../lib/supabase';
 
-// Quick Summary Panel
-const QuickSummaryPanel = ({ borrower, onMoveStage, onClose, ops }) => {
+// Parse quick log entries from notes field
+const parseLog = (notes) => {
+  if (!notes) return [];
+  const lines = notes.split('\n');
+  const entries = [];
+  lines.forEach(line => {
+    const match = line.match(/^\[(\d{2}\/\d{2} \d{1,2}:\d{2}[ap]m)\] (.+)$/);
+    if (match) entries.push({ timestamp: match[1], text: match[2] });
+  });
+  return entries.reverse(); // newest first
+};
+
+const appendLog = (existing, text) => {
+  const stamp = format(new Date(), 'MM/dd h:mma');
+  const entry = `[${stamp}] ${text}`;
+  return existing ? `${existing}\n${entry}` : entry;
+};
+
+// Quick Log + Summary Panel
+const QuickSummaryPanel = ({ borrower, onMoveStage, onClose }) => {
   const [showStageSelect, setShowStageSelect] = useState(false);
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
   const panelRef = useRef();
+  const inputRef = useRef();
+  const sc = STAGE_COLORS[borrower.stage] || STAGE_COLORS['Working'];
+  const pi = calcPI(borrower.loan_amount, borrower.rate);
+  const ltv = calcLTV(borrower.loan_amount, borrower.purchase_price);
+  const logEntries = parseLog(borrower.notes);
 
   useEffect(() => {
     const handler = (e) => {
@@ -17,73 +43,135 @@ const QuickSummaryPanel = ({ borrower, onMoveStage, onClose, ops }) => {
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
-  const pi = calcPI(borrower.loan_amount, borrower.rate);
-  const ltv = calcLTV(borrower.loan_amount, borrower.purchase_price);
-  const sc = STAGE_COLORS[borrower.stage] || STAGE_COLORS['Working'];
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }, []);
+
+  const saveNote = async () => {
+    if (!note.trim()) return;
+    setSaving(true);
+    const updated = appendLog(borrower.notes, note.trim());
+    await supabase.from('borrowers').update({ notes: updated, last_touched: new Date().toISOString() }).eq('id', borrower.id);
+    setNote('');
+    setSaving(false);
+    // Refresh happens via realtime subscription
+  };
 
   return (
-    <div ref={panelRef} className="quick-summary-panel">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <span style={{ fontSize: '11px', fontWeight: '700', color: '#6a6a80', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Quick Summary</span>
-        <span className="stage-badge" style={{ background: sc.bg, color: sc.text }}>{borrower.stage}</span>
+    <div ref={panelRef} className="quick-summary-panel" style={{ width: '340px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <span style={{ fontSize: '13px', fontWeight: '800', color: '#f0f0ff' }}>{borrower.name}</span>
+        <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', background: sc.bg, color: sc.text, textTransform: 'uppercase' }}>
+          {borrower.stage}
+        </span>
       </div>
 
-      <div className="summary-grid">
+      {/* Key stats — compact 3-col */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '12px', padding: '8px', background: '#13131a', borderRadius: '6px' }}>
         {[
-          ['Purchase Price', formatCurrency(borrower.purchase_price)],
-          ['Loan Amount',    formatCurrency(borrower.loan_amount)],
-          ['Loan Type',      borrower.loan_type || '—'],
-          ['Occupancy',      borrower.occupancy || '—'],
-          ['Rate',           formatRate(borrower.rate)],
-          ['P&I / mo',       pi ? formatCurrency(pi) : '—'],
-          ['LTV',            ltv ? `${ltv}%` : (borrower.ltv ? `${borrower.ltv}%` : '—')],
-          ['DTI',            borrower.dti ? `${borrower.dti}%` : '—'],
-          ['Income Type',    borrower.income_type || '—'],
-          ['Seller CC',      formatCurrency(borrower.seller_cc)],
-          ['COE Date',       formatDate(borrower.coe_date)],
-          ['Lender',         borrower.lender || '—'],
-          ['Lock Status',    borrower.rate_status || '—'],
-          ['Stage',          borrower.stage],
-        ].map(([label, value]) => (
-          <div key={label} className="summary-item">
-            <label>{label}</label>
-            <span>{value}</span>
+          ['Price', formatCurrency(borrower.purchase_price)],
+          ['Loan', formatCurrency(borrower.loan_amount)],
+          ['Rate', borrower.rate ? `${borrower.rate}%` : '—'],
+          ['P&I', pi ? `$${Math.round(pi).toLocaleString()}` : '—'],
+          ['LTV', ltv ? `${ltv}%` : '—'],
+          ['COE', borrower.coe_date ? format(parseISO(borrower.coe_date), 'M/d') : '—'],
+        ].map(([label, val]) => (
+          <div key={label} style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '9px', color: '#8080a8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+            <div style={{ fontSize: '12px', color: '#f0f0ff', fontWeight: '700', marginTop: '1px' }}>{val}</div>
           </div>
         ))}
       </div>
 
+      {/* Quick note input */}
+      <div style={{ marginBottom: '10px' }}>
+        <div style={{ fontSize: '10px', fontWeight: '700', color: '#8080a8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }}>
+          📝 Quick Log
+        </div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <input
+            ref={inputRef}
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && saveNote()}
+            placeholder="Type a note, press Enter…"
+            style={{
+              flex: 1, background: '#13131a', border: '1px solid #3a3a55',
+              color: '#f0f0ff', padding: '6px 10px', borderRadius: '5px',
+              fontSize: '12px', outline: 'none',
+            }}
+          />
+          <button
+            type="button"
+            onClick={saveNote}
+            disabled={saving || !note.trim()}
+            style={{
+              padding: '6px 12px', background: '#8b4cf7', color: '#fff',
+              border: 'none', borderRadius: '5px', fontSize: '12px',
+              fontWeight: '700', cursor: 'pointer', opacity: saving ? 0.6 : 1,
+            }}
+          >
+            {saving ? '…' : '+ Log'}
+          </button>
+        </div>
+      </div>
+
+      {/* Log history */}
+      {logEntries.length > 0 && (
+        <div style={{ maxHeight: '160px', overflowY: 'auto', marginBottom: '10px', borderRadius: '5px', border: '1px solid #3a3a55' }}>
+          {logEntries.map((entry, i) => (
+            <div key={i} style={{
+              padding: '6px 10px', borderBottom: i < logEntries.length - 1 ? '1px solid #28283a' : 'none',
+              display: 'flex', gap: '8px', alignItems: 'flex-start',
+            }}>
+              <span style={{ fontSize: '10px', color: '#8b4cf7', fontFamily: 'monospace', fontWeight: '700', flexShrink: 0, marginTop: '1px' }}>
+                {entry.timestamp}
+              </span>
+              <span style={{ fontSize: '12px', color: '#b8b8d8', lineHeight: 1.4 }}>{entry.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {logEntries.length === 0 && (
+        <div style={{ fontSize: '11px', color: '#50507a', textAlign: 'center', padding: '8px 0', marginBottom: '10px' }}>
+          No log entries yet — type above to start
+        </div>
+      )}
+
+      {/* Divider */}
+      <div style={{ height: '1px', background: '#3a3a55', marginBottom: '10px' }} />
+
+      {/* Move Stage */}
       {showStageSelect ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#6a6a80', marginBottom: '4px' }}>Move to Stage</div>
-          {STAGES.filter(s => s !== borrower.stage).map(s => {
-            const c = STAGE_COLORS[s];
-            return (
-              <button
-                key={s}
-                type="button"
-                onClick={() => { onMoveStage(s); onClose(); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '6px 10px', borderRadius: '5px', border: 'none',
-                  background: c.bg, color: c.bg === '#fff' ? c.text : '#000',
-                  cursor: 'pointer', fontSize: '12px', fontWeight: '600', textAlign: 'left',
-                }}
-              >
-                <span style={{
-                  width: '8px', height: '8px', borderRadius: '50%',
-                  background: c.bg === '#fff' ? c.text : c.bg,
-                  flexShrink: 0,
-                }} />
-                {s}
-              </button>
-            );
-          })}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowStageSelect(false)} style={{ marginTop: '4px' }}>
+        <div>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#8080a8', textTransform: 'uppercase', marginBottom: '6px' }}>Move to Stage</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {STAGES.filter(s => s !== borrower.stage).map(s => {
+              const c = STAGE_COLORS[s];
+              return (
+                <button key={s} type="button"
+                  onClick={() => { onMoveStage(s); onClose(); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '6px 10px', borderRadius: '5px', border: 'none',
+                    background: c.bg, color: '#fff', cursor: 'pointer',
+                    fontSize: '11px', fontWeight: '700', textAlign: 'left', textTransform: 'uppercase',
+                  }}
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+          <button type="button" onClick={() => setShowStageSelect(false)}
+            style={{ marginTop: '6px', width: '100%', padding: '5px', background: 'transparent', border: '1px solid #3a3a55', color: '#8080a8', borderRadius: '5px', cursor: 'pointer', fontSize: '11px' }}>
             Cancel
           </button>
         </div>
       ) : (
-        <button type="button" className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => setShowStageSelect(true)}>
+        <button type="button" onClick={() => setShowStageSelect(true)}
+          style={{ width: '100%', padding: '7px', background: '#28283a', border: '1px solid #50507a', color: '#b8b8d8', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>
           Move Stage →
         </button>
       )}
