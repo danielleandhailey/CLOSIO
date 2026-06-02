@@ -526,55 +526,56 @@ const StipulationsSection = ({ borrower, ops }) => {
   ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div className="section-heading" style={{ margin: 0 }}>📋 Stipulations / Needs List</div>
-        <button type="button" className="btn btn-sm" style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '11px' }}
+    <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>📋 NEEDS LIST</div>
+        <button type="button" style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
           onClick={() => setShowTemplates(t => !t)}>
-          + Auto-Populate
+          + Populate
         </button>
       </div>
 
       {showTemplates && (
-        <div style={{ background: '#242d36', border: '1px solid #3a454f', borderRadius: '6px', padding: '10px', marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        <div style={{ background: '#fff', border: '2px solid #0d9488', borderRadius: '8px', padding: '12px', marginBottom: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {templates.map(t => (
             <button key={t.key} type="button" onClick={() => addFromTemplate(STIP_TEMPLATES[t.key])}
-              style={{ background: '#1a2027', border: '1px solid #4a5660', color: '#e8eaed', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+              style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
               {t.label}
             </button>
           ))}
         </div>
       )}
 
-      <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #3a454f', borderRadius: '6px', background: '#1a2027' }}>
+      <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #cbd5e1', maxHeight: '250px', overflowY: 'auto' }}>
         {stips.length === 0 && (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#6b7785', fontSize: '12px' }}>No stips yet. Click Auto-Populate or add manually.</div>
+          <div style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>No stips yet. Click Populate or add manually.</div>
         )}
         {stips.map(s => (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #2e3842', background: s.received ? '#14532d22' : 'transparent' }}>
-            <span style={{ flex: 1, fontSize: '12px', color: s.received ? '#86efac' : '#e8eaed', textDecoration: s.received ? 'line-through' : 'none' }}>{s.item}</span>
+          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderBottom: '1px solid #e2e8f0', background: s.received ? '#dcfce7' : '#fff' }}>
             {s.received ? (
-              <span style={{ fontSize: '10px', color: '#22c55e', whiteSpace: 'nowrap' }}>✓ {s.received_date || 'Received'}</span>
+              <span style={{ fontSize: '16px' }}>✅</span>
             ) : (
               <button type="button" onClick={() => ops.markStipReceived(s.id, null)}
-                style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                Received
+                style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '10px', fontWeight: '700', cursor: 'pointer' }}>
+                ✓
               </button>
             )}
+            <span style={{ flex: 1, fontSize: '13px', color: '#1e293b', textDecoration: s.received ? 'line-through' : 'none' }}>{s.item}</span>
+            {s.received && <span style={{ fontSize: '10px', color: '#16a34a' }}>{s.received_date}</span>}
             <button type="button" onClick={() => ops.removeStipulation(s.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7785', fontSize: '14px' }}>×</button>
+              style={{ background: '#fee2e2', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#dc2626', fontSize: '12px', padding: '2px 6px', fontWeight: '700' }}>×</button>
           </div>
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
         <input
           type="text"
           placeholder="Add custom stip…"
           value={newItem}
           onChange={e => setNewItem(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && newItem.trim()) { ops.addStipulation(borrower.id, newItem.trim()); setNewItem(''); } }}
-          style={{ flex: 1, background: '#1a2027', border: '1px solid #3a454f', color: '#e8eaed', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
+          style={{ flex: 1, background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', outline: 'none' }}
         />
         <button type="button" onClick={() => { if (newItem.trim()) { ops.addStipulation(borrower.id, newItem.trim()); setNewItem(''); } }}
           style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
