@@ -158,7 +158,7 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
 
   const {
     tasksDueToday, todaysAppts, allTasks, locksExpiring, floatingLoans, contingenciesDue,
-    donutData, totalVolume, totalRevenue, processingCount, fundedCount, totalLoans,
+    stageCounts, donutData, totalVolume, totalRevenue, processingCount, fundedCount, totalLoans,
   } = dashboardData;
 
   // Get appointments for a specific date
