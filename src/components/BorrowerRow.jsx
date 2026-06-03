@@ -437,6 +437,7 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
 const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showDropModal, setShowDropModal] = useState(false);
   const inputRef = useRef();
 
   const docs = borrower.documents || [];
@@ -451,6 +452,7 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
       setUploading(true);
       await onDocDrop(borrower.id, files);
       setUploading(false);
+      setShowDropModal(false);
     }
   }, [borrower.id, onDocDrop, onHighlight]);
 
@@ -461,6 +463,7 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
       setUploading(true);
       await onDocDrop(borrower.id, files);
       setUploading(false);
+      setShowDropModal(false);
     }
     if (inputRef.current) inputRef.current.value = '';
   };
@@ -468,21 +471,17 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
   const handleClick = (e) => {
     e.stopPropagation();
     onHighlight?.(true);
-    inputRef.current?.click();
+    setShowDropModal(true);
   };
 
-  // Clear highlight when file dialog closes
-  useEffect(() => {
-    const handleFocus = () => {
-      setTimeout(() => onHighlight?.(false), 200);
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [onHighlight]);
+  const closeModal = () => {
+    setShowDropModal(false);
+    onHighlight?.(false);
+  };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {/* Main Drop Zone - centered, click opens file picker */}
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      {/* Drop Button */}
       <div
         onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragging(true); onHighlight?.(true); }}
         onDragLeave={e => { e.preventDefault(); setDragging(false); onHighlight?.(false); }}
@@ -496,7 +495,7 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
           cursor: 'pointer', flexShrink: 0,
           transition: 'all 0.15s',
         }}
-        title="Click to attach or drag files here"
+        title="Click to open drop zone"
       >
         <Upload size={12} style={{ color: dragging ? '#3b82f6' : 'var(--text3)' }} />
         {uploading ? (
@@ -508,6 +507,63 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
         )}
         {docs.length > 0 && <span style={{ fontSize: '9px', color: 'var(--text3)' }}>({docs.length})</span>}
       </div>
+
+      {/* Drop Modal */}
+      {showDropModal && (
+        <>
+          <div onClick={closeModal} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 999 }} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px',
+            padding: '24px', zIndex: 1000, minWidth: '320px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontWeight: '700', color: 'var(--text)', fontSize: '14px' }}>Upload Documents</span>
+              <button onClick={closeModal} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: '18px', cursor: 'pointer' }}>×</button>
+            </div>
+
+            {/* Large Drop Zone */}
+            <div
+              onDragOver={e => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={handleDrop}
+              style={{
+                padding: '40px 20px', borderRadius: '8px', textAlign: 'center',
+                background: dragging ? '#3b82f620' : 'var(--surface2)',
+                border: `2px dashed ${dragging ? '#3b82f6' : 'var(--border)'}`,
+                marginBottom: '16px', transition: 'all 0.2s',
+              }}
+            >
+              <Upload size={32} style={{ color: dragging ? '#3b82f6' : 'var(--text3)', marginBottom: '8px' }} />
+              <div style={{ fontSize: '13px', color: dragging ? '#3b82f6' : 'var(--text)', fontWeight: '600' }}>
+                {dragging ? 'Drop files here!' : 'Drag & drop files here'}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '4px' }}>PDF, PNG, JPG</div>
+            </div>
+
+            {/* Or Attach Button */}
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '8px' }}>or</span>
+              <button
+                onClick={() => inputRef.current?.click()}
+                style={{
+                  padding: '8px 20px', borderRadius: '6px', fontSize: '12px', fontWeight: '600',
+                  background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer',
+                }}
+              >
+                Browse Files
+              </button>
+            </div>
+
+            {uploading && (
+              <div style={{ textAlign: 'center', marginTop: '12px', color: '#3b82f6', fontSize: '12px' }}>
+                Uploading...
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} style={{ display: 'none' }} />
     </div>
   );
