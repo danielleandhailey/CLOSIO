@@ -181,11 +181,11 @@ const TasksSection = ({ borrower, ops }) => {
             )}
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button type="button" onClick={handleAdd}
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(); }}
               style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
               Save
             </button>
-            <button type="button" onClick={() => setAdding(false)}
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAdding(false); }}
               style={{ background: '#e2e8f0', color: '#475569', border: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
               Cancel
             </button>
