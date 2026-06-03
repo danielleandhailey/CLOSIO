@@ -3,6 +3,7 @@ import { Plus, RefreshCw, Loader, Zap } from 'lucide-react';
 import BorrowerRow from '../components/BorrowerRow';
 import ExpandedCard from '../components/ExpandedCard';
 import AddBorrowerModal from '../components/AddBorrowerModal';
+import DashboardHeader from '../components/DashboardHeader';
 import { STAGES, STAGE_COLORS, SORT_OPTIONS } from '../lib/constants';
 import { sortBorrowers } from '../lib/utils';
 import { bonzoService } from '../lib/bonzo';
@@ -122,8 +123,23 @@ const PipelinePage = ({ borrowers, ops }) => {
     }
   };
 
+  const handleSelectBorrower = useCallback((id) => {
+    setExpandedIds(new Set([id]));
+    // Scroll to borrower
+    setTimeout(() => {
+      document.getElementById(`borrower-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Dashboard Header */}
+      <DashboardHeader
+        borrowers={borrowers}
+        onSelectBorrower={handleSelectBorrower}
+        onFilterStage={setFilterStage}
+      />
+
       {/* Toolbar */}
       <div className="toolbar">
         <select className="select-input" value={filterStage} onChange={e => setFilterStage(e.target.value)}>
@@ -212,6 +228,7 @@ const PipelinePage = ({ borrowers, ops }) => {
 
           {displayedBorrowers.map(borrower => (
             <React.Fragment key={borrower.id}>
+              <div id={`borrower-${borrower.id}`}>
               <BorrowerRow
                 borrower={borrower}
                 isExpanded={expandedIds.has(borrower.id)}
@@ -231,6 +248,7 @@ const PipelinePage = ({ borrowers, ops }) => {
               {expandedIds.has(borrower.id) && (
                 <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} />
               )}
+              </div>
             </React.Fragment>
           ))}
         </div>
