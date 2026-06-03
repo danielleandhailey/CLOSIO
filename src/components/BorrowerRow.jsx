@@ -587,7 +587,7 @@ const BorrowerRow = ({
 
   return (
     <div style={{ position: 'relative' }}>
-      <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={dropHighlight ? { background: '#3b82f615', boxShadow: '0 0 0 2px #3b82f6' } : {}}>
+      <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={dropHighlight ? { background: '#e0f2fe', boxShadow: '0 0 0 2px #7dd3fc' } : {}}>
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 
