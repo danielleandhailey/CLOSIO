@@ -97,11 +97,11 @@ const AppInner = () => {
           <button type="button" className="btn btn-ghost" title="Push updates to Bonzo CRM">
             <Zap size={12} /> Bonzo Push
           </button>
-          <button type="button" className="btn btn-ghost" title="Send Email" style={{ opacity: 0.7 }}>
-            <span style={{ filter: 'grayscale(100%)' }}>✉️</span> Email
+          <button type="button" className="btn btn-ghost" title="Send Email">
+            Email
           </button>
-          <button type="button" className="btn btn-ghost" title="Send Text" style={{ opacity: 0.7 }}>
-            <span style={{ filter: 'grayscale(100%)' }}>💬</span> Text
+          <button type="button" className="btn btn-ghost" title="Send Text">
+            Text
           </button>
         </div>
 

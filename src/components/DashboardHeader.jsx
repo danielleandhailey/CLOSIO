@@ -69,13 +69,19 @@ const MediumCard = ({ children, style = {} }) => (
   </div>
 );
 
-const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) => {
+const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [addingAppt, setAddingAppt] = useState(null); // { date, borrowerId }
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
 
   const dashboardData = useMemo(() => {
     const today = new Date();
+    if (!borrowers || !Array.isArray(borrowers)) {
+      return {
+        tasksDueToday: [], todaysAppts: [], allTasks: [], locksExpiring: [], floatingLoans: [], contingenciesDue: [],
+        stageCounts: {}, donutData: [], totalVolume: 0, totalRevenue: 0, processingCount: 0, fundedCount: 0, totalLoans: 0,
+      };
+    }
 
     // All tasks/appointments (not just today)
     const allTasks = [];
