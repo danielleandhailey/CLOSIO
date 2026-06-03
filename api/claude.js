@@ -1,8 +1,9 @@
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '25mb',
+      sizeLimit: '50mb',
     },
+    responseLimit: false,
   },
 };
 
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        model: req.body.model || 'claude-3-5-sonnet-20241022',
+        model: req.body.model || 'claude-sonnet-4-20250514',
         max_tokens: req.body.max_tokens || 2000,
         system: req.body.system,
         messages: req.body.messages,
@@ -50,7 +51,7 @@ export default async function handler(req, res) {
 
     if (data.error) {
       console.error('Claude API error:', data.error);
-      return res.status(400).json({ error: data.error.message });
+      return res.status(400).json({ error: data.error });
     }
 
     return res.status(200).json(data);

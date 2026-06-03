@@ -1,10 +1,4 @@
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.entry';
-
-// Set worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-
-const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
+const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 // Use serverless function to avoid CORS
 const callClaude = async (body) => {
@@ -14,32 +8,6 @@ const callClaude = async (body) => {
     body: JSON.stringify(body),
   });
   return response.json();
-};
-
-// Extract text from PDF using PDF.js
-const extractPDFText = async (base64Data) => {
-  try {
-    const binaryString = atob(base64Data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-
-    const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-    let fullText = '';
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      fullText += `\n--- Page ${i} ---\n${pageText}`;
-    }
-
-    return fullText;
-  } catch (e) {
-    console.error('PDF text extraction error:', e);
-    return null;
-  }
 };
 
 export const claudeService = {
@@ -79,102 +47,54 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
 
   // Analyze uploaded document and extract mortgage data
   async analyzeDocument(base64Data, mimeType, fileName) {
-    const docPrompt = `You are analyzing a mortgage document. Extract all relevant information and provide:
+    const docPrompt = `Analyze this mortgage document. Extract all relevant information and respond in this EXACT format:
 
-1. A SUMMARY (2-3 sentences) of what this document is and key findings
-2. EXTRACTED DATA in JSON format with these possible fields:
-   - gross_income (monthly, number)
-   - ytd_income (number)
-   - assets (number)
-   - bank_balance (number)
-   - agi (annual gross income, number)
-   - approval_status (string)
-   - dti (percentage, number)
-   - ltv (percentage, number)
-   - conditions (array of strings)
-   - appraisal_value (number)
-   - repairs_required (array of strings)
-   - purchase_price (number)
-   - loan_amount (number)
-   - earnest_money (number - earnest money deposit amount)
-   - seller_cc (number - seller credits/concessions)
-   - buyer_agent_name (string)
-   - buyer_agent_phone (string)
-   - buyer_agent_email (string)
-   - buyer_agent_company (string)
-   - listing_agent_name (string)
-   - listing_agent_phone (string)
-   - listing_agent_email (string)
-   - listing_agent_company (string)
-   - title_company (string)
-   - title_company_phone (string)
-   - title_company_email (string)
-   - inspection_contingency_date (date string)
-   - loan_contingency_date (date string)
-   - appraisal_contingency_date (date string)
-   - coe_date (date string)
-   - appraisal_type (string)
-   - appraisal_subject_to (string)
-   - appraisal_reinspection (boolean)
-   - contingencies (array of objects with: name, due_date, fully_executed)
-   - incomes (array of objects with: person, employment_type, income_type, employer, gross_monthly, pay_frequency)
+SUMMARY: [2-3 sentence summary of document type and key findings]
+JSON: [valid JSON object with only fields you found, from this list:
+  purchase_price, loan_amount, loan_type, rate, ltv, dti,
+  coe_date, seller_cc, earnest_money, occupancy, income_type,
+  appraisal_value, appraisal_type, appraisal_subject_to, appraisal_reinspection,
+  buyer_agent_name, buyer_agent_phone, buyer_agent_email, buyer_agent_company,
+  listing_agent_name, listing_agent_phone, listing_agent_email, listing_agent_company,
+  title_company, title_company_phone, title_company_email,
+  inspection_contingency_date, appraisal_contingency_date,
+  loan_contingency_date, seller_home_sale_contingency_date,
+  gross_income, ytd_income, assets, agi,
+  approval_status, conditions,
+  contingencies (array of {name, due_date, fully_executed}),
+  incomes (array of {person, employment_type, income_type, employer, gross_monthly, pay_frequency})
+]
 
-Document filename: ${fileName}
-
-Respond in this exact format:
-SUMMARY: [your summary here]
-JSON: [valid JSON object with only the fields you found]`;
+Document filename: ${fileName}`;
 
     try {
       const isPDF = mimeType === 'application/pdf';
-      let messages;
-
-      if (isPDF) {
-        // Extract text from PDF first (avoids size limits)
-        console.log('Extracting text from PDF...');
-        const pdfText = await extractPDFText(base64Data);
-
-        if (pdfText && pdfText.length > 100) {
-          console.log(`Extracted ${pdfText.length} chars from PDF`);
-          // Send text instead of PDF binary
-          messages = [{
-            role: 'user',
-            content: `${docPrompt}\n\n--- DOCUMENT TEXT ---\n${pdfText.slice(0, 50000)}`, // Limit to 50k chars
-          }];
-        } else {
-          // Fallback to sending PDF if text extraction failed
-          console.log('Text extraction failed, sending PDF binary...');
-          messages = [{
-            role: 'user',
-            content: [
-              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } },
-              { type: 'text', text: docPrompt }
-            ],
-          }];
-        }
-      } else {
-        // Image - send as-is
-        messages = [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Data } },
-            { type: 'text', text: docPrompt }
-          ],
-        }];
-      }
 
       const data = await callClaude({
         model: CLAUDE_MODEL,
         max_tokens: 2000,
-        isPDF: isPDF && (!messages[0].content || typeof messages[0].content === 'string'),
-        messages,
+        isPDF,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'document',
+              source: {
+                type: 'base64',
+                media_type: mimeType || 'application/pdf',
+                data: base64Data
+              }
+            },
+            { type: 'text', text: docPrompt }
+          ],
+        }],
       });
 
       console.log('Claude API response:', data);
 
       if (data.error) {
         console.error('Claude API error:', data.error);
-        return { summary: `API Error: ${data.error}`, extracted: {} };
+        return { summary: `API Error: ${data.error.message || data.error}`, extracted: {} };
       }
 
       const text = data.content?.[0]?.text || '';
