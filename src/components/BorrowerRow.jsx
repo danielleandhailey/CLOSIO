@@ -539,11 +539,6 @@ const BorrowerRow = ({
         {/* Doc Drop Zone - center of row */}
         <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} />
 
-        {/* Lender - separate section */}
-        <div className="lender-row">
-          <LenderBadge borrower={borrower} onUpdate={onUpdate} />
-        </div>
-
         {/* Preapproved indicators */}
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
           {borrower.val_approved && (
@@ -596,6 +591,26 @@ const BorrowerRow = ({
           </button>
         </div>
       </div>
+
+      {/* Lender Row - only shows when expanded */}
+      {isExpanded && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '8px 16px', marginLeft: '60px',
+          background: '#1a1a28', borderBottom: '1px solid #2a2a40',
+        }}>
+          <span style={{ fontSize: '10px', color: '#6b6b8a', fontWeight: '600' }}>Lender:</span>
+          <LenderBadge borrower={borrower} onUpdate={onUpdate} />
+
+          {/* Tags inline */}
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
+            {tags.map(t => (
+              <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

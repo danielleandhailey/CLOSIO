@@ -162,7 +162,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         </select>
 
         <select className="select-input" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>Sort: {o.label}</option>)}
         </select>
 
         <div style={{ position: 'relative', flex: 1, maxWidth: '240px' }}>

@@ -49,10 +49,10 @@ export const PRESET_TAGS = [
 ];
 
 export const SORT_OPTIONS = [
-  { value: 'stage',         label: 'Sort by Stage' },
-  { value: 'last_name',     label: 'Sort by Last Name' },
-  { value: 'first_name',    label: 'Sort by First Name' },
-  { value: 'coe_date',      label: 'Sort by COE Date' },
+  { value: 'stage',         label: 'Stage' },
+  { value: 'last_name',     label: 'Last Name' },
+  { value: 'first_name',    label: 'First Name' },
+  { value: 'coe_date',      label: 'COE Date' },
   { value: 'floating',      label: 'Floating First' },
   { value: 'contingencies', label: 'Contingencies Due' },
   { value: 'tasks',         label: 'Tasks by Date' },
