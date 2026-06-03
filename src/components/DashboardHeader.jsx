@@ -266,31 +266,6 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
         </div>
       </div>
 
-      {/* Bottom Row - Stage Pills */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {STAGES.map(stage => {
-          const count = stageCounts[stage];
-          const sc = STAGE_COLORS[stage];
-          return (
-            <button
-              key={stage}
-              onClick={() => onFilterStage(stage)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', borderRadius: '8px',
-                background: sc.bg, color: sc.text,
-                border: 'none', cursor: 'pointer',
-                fontSize: '11px', fontWeight: '700',
-                opacity: count === 0 ? 0.4 : 1,
-                transition: 'all 0.15s',
-              }}
-            >
-              {stage}
-              <span style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '6px', fontSize: '10px' }}>{count}</span>
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 };
