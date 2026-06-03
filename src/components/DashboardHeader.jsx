@@ -67,22 +67,22 @@ const StatCard = ({ icon: Icon, label, value, subtext, color = '#3b82f6', onClic
   <div
     onClick={onClick}
     style={{
-      background: '#1e293b',
+      background: 'var(--surface2)',
       borderRadius: '8px',
       padding: '10px 12px',
       minWidth: '100px',
       cursor: onClick ? 'pointer' : 'default',
-      border: '1px solid #334155',
+      border: '1px solid var(--border)',
       transition: 'all 0.2s',
     }}
     onMouseEnter={e => onClick && (e.currentTarget.style.borderColor = color)}
-    onMouseLeave={e => e.currentTarget.style.borderColor = '#334155'}
+    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
       <Icon size={12} style={{ color }} />
-      <span style={{ fontSize: '9px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
+      <span style={{ fontSize: '9px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
     </div>
-    <div style={{ fontSize: '20px', fontWeight: '700', color: '#f1f5f9', lineHeight: 1 }}>{value}</div>
+    <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{value}</div>
   </div>
 );
 
@@ -93,18 +93,18 @@ const AlertItem = ({ icon: Icon, text, subtext, color, urgent, onClick }) => (
     style={{
       display: 'flex', alignItems: 'center', gap: '6px',
       padding: '5px 8px', borderRadius: '5px',
-      background: urgent ? `${color}15` : '#0f172a',
-      border: `1px solid ${urgent ? color : '#1e293b'}`,
+      background: urgent ? `${color}15` : 'var(--surface)',
+      border: `1px solid ${urgent ? color : 'var(--border)'}`,
       cursor: 'pointer', transition: 'all 0.15s',
       marginBottom: '3px',
     }}
     onMouseEnter={e => e.currentTarget.style.background = `${color}20`}
-    onMouseLeave={e => e.currentTarget.style.background = urgent ? `${color}15` : '#0f172a'}
+    onMouseLeave={e => e.currentTarget.style.background = urgent ? `${color}15` : 'var(--surface)'}
   >
     <Icon size={10} style={{ color, flexShrink: 0 }} />
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: '10px', fontWeight: '600', color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
-      {subtext && <div style={{ fontSize: '9px', color: '#64748b' }}>{subtext}</div>}
+      <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
+      {subtext && <div style={{ fontSize: '9px', color: 'var(--text3)' }}>{subtext}</div>}
     </div>
   </div>
 );
@@ -215,21 +215,21 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
 
   // Alert box component - compact
   const AlertBox = ({ title, count, color, items, emptyText, renderItem }) => (
-    <div style={{ background: '#1e293b', borderRadius: '8px', padding: '10px', border: '1px solid #334155', minWidth: '140px', flex: 1 }}>
+    <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '10px', border: '1px solid var(--border)', minWidth: '140px', flex: 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-        <span style={{ fontSize: '9px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase' }}>{title}</span>
+        <span style={{ fontSize: '9px', fontWeight: '600', color: 'var(--text3)', textTransform: 'uppercase' }}>{title}</span>
         <span style={{ background: color, color: '#fff', fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '8px' }}>{count}</span>
       </div>
       <div style={{ maxHeight: '60px', overflowY: 'auto' }}>
         {items.length === 0 ? (
-          <div style={{ fontSize: '9px', color: '#475569', fontStyle: 'italic' }}>{emptyText}</div>
+          <div style={{ fontSize: '9px', color: 'var(--text3)', fontStyle: 'italic' }}>{emptyText}</div>
         ) : items.slice(0, 3).map(renderItem)}
       </div>
     </div>
   );
 
   return (
-    <div style={{ padding: '10px 16px', background: '#0f172a', borderBottom: '1px solid #1e293b' }}>
+    <div className="dashboard-header" style={{ padding: '10px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
       {/* Single Row - Stats, Alerts, Donut */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', overflowX: 'auto', alignItems: 'stretch' }}>
         {/* Stat Cards */}

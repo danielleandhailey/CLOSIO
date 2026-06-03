@@ -434,28 +434,28 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
 };
 
 // Inline Doc Drop Zone
-const InlineDocDrop = ({ borrower, onDocDrop }) => {
+const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef();
 
   const docs = borrower.documents || [];
-  const docNames = docs.slice(0, 3).map(d => d.name?.replace(/\.[^/.]+$/, '').substring(0, 12)).join(', ');
-  const moreCount = docs.length > 3 ? ` +${docs.length - 3}` : '';
 
   const handleDrop = useCallback(async (e) => {
     e.preventDefault();
     setDragging(false);
+    onHighlight?.(false);
     const files = Array.from(e.dataTransfer?.files || []);
     if (files.length && onDocDrop) {
       setUploading(true);
       await onDocDrop(borrower.id, files);
       setUploading(false);
     }
-  }, [borrower.id, onDocDrop]);
+  }, [borrower.id, onDocDrop, onHighlight]);
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files || []);
+    onHighlight?.(false);
     if (files.length && onDocDrop) {
       setUploading(true);
       await onDocDrop(borrower.id, files);
@@ -463,33 +463,37 @@ const InlineDocDrop = ({ borrower, onDocDrop }) => {
     }
   };
 
+  const handleClick = () => {
+    onHighlight?.(true);
+    inputRef.current?.click();
+  };
+
   return (
     <div
-      onDragOver={e => { e.preventDefault(); setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
+      onDragOver={e => { e.preventDefault(); setDragging(true); onHighlight?.(true); }}
+      onDragLeave={() => { setDragging(false); onHighlight?.(false); }}
       onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
+      onClick={handleClick}
+      className="drop-zone"
       style={{
-        display: 'flex', alignItems: 'center', gap: '6px',
-        padding: '4px 10px', borderRadius: '6px',
-        background: dragging ? '#3b3b5a' : '#1e1e2e',
-        border: `1px dashed ${dragging ? '#8b4cf7' : '#3a3a55'}`,
-        cursor: 'pointer', flexShrink: 0, minWidth: '120px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+        padding: '4px 12px', borderRadius: '6px',
+        background: dragging ? 'var(--accent)' : 'transparent',
+        border: `1px dashed ${dragging ? 'var(--accent)' : 'var(--border2)'}`,
+        cursor: 'pointer', flexShrink: 0,
         transition: 'all 0.15s',
+        margin: '0 auto',
       }}
-      title="Drop docs here or click to browse"
+      title="Drop or click to attach"
     >
       <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} style={{ display: 'none' }} />
-      <Upload size={12} style={{ color: uploading ? '#8b4cf7' : '#6b6b8a' }} />
+      <Upload size={11} style={{ color: dragging ? '#fff' : 'var(--text3)' }} />
       {uploading ? (
-        <span style={{ fontSize: '10px', color: '#8b4cf7', fontWeight: '600' }}>Analyzing...</span>
-      ) : docs.length > 0 ? (
-        <span style={{ fontSize: '9px', color: '#6b6b8a', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {docNames}{moreCount}
-        </span>
+        <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: '600' }}>...</span>
       ) : (
-        <span style={{ fontSize: '10px', color: '#6b6b8a' }}>Drop docs</span>
+        <span style={{ fontSize: '10px', color: dragging ? '#fff' : 'var(--text3)' }}>Drop</span>
       )}
+      {docs.length > 0 && <span style={{ fontSize: '9px', color: 'var(--text3)', marginLeft: '2px' }}>({docs.length})</span>}
     </div>
   );
 };
@@ -502,6 +506,7 @@ const BorrowerRow = ({
   onOpenCalendar, onUpdate, onDocDrop,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
+  const [dropHighlight, setDropHighlight] = useState(false);
   const tags = borrower.borrower_tags || [];
   const touched = touchedRecently(borrower.last_touched);
 
@@ -511,7 +516,7 @@ const BorrowerRow = ({
 
   return (
     <div style={{ position: 'relative' }}>
-      <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`}>
+      <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={dropHighlight ? { background: 'var(--accent)', boxShadow: '0 0 0 2px var(--accent)' } : {}}>
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 
@@ -525,7 +530,7 @@ const BorrowerRow = ({
           title="Expand / Collapse"
           style={{
             width: '26px', height: '26px', borderRadius: '5px', border: `1px solid ${STAGE_COLORS[borrower.stage]?.bg || '#50507a'}`,
-            background: isExpanded ? STAGE_COLORS[borrower.stage]?.bg : '#28283a', color: '#fff',
+            background: isExpanded ? STAGE_COLORS[borrower.stage]?.bg : 'var(--surface2)', color: 'var(--text)',
             cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, fontSize: '13px', fontWeight: '900', transition: 'all 0.15s',
           }}
@@ -536,8 +541,8 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Doc Drop Zone - center of row */}
-        <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} />
+        {/* Doc Drop Zone - centered */}
+        <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
 
         {/* Preapproved indicators */}
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
