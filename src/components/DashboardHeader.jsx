@@ -83,9 +83,14 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
       (b.tasks || []).forEach(t => {
         if (t.completed) return;
         if (t.due_date) {
-          const taskDate = parseISO(t.due_date);
-          const daysUntil = differenceInDays(taskDate, today);
-          allTasks.push({ ...t, borrower: b, daysUntil, isToday: isSameDay(taskDate, today), date: taskDate });
+          try {
+            const taskDate = parseISO(t.due_date);
+            if (isNaN(taskDate.getTime())) return; // Skip invalid dates
+            const daysUntil = differenceInDays(taskDate, today);
+            allTasks.push({ ...t, borrower: b, daysUntil, isToday: isSameDay(taskDate, today), date: taskDate });
+          } catch (e) {
+            console.warn('Invalid task date:', t.due_date);
+          }
         }
       });
     });
@@ -189,9 +194,6 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
         {/* 4. PROCESSING */}
         <SmallCard icon={TrendingUp} label="Processing" value={processingCount} color="#06b6d4" onClick={() => onFilterStage('Processing')} />
 
-        {/* 5. FUNDED */}
-        <SmallCard icon={CheckSquare} label="Funded" value={fundedCount} color="#10b981" onClick={() => onFilterStage('Funded')} />
-
         {/* 6. CALENDAR - Bigger, flex to fill */}
         <MediumCard style={{ cursor: 'pointer', flex: 1, minWidth: '140px' }} onClick={() => setShowCalendar(true)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -237,13 +239,16 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
           </div>
         </MediumCard>
 
-        {/* 8. FLOATING */}
+        {/* 8. FUNDED */}
+        <SmallCard icon={CheckSquare} label="Funded" value={fundedCount} color="#10b981" onClick={() => onFilterStage('Funded')} />
+
+        {/* 9. FLOATING */}
         <SmallCard icon={AlertTriangle} label="Floating" value={floatingLoans.length} color="#f59e0b" onClick={() => {}} />
 
-        {/* 9. LOCK EXPIRY */}
+        {/* 10. LOCK EXPIRY */}
         <SmallCard icon={Lock} label="Lock Expiry" value={locksExpiring.length} color="#ef4444" onClick={() => {}} />
 
-        {/* 10. LOAN CONTINGENCY */}
+        {/* 11. LOAN CONTINGENCY */}
         <SmallCard icon={Clock} label="Loan Contg" value={contingenciesDue.length} color="#8b5cf6" onClick={() => {}} />
 
         {/* 11. DONUT CHART */}
