@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Zap, Loader } from 'lucide-react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { useBorrowers } from './hooks/useBorrowers';
+import { bonzoService } from './lib/bonzo';
+import { format } from 'date-fns';
 import LoginPage from './pages/LoginPage';
 import PipelinePage from './pages/PipelinePage';
 import CalendarPage from './pages/CalendarPage';
@@ -86,6 +89,14 @@ const AppInner = () => {
               {tab}
             </button>
           ))}
+
+          {/* Bonzo Buttons */}
+          <button type="button" className="btn btn-ghost" style={{ marginLeft: '12px' }} title="Sync leads from Bonzo CRM">
+            <Zap size={12} /> Bonzo Pull
+          </button>
+          <button type="button" className="btn btn-ghost" title="Push updates to Bonzo CRM">
+            <Zap size={12} /> Bonzo Push
+          </button>
         </div>
 
         <div className="nav-right">

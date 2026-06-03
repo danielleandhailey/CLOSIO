@@ -1,13 +1,11 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Plus, RefreshCw, Loader, Zap } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import BorrowerRow from '../components/BorrowerRow';
 import ExpandedCard from '../components/ExpandedCard';
 import AddBorrowerModal from '../components/AddBorrowerModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { STAGES, STAGE_COLORS, SORT_OPTIONS } from '../lib/constants';
 import { sortBorrowers } from '../lib/utils';
-import { bonzoService } from '../lib/bonzo';
-import { format } from 'date-fns';
 
 const PipelinePage = ({ borrowers, ops }) => {
   const [expandedIds, setExpandedIds] = useState(new Set());
@@ -16,9 +14,6 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [sortBy, setSortBy] = useState('stage');
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [bonzoPulling, setBonzoPulling] = useState(false);
-  const [bonzoPushing, setBonzoPushing] = useState(false);
-  const [bonzoStatus, setBonzoStatus] = useState('');
   const [editingBorrower, setEditingBorrower] = useState(null);
 
   // Stage counts
@@ -111,31 +106,6 @@ const PipelinePage = ({ borrowers, ops }) => {
     setCxldDialog(null);
   };
 
-  const handleBonzoPull = async () => {
-    setBonzoPulling(true);
-    setBonzoStatus('');
-    try {
-      const { added, updated } = await bonzoService.pullLeads();
-      setBonzoStatus(`Pulled ${added} new, ${updated} updated — ${format(new Date(), 'MM/dd h:mma')}`);
-    } catch (e) {
-      setBonzoStatus(`Error: ${e.message}`);
-    } finally {
-      setBonzoPulling(false);
-    }
-  };
-
-  const handleBonzoPush = async () => {
-    setBonzoPushing(true);
-    setBonzoStatus('');
-    try {
-      // Placeholder for future Bonzo push integration
-      setBonzoStatus(`Push ready — integrate Bonzo API`);
-    } catch (e) {
-      setBonzoStatus(`Error: ${e.message}`);
-    } finally {
-      setBonzoPushing(false);
-    }
-  };
 
   const handleSelectBorrower = useCallback((id) => {
     setExpandedIds(new Set([id]));
@@ -186,22 +156,6 @@ const PipelinePage = ({ borrowers, ops }) => {
             >×</button>
           )}
         </div>
-
-        {/* Bonzo Pull */}
-        <button type="button" className="btn btn-ghost" onClick={handleBonzoPull} disabled={bonzoPulling} title="Sync leads from Bonzo CRM">
-          {bonzoPulling ? <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Zap size={12} />}
-          Bonzo Pull
-        </button>
-
-        {/* Bonzo Push */}
-        <button type="button" className="btn btn-ghost" onClick={handleBonzoPush} disabled={bonzoPushing} title="Push updates to Bonzo CRM">
-          {bonzoPushing ? <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Zap size={12} />}
-          Bonzo Push
-        </button>
-
-        {bonzoStatus && (
-          <span className="bonzo-badge">{bonzoStatus}</span>
-        )}
 
         <button type="button" className="btn btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setShowAddModal(true)}>
           <Plus size={13} /> Add Borrower
