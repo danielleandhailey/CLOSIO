@@ -803,11 +803,15 @@ const EmailTemplateSection = ({ borrower, stips }) => {
   // Build the needs list
   const needsList = stips.map(s => `  • ${s.item}`).join('\n');
 
+  // Note: When pasting into Outlook, the link will be clickable
+  const applyLink = 'https://westcapitallending.com/apply'; // Update this URL
+
   const emailTemplate = `Hi ${greeting},
 
 Thank you for choosing West Capital Lending! My team and I are excited to help you through your home purchase.
 
-To get started, please complete your loan application using the secure link below: APPLY NOW
+To get started, please complete your loan application using the secure link below:
+${applyLink}
 
 Once your application is submitted, please scan, upload, email, or fax the following documents:
 
@@ -818,11 +822,7 @@ ${needsList}
 Identification
   • Copy of driver's license or photo ID (ensure it's clear; phone photos are acceptable)
 
-We look forward to working with you and helping you get into your new home smoothly. If you have any questions or need assistance, I'm available 24/7, and my team is happy to help.
-
-Best regards,
-Danielle Regnier
-West Capital Lending`;
+We look forward to working with you and helping you get into your new home smoothly. If you have any questions or need assistance, I'm available 24/7, and my team is happy to help.`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(emailTemplate);

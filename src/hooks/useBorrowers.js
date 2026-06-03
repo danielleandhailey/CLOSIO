@@ -119,6 +119,7 @@ export const useBorrowers = () => {
   const addTask = async (taskData) => {
     const { data, error } = await supabase.from('tasks').insert([taskData]).select().single();
     if (error) throw error;
+    await fetchBorrowers(); // Refresh to show new task
     return data;
   };
 
