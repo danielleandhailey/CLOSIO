@@ -782,6 +782,95 @@ const StipulationsSection = ({ borrower, ops }) => {
           Add
         </button>
       </div>
+
+      {/* Email Template Section */}
+      {stips.filter(s => !s.received).length > 0 && (
+        <EmailTemplateSection borrower={borrower} stips={stips.filter(s => !s.received)} />
+      )}
+    </div>
+  );
+};
+
+// Email Template for Needs List
+const EmailTemplateSection = ({ borrower, stips }) => {
+  const [copied, setCopied] = useState(false);
+
+  // Get first name(s)
+  const firstName = borrower.name?.split(' ')[0] || 'there';
+  const coBorrowerFirst = borrower.co_borrower?.split(' ')[0];
+  const greeting = coBorrowerFirst ? `${firstName} and ${coBorrowerFirst}` : firstName;
+
+  // Build the needs list
+  const needsList = stips.map(s => `  • ${s.item}`).join('\n');
+
+  const emailTemplate = `Hi ${greeting},
+
+Thank you for choosing West Capital Lending! My team and I are excited to help you through your home purchase.
+
+To get started, please complete your loan application using the secure link below: APPLY NOW
+
+Once your application is submitted, please scan, upload, email, or fax the following documents:
+
+Purchase Loan Documentation Checklist
+
+${needsList}
+
+Identification
+  • Copy of driver's license or photo ID (ensure it's clear; phone photos are acceptable)
+
+We look forward to working with you and helping you get into your new home smoothly. If you have any questions or need assistance, I'm available 24/7, and my team is happy to help.
+
+Best regards,
+Danielle Regnier
+West Capital Lending`;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(emailTemplate);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div style={{ marginTop: '16px', background: '#f0fdf4', border: '2px solid #22c55e', borderRadius: '8px', padding: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: '#166534' }}>📧 Email Template</div>
+        <button
+          type="button"
+          onClick={copyToClipboard}
+          style={{
+            background: copied ? '#22c55e' : '#166534',
+            color: '#fff',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          {copied ? '✓ Copied!' : '📋 Copy Email'}
+        </button>
+      </div>
+      <pre style={{
+        background: '#fff',
+        border: '1px solid #bbf7d0',
+        borderRadius: '6px',
+        padding: '12px',
+        fontSize: '11px',
+        color: '#1e293b',
+        whiteSpace: 'pre-wrap',
+        wordWrap: 'break-word',
+        maxHeight: '200px',
+        overflowY: 'auto',
+        fontFamily: 'inherit',
+        lineHeight: 1.5,
+        margin: 0,
+      }}>
+        {emailTemplate}
+      </pre>
     </div>
   );
 };
