@@ -44,10 +44,25 @@ const TasksSection = ({ borrower, ops }) => {
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;
+    // Appointments require time
+    if (form.type === 'appointment' && !form.due_time) {
+      alert('Appointments require a time');
+      return;
+    }
     try {
       const assignee = form.assigned_to === 'Other' ? customAssign : form.assigned_to;
-      const dueDateTime = form.due_date && form.due_time ? `${form.due_date}T${form.due_time}` : form.due_date || null;
-      await ops.addTask({ ...form, due_date: dueDateTime, assigned_to: assignee, borrower_id: borrower.id });
+      // Combine date+time into single due_date field (don't send due_time separately)
+      let dueDateTime = null;
+      if (form.due_date) {
+        dueDateTime = form.due_time ? `${form.due_date}T${form.due_time}` : form.due_date;
+      }
+      await ops.addTask({
+        title: form.title,
+        due_date: dueDateTime,
+        type: form.type,
+        assigned_to: assignee,
+        borrower_id: borrower.id
+      });
       setForm({ title: '', due_date: '', due_time: '', type: 'task', assigned_to: 'Danielle' });
       setCustomAssign('');
       setAdding(false);
@@ -96,7 +111,11 @@ const TasksSection = ({ borrower, ops }) => {
             </span>
             {task.due_date && (
               <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
-                {format(typeof task.due_date === 'string' ? parseISO(task.due_date) : task.due_date, 'M/d/yy h:mma')}
+                {(() => {
+                  const d = typeof task.due_date === 'string' ? parseISO(task.due_date) : task.due_date;
+                  const hasTime = typeof task.due_date === 'string' && task.due_date.includes('T');
+                  return hasTime ? format(d, 'M/d/yy h:mma') : format(d, 'M/d/yy');
+                })()}
               </span>
             )}
             {task.assigned_to && <span style={{ fontSize: '10px', color: '#94a3b8' }}>{task.assigned_to}</span>}
