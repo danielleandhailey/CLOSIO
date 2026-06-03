@@ -434,7 +434,7 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
 };
 
 // Inline Doc Drop Zone
-const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
+const InlineDocDrop = ({ borrower, onDocDrop, onHighlight, onExpand }) => {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef();
@@ -465,49 +465,41 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
     if (inputRef.current) inputRef.current.value = '';
   };
 
+  const handleClick = (e) => {
+    e.stopPropagation();
+    // Open the expanded card to Documents tab
+    onExpand?.(borrower.id);
+  };
+
   return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>
-      {/* Main Drop Zone */}
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+      {/* Main Drop Zone - centered, clickable to expand */}
       <div
         onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragging(true); onHighlight?.(true); }}
         onDragLeave={e => { e.preventDefault(); setDragging(false); onHighlight?.(false); }}
         onDrop={handleDrop}
+        onClick={handleClick}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-          padding: '8px 16px', borderRadius: '6px',
-          background: dragging ? '#3b82f630' : 'var(--surface2)',
-          border: `2px dashed ${dragging ? '#3b82f6' : 'var(--border)'}`,
-          cursor: 'default', flexShrink: 0,
+          padding: '6px 14px', borderRadius: '6px',
+          background: dragging ? '#3b82f630' : 'transparent',
+          border: `1px dashed ${dragging ? '#3b82f6' : 'var(--border)'}`,
+          cursor: 'pointer', flexShrink: 0,
           transition: 'all 0.15s',
-          minWidth: '80px',
         }}
+        title="Click to open docs, or drag files here"
       >
-        <Upload size={14} style={{ color: dragging ? '#3b82f6' : 'var(--text3)' }} />
+        <Upload size={12} style={{ color: dragging ? '#3b82f6' : 'var(--text3)' }} />
         {uploading ? (
-          <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '600' }}>Uploading...</span>
+          <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '600' }}>...</span>
         ) : (
-          <span style={{ fontSize: '11px', color: dragging ? '#3b82f6' : 'var(--text3)', fontWeight: '500' }}>
-            {dragging ? 'Drop Here' : 'Drop'}
+          <span style={{ fontSize: '10px', color: dragging ? '#3b82f6' : 'var(--text3)' }}>
+            {dragging ? 'Drop!' : 'Drop'}
           </span>
         )}
+        {docs.length > 0 && <span style={{ fontSize: '9px', color: 'var(--text3)' }}>({docs.length})</span>}
       </div>
-
-      {/* Small Attach Button */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
-        style={{
-          padding: '4px 8px', borderRadius: '4px', fontSize: '9px',
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          color: 'var(--text3)', cursor: 'pointer',
-        }}
-        title="Browse files"
-      >
-        Attach
-      </button>
       <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} style={{ display: 'none' }} />
-
-      {docs.length > 0 && <span style={{ fontSize: '9px', color: 'var(--text3)' }}>({docs.length})</span>}
     </div>
   );
 };
@@ -530,7 +522,7 @@ const BorrowerRow = ({
 
   return (
     <div style={{ position: 'relative' }}>
-      <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={dropHighlight ? { background: 'var(--accent)', boxShadow: '0 0 0 2px var(--accent)' } : {}}>
+      <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={dropHighlight ? { background: '#3b82f615', boxShadow: '0 0 0 2px #3b82f6' } : {}}>
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 
@@ -555,8 +547,8 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Doc Drop Zone - centered */}
-        <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
+        {/* Doc Drop Zone - centered, click opens expanded card */}
+        <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} onExpand={onExpand} />
 
         {/* Preapproved indicators */}
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -568,8 +560,11 @@ const BorrowerRow = ({
           )}
         </div>
 
-        {/* Touch stamp */}
-        <span className={`touch-stamp ${touched ? 'touched' : ''}`}>
+        {/* Spacer to push everything right */}
+        <div style={{ flex: 1 }} />
+
+        {/* Touch stamp - right side */}
+        <span className={`touch-stamp ${touched ? 'touched' : ''}`} style={{ marginRight: '8px' }}>
           {touchLabel}
         </span>
 
