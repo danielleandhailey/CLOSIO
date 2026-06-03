@@ -1,11 +1,26 @@
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-// Use serverless function to avoid CORS
+// Use Vercel serverless for chat (small payloads)
 const callClaude = async (body) => {
   const response = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+  });
+  return response.json();
+};
+
+// Use Supabase Edge Function for documents (large payloads)
+const analyzeWithSupabase = async (base64Data, mimeType, fileName) => {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-document`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ base64Data, mimeType, fileName }),
   });
   return response.json();
 };
@@ -47,6 +62,22 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
 
   // Analyze uploaded document and extract mortgage data
   async analyzeDocument(base64Data, mimeType, fileName) {
+    // Use Supabase Edge Function (no size limit)
+    try {
+      const result = await analyzeWithSupabase(base64Data, mimeType, fileName);
+      console.log('Supabase analyze result:', result);
+      if (result.error) {
+        return { summary: `Error: ${result.error.message || result.error}`, extracted: {} };
+      }
+      return result;
+    } catch (e) {
+      console.error('Supabase analyze error:', e);
+      return { summary: 'Error analyzing document.', extracted: {} };
+    }
+  },
+
+  // Legacy direct Claude call (kept for reference)
+  async analyzeDocumentDirect(base64Data, mimeType, fileName) {
     const docPrompt = `Analyze this mortgage document. Extract all relevant information and respond in this EXACT format:
 
 SUMMARY: [2-3 sentence summary of document type and key findings]
