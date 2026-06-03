@@ -204,9 +204,6 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
           <div style={{ fontSize: volFontSize, fontWeight: '700', color: '#f59e0b', lineHeight: 1 }}>{volStr}</div>
         </div>
 
-        {/* Divider */}
-        <div style={{ width: '1px', background: '#334155', margin: '0 2px' }} />
-
         {/* 6. CALENDAR - Bigger, shows today's appts */}
         <MediumCard style={{ cursor: 'pointer', minWidth: '140px' }} onClick={() => setShowCalendar(true)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -252,14 +249,11 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
           </div>
         </MediumCard>
 
-        {/* Divider */}
-        <div style={{ width: '1px', background: '#334155', margin: '0 2px' }} />
-
         {/* 8. FLOATING */}
         <SmallCard icon={AlertTriangle} label="Floating" value={floatingLoans.length} color="#f59e0b" onClick={() => {}} />
 
         {/* 9. LOCK EXPIRY */}
-        <SmallCard icon={Lock} label="Locks" value={locksExpiring.length} color="#ef4444" onClick={() => {}} />
+        <SmallCard icon={Lock} label="Lock Expiry" value={locksExpiring.length} color="#ef4444" onClick={() => {}} />
 
         {/* 10. CONTINGENCIES */}
         <SmallCard icon={Clock} label="Contg" value={contingenciesDue.length} color="#8b5cf6" onClick={() => {}} />
