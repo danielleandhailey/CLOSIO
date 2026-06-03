@@ -434,7 +434,7 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
 };
 
 // Inline Doc Drop Zone
-const InlineDocDrop = ({ borrower, onDocDrop, onHighlight, onExpand }) => {
+const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef();
@@ -467,13 +467,13 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight, onExpand }) => {
 
   const handleClick = (e) => {
     e.stopPropagation();
-    // Open the expanded card to Documents tab
-    onExpand?.(borrower.id);
+    // Open file picker
+    inputRef.current?.click();
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-      {/* Main Drop Zone - centered, clickable to expand */}
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Main Drop Zone - centered, click opens file picker */}
       <div
         onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragging(true); onHighlight?.(true); }}
         onDragLeave={e => { e.preventDefault(); setDragging(false); onHighlight?.(false); }}
@@ -487,7 +487,7 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight, onExpand }) => {
           cursor: 'pointer', flexShrink: 0,
           transition: 'all 0.15s',
         }}
-        title="Click to open docs, or drag files here"
+        title="Click to attach or drag files here"
       >
         <Upload size={12} style={{ color: dragging ? '#3b82f6' : 'var(--text3)' }} />
         {uploading ? (
@@ -547,8 +547,8 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Doc Drop Zone - centered, click opens expanded card */}
-        <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} onExpand={onExpand} />
+        {/* Doc Drop Zone - centered, click opens file picker */}
+        <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
 
         {/* Preapproved indicators */}
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
