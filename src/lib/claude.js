@@ -14,7 +14,7 @@ const callClaude = async (body) => {
 
 // Use Supabase Edge Function for documents (large payloads)
 const analyzeWithSupabase = async (base64Data, mimeType, fileName) => {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/analyze-document`, {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/hyper-handler`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
