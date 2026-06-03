@@ -63,14 +63,14 @@ const DonutChart = ({ data, size = 90 }) => {
 };
 
 // Stat Card component - compact
-const StatCard = ({ icon: Icon, label, value, subtext, color = '#3b82f6', onClick }) => (
+const StatCard = ({ icon: Icon, label, value, subtext, color = '#3b82f6', onClick, small }) => (
   <div
     onClick={onClick}
     style={{
       background: 'var(--surface2)',
       borderRadius: '8px',
-      padding: '10px 12px',
-      minWidth: '100px',
+      padding: small ? '8px 10px' : '10px 12px',
+      minWidth: small ? '70px' : '100px',
       cursor: onClick ? 'pointer' : 'default',
       border: '1px solid var(--border)',
       transition: 'all 0.2s',
@@ -79,12 +79,57 @@ const StatCard = ({ icon: Icon, label, value, subtext, color = '#3b82f6', onClic
     onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-      <Icon size={12} style={{ color }} />
+      <Icon size={small ? 10 : 12} style={{ color }} />
       <span style={{ fontSize: '9px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
     </div>
-    <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{value}</div>
+    <div style={{ fontSize: small ? '16px' : '20px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{value}</div>
+    {subtext && <div style={{ fontSize: '10px', color: 'var(--text3)', marginTop: '2px' }}>{subtext}</div>}
   </div>
 );
+
+// Combined Pipeline+Volume card
+const PipelineVolumeCard = ({ count, volume }) => {
+  const volStr = formatCurrency(volume);
+  const fontSize = volStr.length > 10 ? '12px' : volStr.length > 8 ? '14px' : '16px';
+  return (
+    <div style={{
+      background: 'var(--surface2)', borderRadius: '8px', padding: '10px 12px',
+      minWidth: '100px', border: '1px solid var(--border)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+        <Users size={12} style={{ color: '#8b5cf6' }} />
+        <span style={{ fontSize: '9px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Pipeline</span>
+      </div>
+      <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{count}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+        <DollarSign size={10} style={{ color: '#22c55e' }} />
+        <span style={{ fontSize, fontWeight: '600', color: '#22c55e' }}>{volStr}</span>
+      </div>
+    </div>
+  );
+};
+
+// Calendar mini card
+const CalendarCard = ({ onClick }) => {
+  const today = new Date();
+  const dayName = format(today, 'EEE');
+  const dayNum = format(today, 'd');
+  const month = format(today, 'MMM');
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px',
+        minWidth: '70px', border: '1px solid var(--border)', cursor: 'pointer',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <span style={{ fontSize: '8px', color: '#ef4444', fontWeight: '700', textTransform: 'uppercase' }}>{dayName}</span>
+      <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{dayNum}</span>
+      <span style={{ fontSize: '9px', color: 'var(--text3)', fontWeight: '600' }}>{month}</span>
+    </div>
+  );
+};
 
 // Alert Item component - compact
 const AlertItem = ({ icon: Icon, text, subtext, color, urgent, onClick }) => (
@@ -228,33 +273,36 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
     </div>
   );
 
+  const [showCalendar, setShowCalendar] = React.useState(false);
+
   return (
     <div className="dashboard-header" style={{ padding: '10px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
       {/* Single Row - Stats, Alerts, Donut */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', overflowX: 'auto', alignItems: 'stretch' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', overflowX: 'auto', alignItems: 'stretch' }}>
+        {/* Pipeline + Volume combined */}
+        <PipelineVolumeCard count={totalLoans} volume={totalVolume} />
+
         {/* Stat Cards */}
-        <StatCard icon={Users} label="Pipeline" value={totalLoans} color="#8b5cf6" />
-        <StatCard icon={DollarSign} label="Volume" value={formatCurrency(totalVolume)} color="#22c55e" />
         <StatCard icon={TrendingUp} label="Processing" value={processingCount} color="#3b82f6" onClick={() => onFilterStage('Processing')} />
-        <StatCard icon={Home} label="Closing" value={closingsThisMonth} color="#f59e0b" />
-        <StatCard icon={CheckSquare} label="Funded" value={fundedCount} color="#10b981" onClick={() => onFilterStage('Funded')} />
+        <StatCard icon={Home} label="Closing" value={closingsThisMonth} color="#f59e0b" small />
+        <StatCard icon={CheckSquare} label="Funded" value={fundedCount} color="#10b981" onClick={() => onFilterStage('Funded')} small />
+
+        {/* Locks & Floating - smaller */}
+        <StatCard icon={Lock} label="Locks" value={locksExpiring.length} color="#ef4444" small onClick={() => {}} />
+        <StatCard icon={AlertTriangle} label="Floating" value={floatingLoans.length} color="#f59e0b" small onClick={() => {}} />
 
         {/* Divider */}
         <div style={{ width: '1px', background: '#334155', margin: '0 4px' }} />
 
-        {/* Alert Boxes */}
+        {/* Calendar */}
+        <CalendarCard onClick={() => setShowCalendar(s => !s)} />
+
+        {/* Tasks Alert Box */}
         <AlertBox title="Tasks" count={tasksDueToday.length} color="#3b82f6" items={tasksDueToday} emptyText="All caught up!"
           renderItem={(t, i) => <AlertItem key={i} icon={CheckSquare} text={t.borrower.name?.split(' ')[0]} subtext={t.title?.substring(0, 15)}
             color={t.daysUntil < 0 ? '#ef4444' : '#3b82f6'} urgent={t.daysUntil < 0} onClick={() => onSelectBorrower(t.borrower.id)} />} />
 
-        <AlertBox title="Locks" count={locksExpiring.length} color="#ef4444" items={locksExpiring} emptyText="No locks expiring"
-          renderItem={(b, i) => <AlertItem key={i} icon={Lock} text={b.name?.split(' ')[0]} subtext={b.daysUntil === 0 ? 'TODAY!' : `${b.daysUntil}d`}
-            color="#ef4444" urgent={b.daysUntil <= 2} onClick={() => onSelectBorrower(b.id)} />} />
-
-        <AlertBox title="Floating" count={floatingLoans.length} color="#f59e0b" items={floatingLoans} emptyText="All locked"
-          renderItem={(b, i) => <AlertItem key={i} icon={AlertTriangle} text={b.name?.split(' ')[0]} subtext={b.stage}
-            color="#f59e0b" urgent={false} onClick={() => onSelectBorrower(b.id)} />} />
-
+        {/* Contingencies */}
         <AlertBox title="Contingencies" count={contingenciesDue.length} color="#8b5cf6" items={contingenciesDue} emptyText="None due"
           renderItem={(c, i) => <AlertItem key={i} icon={Clock} text={c.borrower.name?.split(' ')[0]} subtext={`${c.contingency} ${c.daysUntil}d`}
             color="#8b5cf6" urgent={c.daysUntil <= 2} onClick={() => onSelectBorrower(c.borrower.id)} />} />
@@ -266,6 +314,32 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
         </div>
       </div>
 
+      {/* Calendar Popup */}
+      {showCalendar && (
+        <div style={{ position: 'absolute', zIndex: 1000, top: '80px', left: '50%', transform: 'translateX(-50%)', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontWeight: '700', color: 'var(--text)' }}>{format(new Date(), 'MMMM yyyy')}</span>
+            <button onClick={() => setShowCalendar(false)} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: '16px' }}>×</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 30px)', gap: '2px', textAlign: 'center' }}>
+            {['S','M','T','W','T','F','S'].map((d,i) => <div key={i} style={{ fontSize: '9px', color: 'var(--text3)', padding: '4px' }}>{d}</div>)}
+            {(() => {
+              const today = new Date();
+              const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+              const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+              const cells = [];
+              for (let i = 0; i < firstDay; i++) cells.push(<div key={`e${i}`} />);
+              for (let d = 1; d <= daysInMonth; d++) {
+                const isToday = d === today.getDate();
+                cells.push(
+                  <div key={d} style={{ padding: '4px', fontSize: '11px', borderRadius: '4px', background: isToday ? '#3b82f6' : 'transparent', color: isToday ? '#fff' : 'var(--text)', fontWeight: isToday ? '700' : '400' }}>{d}</div>
+                );
+              }
+              return cells;
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
