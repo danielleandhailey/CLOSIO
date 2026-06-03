@@ -227,21 +227,22 @@ body {
 .btn-primary:hover { background: var(--accent2); }
 
 .btn-ghost {
-  background: var(--surface3);
+  background: transparent;
   color: var(--text2);
-  border-color: var(--border2);
+  border: none;
+  box-shadow: none;
 }
 .btn-ghost:hover { background: var(--surface2); color: var(--text); }
 
 [data-theme="light"] .btn-ghost,
 body[data-theme="light"] .btn-ghost {
-  background: #dcdcec !important;
+  background: transparent !important;
   color: #1a1a2e !important;
-  border-color: #9090b8 !important;
+  border: none !important;
 }
 [data-theme="light"] .btn-ghost:hover,
 body[data-theme="light"] .btn-ghost:hover {
-  background: #c8c8e0 !important;
+  background: #e8e8f0 !important;
   color: #0a0a1e !important;
 }
 
@@ -429,23 +430,22 @@ body[data-theme="light"] .btn-icon:hover {
 }
 
 .touch-stamp {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
   white-space: nowrap;
   flex-shrink: 0;
   font-family: var(--mono);
-  font-weight: 600;
-  min-width: 32px;
-  text-align: center;
+  margin-left: auto;
 }
 
-.touch-stamp.touched { color: var(--red); font-weight: 800; }
+.touch-stamp.touched { color: var(--red); font-weight: 700; }
 
 .card-actions {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-left: 8px;
   flex-shrink: 0;
   margin-left: auto;
 }
