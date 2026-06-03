@@ -811,6 +811,30 @@ const EmailTemplateSection = ({ borrower, stips }) => {
   // Note: When pasting into Outlook, the link will be clickable
   const applyLink = 'https://westcapitallending.com/apply'; // Update this URL
 
+  // Group stips by category for bold headers
+  const incomeStips = stips.filter(s =>
+    s.item.toLowerCase().includes('w2') || s.item.toLowerCase().includes('pay') ||
+    s.item.toLowerCase().includes('tax') || s.item.toLowerCase().includes('1099') ||
+    s.item.toLowerCase().includes('income') || s.item.toLowerCase().includes('employ')
+  );
+  const assetStips = stips.filter(s =>
+    s.item.toLowerCase().includes('bank') || s.item.toLowerCase().includes('asset') ||
+    s.item.toLowerCase().includes('statement') || s.item.toLowerCase().includes('investment')
+  );
+  const propertyStips = stips.filter(s =>
+    s.item.toLowerCase().includes('contract') || s.item.toLowerCase().includes('hoa') ||
+    s.item.toLowerCase().includes('insurance') || s.item.toLowerCase().includes('property') ||
+    s.item.toLowerCase().includes('mortgage')
+  );
+  const otherStips = stips.filter(s =>
+    !incomeStips.includes(s) && !assetStips.includes(s) && !propertyStips.includes(s)
+  );
+
+  const formatSection = (title, items) => {
+    if (items.length === 0) return '';
+    return `\n${title}\n${items.map(s => `  • ${s.item}`).join('\n')}`;
+  };
+
   const emailTemplate = `Hi ${greeting},
 
 Thank you for choosing West Capital Lending! My team and I are excited to help you through your home purchase.
@@ -820,11 +844,13 @@ ${applyLink}
 
 Once your application is submitted, please scan, upload, email, or fax the following documents:
 
-Purchase Loan Documentation Checklist
+PURCHASE LOAN DOCUMENTATION CHECKLIST
+${formatSection('INCOME DOCUMENTATION', incomeStips)}
+${formatSection('ASSET DOCUMENTATION', assetStips)}
+${formatSection('PROPERTY DOCUMENTATION', propertyStips)}
+${formatSection('ADDITIONAL ITEMS', otherStips)}
 
-${needsList}
-
-Identification
+IDENTIFICATION
   • Copy of driver's license or photo ID (ensure it's clear; phone photos are acceptable)
 
 We look forward to working with you and helping you get into your new home smoothly. If you have any questions or need assistance, I'm available 24/7, and my team is happy to help.`;

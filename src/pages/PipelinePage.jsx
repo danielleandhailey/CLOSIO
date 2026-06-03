@@ -50,9 +50,14 @@ const PipelinePage = ({ borrowers, ops }) => {
 
   const handleExpand = useCallback((id) => {
     setExpandedIds(prev => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
+      // If clicking on same one, toggle it off
+      if (prev.has(id)) {
+        const n = new Set(prev);
+        n.delete(id);
+        return n;
+      }
+      // Otherwise close all others and open this one (auto-close previous)
+      return new Set([id]);
     });
   }, []);
 
