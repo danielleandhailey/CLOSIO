@@ -1,7 +1,39 @@
 import React, { useMemo } from 'react';
-import { format, parseISO, differenceInDays, isToday, isTomorrow, addDays } from 'date-fns';
-import { Calendar, Lock, AlertTriangle, Clock, CheckCircle, Users } from 'lucide-react';
+import { format, parseISO, differenceInDays, isToday, isTomorrow, addDays, isSameDay } from 'date-fns';
+import { Calendar, Lock, AlertTriangle, Clock, CheckCircle, Users, CheckSquare } from 'lucide-react';
 import { STAGES, STAGE_COLORS } from '../lib/constants';
+
+// Simple Pie Chart component
+const PieChart = ({ data, size = 80 }) => {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  if (total === 0) return null;
+
+  let cumulative = 0;
+  const slices = data.filter(d => d.value > 0).map(d => {
+    const start = cumulative;
+    cumulative += (d.value / total) * 360;
+    return { ...d, start, end: cumulative };
+  });
+
+  const getCoords = (angle, r) => {
+    const rad = (angle - 90) * Math.PI / 180;
+    return { x: 50 + r * Math.cos(rad), y: 50 + r * Math.sin(rad) };
+  };
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      {slices.map((slice, i) => {
+        const start = getCoords(slice.start, 40);
+        const end = getCoords(slice.end, 40);
+        const largeArc = slice.end - slice.start > 180 ? 1 : 0;
+        const d = `M 50 50 L ${start.x} ${start.y} A 40 40 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+        return <path key={i} d={d} fill={slice.color} stroke="#1a1a2e" strokeWidth="1" />;
+      })}
+      <circle cx="50" cy="50" r="20" fill="#1a1a2e" />
+      <text x="50" y="54" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700">{total}</text>
+    </svg>
+  );
+};
 
 const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
   // Calculate all dashboard data
@@ -9,8 +41,23 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
     const today = new Date();
     const todayStr = format(today, 'yyyy-MM-dd');
 
-    // Tasks due today (from tasks table or appointments)
-    const tasksDueToday = [];
+    // Tasks due today or upcoming (from all borrowers)
+    const allTasks = [];
+    borrowers.forEach(b => {
+      (b.tasks || []).forEach(t => {
+        if (t.completed) return;
+        if (t.due_date) {
+          const taskDate = parseISO(t.due_date);
+          const daysUntil = differenceInDays(taskDate, today);
+          if (daysUntil >= -1 && daysUntil <= 7) { // include yesterday (overdue) to 7 days out
+            allTasks.push({ ...t, borrower: b, daysUntil, isToday: isSameDay(taskDate, today) });
+          }
+        }
+      });
+    });
+    allTasks.sort((a, b) => a.daysUntil - b.daysUntil);
+
+    const tasksDueToday = allTasks.filter(t => t.isToday || t.daysUntil < 0);
 
     // Locks expiring soon (within 7 days)
     const locksExpiring = borrowers.filter(b => {
@@ -73,10 +120,17 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
       if (stageCounts[b.stage] !== undefined) stageCounts[b.stage]++;
     });
 
-    return { locksExpiring, floatingLoans, contingenciesDue, coeDates, stageCounts };
+    // Pie chart data
+    const pieData = STAGES.map(s => ({
+      label: s,
+      value: stageCounts[s],
+      color: STAGE_COLORS[s]?.bg || '#666',
+    }));
+
+    return { locksExpiring, floatingLoans, contingenciesDue, coeDates, stageCounts, tasksDueToday, allTasks, pieData };
   }, [borrowers]);
 
-  const { locksExpiring, floatingLoans, contingenciesDue, coeDates, stageCounts } = dashboardData;
+  const { locksExpiring, floatingLoans, contingenciesDue, coeDates, stageCounts, tasksDueToday, allTasks, pieData } = dashboardData;
 
   const Widget = ({ title, icon: Icon, color, items, emptyText, renderItem }) => (
     <div style={{
@@ -142,6 +196,38 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
     }}>
       {/* Widget Row */}
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
+
+        {/* Pie Chart */}
+        <div style={{
+          background: '#1a1a2e',
+          borderRadius: '10px',
+          padding: '12px 14px',
+          border: '1px solid #2a2a45',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          minWidth: '100px',
+        }}>
+          <PieChart data={pieData} size={70} />
+          <span style={{ fontSize: '9px', color: '#6b6b8a', marginTop: '4px' }}>Pipeline</span>
+        </div>
+
+        {/* Today's Tasks */}
+        <Widget
+          title="Today's Tasks"
+          icon={CheckSquare}
+          color="#3b82f6"
+          items={tasksDueToday}
+          emptyText="No tasks due today"
+          renderItem={(t, i) => (
+            <BorrowerLink
+              key={i}
+              borrower={t.borrower}
+              extra={t.daysUntil < 0 ? 'OVERDUE' : t.title?.substring(0, 15)}
+              urgent={t.daysUntil < 0}
+            />
+          )}
+        />
 
         {/* Locks Expiring */}
         <Widget

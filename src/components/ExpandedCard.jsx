@@ -1226,14 +1226,34 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
 
   return (
     <div className="expanded-card">
-      <div className="expanded-tabs">
-        {tabs.map(t => (
-          <button key={t.id} type="button" className={`expanded-tab ${openTabs.has(t.id) ? 'active' : ''}`} onClick={() => toggleTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
+      {/* First Row: Tabs + Lender */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+        <div className="expanded-tabs" style={{ flex: 1, marginBottom: 0 }}>
+          {tabs.map(t => (
+            <button key={t.id} type="button" className={`expanded-tab ${openTabs.has(t.id) ? 'active' : ''}`} onClick={() => toggleTab(t.id)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {/* Lender Badge inline with tabs */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <span style={{ fontSize: '10px', color: '#6b6b8a', fontWeight: '600' }}>Lender:</span>
+          {borrower.lender ? (
+            <span style={{ padding: '4px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '700', background: '#14532d', color: '#86efac', border: '1px solid #22c55e' }}>
+              {borrower.lender}
+            </span>
+          ) : (
+            <span style={{ fontSize: '11px', color: '#6b6b8a' }}>Not set</span>
+          )}
+          {borrower.lender_2 && (
+            <span style={{ padding: '4px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '700', background: '#78350f', color: '#fcd34d', border: '1px solid #d97706' }}>
+              {borrower.lender_2}
+            </span>
+          )}
+        </div>
       </div>
 
+      {/* Content Boxes */}
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
         {openTabs.has('notes') && (
           <div style={boxStyle}>
