@@ -1016,20 +1016,16 @@ const BorrowersSection = ({ borrower, onUpdate }) => {
 // ---- Preapproval Section ----
 const PreapprovalSection = ({ borrower, onUpdate }) => {
   const [valApproved, setValApproved] = useState(borrower.val_approved || false);
-  const [preapprovalSent, setPreapprovalSent] = useState(borrower.preapproval_sent || false);
   const [copied, setCopied] = useState(false);
 
-  // Letter form state with auto-populated defaults
+  // Letter form state
   const [letter, setLetter] = useState({
     term: '360',
-    program: 'Correspondent 20YR HELOC Adjustable Rate',
     programType: 'Correspondent',
-    rateType: 'Adjustable',
+    rateType: 'Fixed',
     occupancy: borrower.occupancy || 'Primary Residence',
     salesPrice: borrower.purchase_price || '',
     loanAmount: borrower.loan_amount || '',
-    downPayment: '',
-    ltv: borrower.ltv || '',
     state: 'CA',
   });
 
@@ -1037,20 +1033,20 @@ const PreapprovalSection = ({ borrower, onUpdate }) => {
   const calcDownPayment = () => {
     if (letter.salesPrice && letter.loanAmount) {
       const dp = Number(letter.salesPrice) - Number(letter.loanAmount);
-      return dp > 0 ? dp : '';
+      return dp > 0 ? dp : 0;
     }
-    return '';
+    return 0;
   };
 
   const calcLtvPercent = () => {
     if (letter.salesPrice && letter.loanAmount && Number(letter.salesPrice) > 0) {
-      return ((Number(letter.loanAmount) / Number(letter.salesPrice)) * 100).toFixed(3);
+      return ((Number(letter.loanAmount) / Number(letter.salesPrice)) * 100).toFixed(2);
     }
     return '';
   };
 
-  const fieldStyle = { width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', background: '#fff' };
-  const labelStyle = { fontSize: '10px', color: '#64748b', marginBottom: '2px', fontWeight: '600', textTransform: 'uppercase' };
+  const fieldStyle = { width: '100%', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', background: '#fff' };
+  const labelStyle = { fontSize: '9px', color: '#64748b', marginBottom: '2px', fontWeight: '600', textTransform: 'uppercase' };
 
   const save = (field, val) => onUpdate(borrower.id, { [field]: val });
 
@@ -1109,36 +1105,28 @@ NMLS ID: 1566096
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {/* VAL Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: valApproved ? '#dcfce7' : '#f8fafc', borderRadius: '6px', border: `1px solid ${valApproved ? '#22c55e' : '#e2e8f0'}` }}>
-        <input type="checkbox" checked={valApproved} onChange={e => { setValApproved(e.target.checked); save('val_approved', e.target.checked); }}
-          style={{ width: '18px', height: '18px', accentColor: '#22c55e' }} />
-        <div>
-          <div style={{ fontWeight: '700', fontSize: '12px', color: valApproved ? '#166534' : '#475569' }}>VAL — Verified Approval Letter</div>
-          <div style={{ fontSize: '11px', color: '#64748b' }}>Actual lender approval received</div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {/* VAL - top right style */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: valApproved ? '#dcfce7' : '#f1f5f9', borderRadius: '6px', border: `1px solid ${valApproved ? '#22c55e' : '#e2e8f0'}`, cursor: 'pointer' }}>
+          <input type="checkbox" checked={valApproved} onChange={e => { setValApproved(e.target.checked); save('val_approved', e.target.checked); }}
+            style={{ width: '14px', height: '14px', accentColor: '#22c55e' }} />
+          <span style={{ fontWeight: '600', fontSize: '11px', color: valApproved ? '#166534' : '#64748b' }}>VAL ✓</span>
+        </label>
       </div>
 
-      {/* Preapproval Sent Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: preapprovalSent ? '#dbeafe' : '#f8fafc', borderRadius: '6px', border: `1px solid ${preapprovalSent ? '#3b82f6' : '#e2e8f0'}` }}>
-        <input type="checkbox" checked={preapprovalSent} onChange={e => { setPreapprovalSent(e.target.checked); save('preapproval_sent', e.target.checked); }}
-          style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }} />
-        <div style={{ fontWeight: '700', fontSize: '12px', color: preapprovalSent ? '#1d4ed8' : '#475569' }}>Preapproval Letter Sent</div>
-      </div>
+      {/* Letter Generator Form */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b', marginBottom: '10px' }}>📄 Pre-Approval Letter Generator</div>
 
-      {/* Letter Generator */}
-      <div style={{ background: '#fffbeb', border: '2px solid #f59e0b', borderRadius: '8px', padding: '14px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', marginBottom: '12px' }}>📄 Generate Pre-Approval Letter</div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '10px' }}>
           <div>
-            <div style={labelStyle}>Term (months)</div>
+            <div style={labelStyle}>Term</div>
             <select value={letter.term} onChange={e => setLetter(l => ({ ...l, term: e.target.value }))} style={fieldStyle}>
-              <option value="360">360 (30yr)</option>
-              <option value="240">240 (20yr)</option>
-              <option value="180">180 (15yr)</option>
-              <option value="120">120 (10yr)</option>
+              <option value="360">30yr (360mo)</option>
+              <option value="240">20yr (240mo)</option>
+              <option value="180">15yr (180mo)</option>
+              <option value="120">10yr (120mo)</option>
             </select>
           </div>
           <div>
@@ -1149,7 +1137,7 @@ NMLS ID: 1566096
             </select>
           </div>
           <div>
-            <div style={labelStyle}>Program Type</div>
+            <div style={labelStyle}>Program</div>
             <select value={letter.programType} onChange={e => setLetter(l => ({ ...l, programType: e.target.value }))} style={fieldStyle}>
               <option value="Correspondent">Correspondent</option>
               <option value="Wholesale">Wholesale</option>
@@ -1158,63 +1146,69 @@ NMLS ID: 1566096
           <div>
             <div style={labelStyle}>Occupancy</div>
             <select value={letter.occupancy} onChange={e => setLetter(l => ({ ...l, occupancy: e.target.value }))} style={fieldStyle}>
-              <option value="Primary Residence">Primary Residence</option>
-              <option value="Secondary Residence">Secondary Residence</option>
-              <option value="Investment Property">Investment Property</option>
+              <option value="Primary Residence">Primary</option>
+              <option value="Secondary Residence">Secondary</option>
+              <option value="Investment Property">Investment</option>
             </select>
           </div>
           <div>
             <div style={labelStyle}>Sales Price</div>
-            <input type="number" value={letter.salesPrice} onChange={e => setLetter(l => ({ ...l, salesPrice: e.target.value }))} style={fieldStyle} placeholder="$0" />
+            <input type="number" value={letter.salesPrice} onChange={e => setLetter(l => ({ ...l, salesPrice: e.target.value }))} style={fieldStyle} placeholder="Enter amount" />
           </div>
           <div>
             <div style={labelStyle}>Loan Amount</div>
-            <input type="number" value={letter.loanAmount} onChange={e => setLetter(l => ({ ...l, loanAmount: e.target.value }))} style={fieldStyle} placeholder="$0" />
+            <input type="number" value={letter.loanAmount} onChange={e => setLetter(l => ({ ...l, loanAmount: e.target.value }))} style={fieldStyle} placeholder="Enter amount" />
           </div>
           <div>
             <div style={labelStyle}>State</div>
             <select value={letter.state} onChange={e => setLetter(l => ({ ...l, state: e.target.value }))} style={fieldStyle}>
-              <option value="CA">California</option>
-              <option value="AZ">Arizona</option>
-              <option value="NV">Nevada</option>
-              <option value="TX">Texas</option>
-              <option value="WA">Washington</option>
-              <option value="OR">Oregon</option>
-              <option value="CO">Colorado</option>
-              <option value="FL">Florida</option>
+              <option value="CA">CA</option>
+              <option value="AZ">AZ</option>
+              <option value="NV">NV</option>
+              <option value="TX">TX</option>
+              <option value="WA">WA</option>
+              <option value="OR">OR</option>
+              <option value="CO">CO</option>
+              <option value="FL">FL</option>
             </select>
           </div>
           <div>
             <div style={labelStyle}>Down Payment</div>
-            <div style={{ ...fieldStyle, background: '#f3f4f6', color: '#6b7280' }}>
+            <div style={{ ...fieldStyle, background: '#f8fafc', color: '#475569', fontWeight: '600' }}>
               {downPaymentCalc ? `$${Number(downPaymentCalc).toLocaleString()} (${downPaymentPercent}%)` : '—'}
             </div>
           </div>
           <div>
             <div style={labelStyle}>LTV</div>
-            <div style={{ ...fieldStyle, background: '#f3f4f6', color: '#6b7280' }}>
+            <div style={{ ...fieldStyle, background: '#f8fafc', color: '#475569', fontWeight: '600' }}>
               {ltvCalc ? `${ltvCalc}%` : '—'}
             </div>
           </div>
         </div>
 
+        {/* Copy Button */}
         <button
           onClick={copyLetter}
           style={{
-            width: '100%', padding: '12px', background: copied ? '#22c55e' : '#f59e0b', color: '#fff',
-            border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+            width: '100%', padding: '10px',
+            background: copied ? '#22c55e' : '#1e40af',
+            color: '#fff',
+            border: 'none', borderRadius: '6px',
+            fontSize: '12px', fontWeight: '700',
+            cursor: 'pointer',
+            marginBottom: '8px',
           }}
         >
-          {copied ? '✓ Copied to Clipboard!' : '📋 Copy Pre-Approval Letter'}
+          {copied ? '✓ Copied!' : '📋 Copy Pre-Approval Letter'}
         </button>
-      </div>
 
-      {/* Preview */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px', maxHeight: '200px', overflowY: 'auto' }}>
-        <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>PREVIEW</div>
-        <pre style={{ fontSize: '10px', color: '#1e293b', whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0, lineHeight: 1.4 }}>
-          {generateLetterText()}
-        </pre>
+        {/* Preview */}
+        <details style={{ marginTop: '8px' }}>
+          <summary style={{ fontSize: '10px', color: '#64748b', cursor: 'pointer', fontWeight: '600' }}>Preview Letter</summary>
+          <pre style={{ fontSize: '9px', color: '#1e293b', whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: '8px 0 0 0', lineHeight: 1.3, background: '#f8fafc', padding: '8px', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto' }}>
+            {generateLetterText()}
+          </pre>
+        </details>
       </div>
     </div>
   );
