@@ -461,11 +461,17 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
       await onDocDrop(borrower.id, files);
       setUploading(false);
     }
+    // Reset input so same file can be selected again
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   const handleClick = () => {
-    onHighlight?.(true);
     inputRef.current?.click();
+  };
+
+  // Clear highlight when input loses focus (cancel)
+  const handleInputBlur = () => {
+    setTimeout(() => onHighlight?.(false), 100);
   };
 
   return (
@@ -478,20 +484,20 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
         padding: '4px 12px', borderRadius: '6px',
-        background: dragging ? 'var(--accent)' : 'transparent',
-        border: `1px dashed ${dragging ? 'var(--accent)' : 'var(--border2)'}`,
+        background: dragging ? '#3b82f620' : 'transparent',
+        border: `1px dashed ${dragging ? '#3b82f6' : 'var(--border2)'}`,
         cursor: 'pointer', flexShrink: 0,
         transition: 'all 0.15s',
         margin: '0 auto',
       }}
       title="Drop or click to attach"
     >
-      <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} style={{ display: 'none' }} />
-      <Upload size={11} style={{ color: dragging ? '#fff' : 'var(--text3)' }} />
+      <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} onBlur={handleInputBlur} style={{ display: 'none' }} />
+      <Upload size={11} style={{ color: dragging ? '#3b82f6' : 'var(--text3)' }} />
       {uploading ? (
-        <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: '600' }}>...</span>
+        <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '600' }}>...</span>
       ) : (
-        <span style={{ fontSize: '10px', color: dragging ? '#fff' : 'var(--text3)' }}>Drop</span>
+        <span style={{ fontSize: '10px', color: dragging ? '#3b82f6' : 'var(--text3)' }}>Drop</span>
       )}
       {docs.length > 0 && <span style={{ fontSize: '9px', color: 'var(--text3)', marginLeft: '2px' }}>({docs.length})</span>}
     </div>
