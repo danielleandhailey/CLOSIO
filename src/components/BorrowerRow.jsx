@@ -443,6 +443,7 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
 
   const handleDrop = useCallback(async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragging(false);
     onHighlight?.(false);
     const files = Array.from(e.dataTransfer?.files || []);
@@ -461,45 +462,52 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
       await onDocDrop(borrower.id, files);
       setUploading(false);
     }
-    // Reset input so same file can be selected again
     if (inputRef.current) inputRef.current.value = '';
   };
 
-  const handleClick = () => {
-    inputRef.current?.click();
-  };
-
-  // Clear highlight when input loses focus (cancel)
-  const handleInputBlur = () => {
-    setTimeout(() => onHighlight?.(false), 100);
-  };
-
   return (
-    <div
-      onDragOver={e => { e.preventDefault(); setDragging(true); onHighlight?.(true); }}
-      onDragLeave={() => { setDragging(false); onHighlight?.(false); }}
-      onDrop={handleDrop}
-      onClick={handleClick}
-      className="drop-zone"
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-        padding: '4px 12px', borderRadius: '6px',
-        background: dragging ? '#3b82f620' : 'transparent',
-        border: `1px dashed ${dragging ? '#3b82f6' : 'var(--border2)'}`,
-        cursor: 'pointer', flexShrink: 0,
-        transition: 'all 0.15s',
-        margin: '0 auto',
-      }}
-      title="Drop or click to attach"
-    >
-      <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} onBlur={handleInputBlur} style={{ display: 'none' }} />
-      <Upload size={11} style={{ color: dragging ? '#3b82f6' : 'var(--text3)' }} />
-      {uploading ? (
-        <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '600' }}>...</span>
-      ) : (
-        <span style={{ fontSize: '10px', color: dragging ? '#3b82f6' : 'var(--text3)' }}>Drop</span>
-      )}
-      {docs.length > 0 && <span style={{ fontSize: '9px', color: 'var(--text3)', marginLeft: '2px' }}>({docs.length})</span>}
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {/* Main Drop Zone */}
+      <div
+        onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragging(true); onHighlight?.(true); }}
+        onDragLeave={e => { e.preventDefault(); setDragging(false); onHighlight?.(false); }}
+        onDrop={handleDrop}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+          padding: '8px 16px', borderRadius: '6px',
+          background: dragging ? '#3b82f630' : 'var(--surface2)',
+          border: `2px dashed ${dragging ? '#3b82f6' : 'var(--border)'}`,
+          cursor: 'default', flexShrink: 0,
+          transition: 'all 0.15s',
+          minWidth: '80px',
+        }}
+      >
+        <Upload size={14} style={{ color: dragging ? '#3b82f6' : 'var(--text3)' }} />
+        {uploading ? (
+          <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '600' }}>Uploading...</span>
+        ) : (
+          <span style={{ fontSize: '11px', color: dragging ? '#3b82f6' : 'var(--text3)', fontWeight: '500' }}>
+            {dragging ? 'Drop Here' : 'Drop'}
+          </span>
+        )}
+      </div>
+
+      {/* Small Attach Button */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+        style={{
+          padding: '4px 8px', borderRadius: '4px', fontSize: '9px',
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          color: 'var(--text3)', cursor: 'pointer',
+        }}
+        title="Browse files"
+      >
+        Attach
+      </button>
+      <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} style={{ display: 'none' }} />
+
+      {docs.length > 0 && <span style={{ fontSize: '9px', color: 'var(--text3)' }}>({docs.length})</span>}
     </div>
   );
 };
