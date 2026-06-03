@@ -112,9 +112,12 @@ const TasksSection = ({ borrower, ops }) => {
             {task.due_date && (
               <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
                 {(() => {
-                  const d = typeof task.due_date === 'string' ? parseISO(task.due_date) : task.due_date;
-                  const hasTime = typeof task.due_date === 'string' && task.due_date.includes('T');
-                  return hasTime ? format(d, 'M/d/yy h:mma') : format(d, 'M/d/yy');
+                  try {
+                    const d = typeof task.due_date === 'string' ? parseISO(task.due_date) : task.due_date;
+                    if (isNaN(d.getTime())) return '';
+                    const hasTime = typeof task.due_date === 'string' && task.due_date.includes('T');
+                    return hasTime ? format(d, 'M/d/yy h:mma') : format(d, 'M/d/yy');
+                  } catch (e) { return ''; }
                 })()}
               </span>
             )}
