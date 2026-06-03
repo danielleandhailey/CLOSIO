@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Trash2, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3 } from 'lucide-react';
 import { STAGE_COLORS, STAGES, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS } from '../lib/constants';
 import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
@@ -433,12 +433,73 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
   );
 };
 
+// Inline Doc Drop Zone
+const InlineDocDrop = ({ borrower, onDocDrop }) => {
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef();
+
+  const docs = borrower.documents || [];
+  const docNames = docs.slice(0, 3).map(d => d.name?.replace(/\.[^/.]+$/, '').substring(0, 12)).join(', ');
+  const moreCount = docs.length > 3 ? ` +${docs.length - 3}` : '';
+
+  const handleDrop = useCallback(async (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (files.length && onDocDrop) {
+      setUploading(true);
+      await onDocDrop(borrower.id, files);
+      setUploading(false);
+    }
+  }, [borrower.id, onDocDrop]);
+
+  const handleFileSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length && onDocDrop) {
+      setUploading(true);
+      await onDocDrop(borrower.id, files);
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div
+      onDragOver={e => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={handleDrop}
+      onClick={() => inputRef.current?.click()}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '6px',
+        padding: '4px 10px', borderRadius: '6px',
+        background: dragging ? '#3b3b5a' : '#1e1e2e',
+        border: `1px dashed ${dragging ? '#8b4cf7' : '#3a3a55'}`,
+        cursor: 'pointer', flexShrink: 0, minWidth: '120px',
+        transition: 'all 0.15s',
+      }}
+      title="Drop docs here or click to browse"
+    >
+      <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileSelect} style={{ display: 'none' }} />
+      <Upload size={12} style={{ color: uploading ? '#8b4cf7' : '#6b6b8a' }} />
+      {uploading ? (
+        <span style={{ fontSize: '10px', color: '#8b4cf7', fontWeight: '600' }}>Analyzing...</span>
+      ) : docs.length > 0 ? (
+        <span style={{ fontSize: '9px', color: '#6b6b8a', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {docNames}{moreCount}
+        </span>
+      ) : (
+        <span style={{ fontSize: '10px', color: '#6b6b8a' }}>Drop docs</span>
+      )}
+    </div>
+  );
+};
+
 // Main condensed row
 const BorrowerRow = ({
   borrower, isExpanded, isSelected,
   onSelect, onExpand, onEdit, onDelete,
   onTouch, onMoveStage, onAddTag, onRemoveTag,
-  onOpenCalendar, onUpdate,
+  onOpenCalendar, onUpdate, onDocDrop,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
   const tags = borrower.borrower_tags || [];
@@ -475,16 +536,8 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Tags */}
-        <div className="tags-row">
-          <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
-          {STAGES_WITH_AUTO_TAGS.includes(borrower.stage) && (
-            <AutoTagPills borrower={borrower} />
-          )}
-          {tags.map(t => (
-            <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
-          ))}
-        </div>
+        {/* Doc Drop Zone - center of row */}
+        <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} />
 
         {/* Lender - separate section */}
         <div className="lender-row">
@@ -506,13 +559,15 @@ const BorrowerRow = ({
           {touchLabel}
         </span>
 
-        {/* Actions */}
+        {/* Actions - clearer icons */}
         <div className="card-actions">
-          <button type="button" className="btn-xs btn-ghost" onClick={() => onTouch(borrower.id)} title="Touch">
-            <Clock size={10} style={{ marginRight: '2px' }} />touch
+          <button type="button" className="btn-icon" onClick={() => onTouch(borrower.id)} title="Mark Touched">
+            <Clock size={14} />
           </button>
 
-          <button type="button" className="btn-icon" onClick={onOpenCalendar} title="Calendar">📅</button>
+          <button type="button" className="btn-icon" onClick={onOpenCalendar} title="Calendar">
+            <Calendar size={14} />
+          </button>
 
           <div style={{ position: 'relative' }}>
             <button
@@ -520,7 +575,9 @@ const BorrowerRow = ({
               className="btn-icon"
               onClick={e => { e.stopPropagation(); setShowSummary(s => !s); }}
               title="Quick Summary"
-            >→</button>
+            >
+              <ArrowRight size={14} />
+            </button>
             {showSummary && (
               <QuickSummaryPanel
                 borrower={borrower}
@@ -530,10 +587,12 @@ const BorrowerRow = ({
             )}
           </div>
 
-          <button type="button" className="btn-icon" onClick={() => onEdit(borrower)} title="Edit Borrower" style={{ fontSize: '13px' }}>✎</button>
+          <button type="button" className="btn-icon" onClick={() => onEdit(borrower)} title="Edit Borrower">
+            <Edit3 size={14} />
+          </button>
 
           <button type="button" className="btn-icon" onClick={() => onDelete(borrower.id)} title="Delete" style={{ color: '#f87171', borderColor: '#7f1d1d' }}>
-            <Trash2 size={13} />
+            <Trash2 size={14} />
           </button>
         </div>
       </div>

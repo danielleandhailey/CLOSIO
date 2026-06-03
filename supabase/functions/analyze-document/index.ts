@@ -72,6 +72,7 @@ Document filename: ${fileName}`
     })
 
     const data = await response.json()
+    console.log('Claude raw response:', JSON.stringify(data).substring(0, 500))
 
     if (data.error) {
       return new Response(JSON.stringify({ error: data.error }), {

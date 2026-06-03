@@ -225,6 +225,8 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
           if (extracted.appraisal_type) updates.appraisal_type = extracted.appraisal_type;
           if (extracted.appraisal_subject_to) updates.appraisal_subject_to = extracted.appraisal_subject_to;
           if (extracted.appraisal_reinspection !== undefined) updates.appraisal_reinspection = extracted.appraisal_reinspection;
+          if (extracted.property_type) updates.property_type = extracted.property_type;
+          if (extracted.occupancy) updates.occupancy = extracted.occupancy;
           if (Object.keys(updates).length > 0) {
             await supabase.from('borrowers').update(updates).eq('id', borrower.id);
           }
@@ -822,6 +824,8 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
         <Field label="Funded Date" value={borrower.funded_date} dbKey="funded_date" type="date" />
         <Field label="Lender" value={borrower.lender} dbKey="lender" />
         <Field label="Loan Type" value={borrower.loan_type} dbKey="loan_type" />
+        <Field label="Property Type" value={borrower.property_type} dbKey="property_type" />
+        <Field label="Occupancy" value={borrower.occupancy} dbKey="occupancy" />
         <Field label="Earnest Money" value={borrower.earnest_money} dbKey="earnest_money" type="number" />
       </div>
     </div>
