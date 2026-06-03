@@ -17,6 +17,7 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [bonzoPulling, setBonzoPulling] = useState(false);
+  const [bonzoPushing, setBonzoPushing] = useState(false);
   const [bonzoStatus, setBonzoStatus] = useState('');
   const [editingBorrower, setEditingBorrower] = useState(null);
 
@@ -123,6 +124,19 @@ const PipelinePage = ({ borrowers, ops }) => {
     }
   };
 
+  const handleBonzoPush = async () => {
+    setBonzoPushing(true);
+    setBonzoStatus('');
+    try {
+      // Placeholder for future Bonzo push integration
+      setBonzoStatus(`Push ready — integrate Bonzo API`);
+    } catch (e) {
+      setBonzoStatus(`Error: ${e.message}`);
+    } finally {
+      setBonzoPushing(false);
+    }
+  };
+
   const handleSelectBorrower = useCallback((id) => {
     setExpandedIds(new Set([id]));
     // Scroll to borrower
@@ -177,6 +191,12 @@ const PipelinePage = ({ borrowers, ops }) => {
         <button type="button" className="btn btn-ghost" onClick={handleBonzoPull} disabled={bonzoPulling} title="Sync leads from Bonzo CRM">
           {bonzoPulling ? <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Zap size={12} />}
           Bonzo Pull
+        </button>
+
+        {/* Bonzo Push */}
+        <button type="button" className="btn btn-ghost" onClick={handleBonzoPush} disabled={bonzoPushing} title="Push updates to Bonzo CRM">
+          {bonzoPushing ? <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Zap size={12} />}
+          Bonzo Push
         </button>
 
         {bonzoStatus && (
