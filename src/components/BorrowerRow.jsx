@@ -612,8 +612,14 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Doc Drop Zone - centered, click opens file picker */}
+        {/* Spacer to center Drop */}
+        <div style={{ flex: 1 }} />
+
+        {/* Doc Drop Zone - centered */}
         <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
+
+        {/* Spacer to balance */}
+        <div style={{ flex: 1 }} />
 
         {/* Preapproved indicators */}
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -624,9 +630,6 @@ const BorrowerRow = ({
             <span title="Preapproval Letter Sent" style={{ background: '#3b82f6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700' }}>PA</span>
           )}
         </div>
-
-        {/* Spacer to push everything right */}
-        <div style={{ flex: 1 }} />
 
         {/* Touch stamp - right side */}
         <span className={`touch-stamp ${touched ? 'touched' : ''}`} style={{ marginRight: '8px' }}>
