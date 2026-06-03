@@ -33,7 +33,8 @@ const NotesSection = ({ borrower, onUpdate }) => {
 // ---- Tasks Section ----
 const TasksSection = ({ borrower, ops }) => {
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ title: '', due_date: '', type: 'task', assigned_to: '' });
+  const [form, setForm] = useState({ title: '', due_date: '', due_time: '', type: 'task', assigned_to: 'Danielle' });
+  const [customAssign, setCustomAssign] = useState('');
 
   const tasks = (borrower.tasks || []).sort((a, b) => {
     if (!a.due_date) return 1;
@@ -44,8 +45,11 @@ const TasksSection = ({ borrower, ops }) => {
   const handleAdd = async () => {
     if (!form.title.trim()) return;
     try {
-      await ops.addTask({ ...form, borrower_id: borrower.id });
-      setForm({ title: '', due_date: '', type: 'task', assigned_to: '' });
+      const assignee = form.assigned_to === 'Other' ? customAssign : form.assigned_to;
+      const dueDateTime = form.due_date && form.due_time ? `${form.due_date}T${form.due_time}` : form.due_date || null;
+      await ops.addTask({ ...form, due_date: dueDateTime, assigned_to: assignee, borrower_id: borrower.id });
+      setForm({ title: '', due_date: '', due_time: '', type: 'task', assigned_to: 'Danielle' });
+      setCustomAssign('');
       setAdding(false);
     } catch (e) {
       console.error('Save task error:', e);
@@ -92,7 +96,7 @@ const TasksSection = ({ borrower, ops }) => {
             </span>
             {task.due_date && (
               <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
-                {format(typeof task.due_date === 'string' ? parseISO(task.due_date) : task.due_date, 'M/d h:mma')}
+                {format(typeof task.due_date === 'string' ? parseISO(task.due_date) : task.due_date, 'M/d/yy h:mma')}
               </span>
             )}
             {task.assigned_to && <span style={{ fontSize: '10px', color: '#94a3b8' }}>{task.assigned_to}</span>}
@@ -106,7 +110,7 @@ const TasksSection = ({ borrower, ops }) => {
 
       {adding && (
         <div style={{ background: '#f0fdf4', border: '2px solid #22c55e', borderRadius: '6px', padding: '12px', marginTop: '8px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
             <select
               value={form.type}
               onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
@@ -116,9 +120,16 @@ const TasksSection = ({ borrower, ops }) => {
               <option value="appointment">Appointment</option>
             </select>
             <input
-              type="datetime-local"
+              type="date"
               value={form.due_date}
               onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
+              style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '6px 8px', borderRadius: '4px', fontSize: '12px' }}
+            />
+            <input
+              type="time"
+              value={form.due_time}
+              onChange={e => setForm(f => ({ ...f, due_time: e.target.value }))}
+              placeholder="Time"
               style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '6px 8px', borderRadius: '4px', fontSize: '12px' }}
             />
           </div>
@@ -130,13 +141,26 @@ const TasksSection = ({ borrower, ops }) => {
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
             style={{ width: '100%', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '8px', borderRadius: '4px', fontSize: '12px', marginBottom: '6px', outline: 'none' }}
           />
-          <input
-            type="text"
-            placeholder="Assign to (LO / LOA name)"
-            value={form.assigned_to}
-            onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))}
-            style={{ width: '100%', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '8px', borderRadius: '4px', fontSize: '12px', marginBottom: '8px', outline: 'none' }}
-          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            <select
+              value={form.assigned_to}
+              onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))}
+              style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '8px', borderRadius: '4px', fontSize: '12px' }}
+            >
+              <option value="Danielle">Danielle</option>
+              <option value="Hailey">Hailey</option>
+              <option value="Other">Other...</option>
+            </select>
+            {form.assigned_to === 'Other' && (
+              <input
+                type="text"
+                placeholder="Enter name..."
+                value={customAssign}
+                onChange={e => setCustomAssign(e.target.value)}
+                style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '8px', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
+              />
+            )}
+          </div>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button type="button" onClick={handleAdd}
               style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
