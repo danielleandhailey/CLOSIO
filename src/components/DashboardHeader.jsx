@@ -175,37 +175,25 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
 
   return (
     <div className="dashboard-header" style={{ padding: '10px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch', width: '100%' }}>
 
         {/* 1. PIPELINE */}
         <SmallCard icon={Users} label="Pipeline" value={totalLoans} color="#8b5cf6" />
 
-        {/* 2. PROCESSING */}
-        <SmallCard icon={TrendingUp} label="Processing" value={processingCount} color="#3b82f6" onClick={() => onFilterStage('Processing')} />
+        {/* 2. WORKING */}
+        <SmallCard icon={TrendingUp} label="Working" value={stageCounts['Working'] || 0} color="#3b82f6" onClick={() => onFilterStage('Working')} />
 
-        {/* 3. FUNDED */}
+        {/* 3. SHOPPING */}
+        <SmallCard icon={Home} label="Shopping" value={stageCounts['Shopping'] || 0} color="#f59e0b" onClick={() => onFilterStage('Shopping')} />
+
+        {/* 4. PROCESSING */}
+        <SmallCard icon={TrendingUp} label="Processing" value={processingCount} color="#06b6d4" onClick={() => onFilterStage('Processing')} />
+
+        {/* 5. FUNDED */}
         <SmallCard icon={CheckSquare} label="Funded" value={fundedCount} color="#10b981" onClick={() => onFilterStage('Funded')} />
 
-        {/* 4. REVENUE */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '85px', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px' }}>
-            <DollarSign size={10} style={{ color: '#22c55e' }} />
-            <span style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Revenue</span>
-          </div>
-          <div style={{ fontSize: revFontSize, fontWeight: '700', color: '#22c55e', lineHeight: 1 }}>{revStr}</div>
-        </div>
-
-        {/* 5. VOLUME */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '85px', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px' }}>
-            <DollarSign size={10} style={{ color: '#f59e0b' }} />
-            <span style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Volume</span>
-          </div>
-          <div style={{ fontSize: volFontSize, fontWeight: '700', color: '#f59e0b', lineHeight: 1 }}>{volStr}</div>
-        </div>
-
-        {/* 6. CALENDAR - Bigger, shows today's appts */}
-        <MediumCard style={{ cursor: 'pointer', minWidth: '140px' }} onClick={() => setShowCalendar(true)}>
+        {/* 6. CALENDAR - Bigger, flex to fill */}
+        <MediumCard style={{ cursor: 'pointer', flex: 1, minWidth: '140px' }} onClick={() => setShowCalendar(true)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '8px', color: '#ef4444', fontWeight: '700', textTransform: 'uppercase' }}>{format(new Date(), 'EEE')}</div>
@@ -227,8 +215,8 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
           </div>
         </MediumCard>
 
-        {/* 7. TASKS - Same size as calendar */}
-        <MediumCard style={{ minWidth: '140px' }}>
+        {/* 7. TASKS - Same size as calendar, flex to fill */}
+        <MediumCard style={{ flex: 1, minWidth: '140px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <CheckSquare size={10} style={{ color: '#3b82f6' }} />
@@ -255,8 +243,8 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
         {/* 9. LOCK EXPIRY */}
         <SmallCard icon={Lock} label="Lock Expiry" value={locksExpiring.length} color="#ef4444" onClick={() => {}} />
 
-        {/* 10. CONTINGENCIES */}
-        <SmallCard icon={Clock} label="Contg" value={contingenciesDue.length} color="#8b5cf6" onClick={() => {}} />
+        {/* 10. LOAN CONTINGENCY */}
+        <SmallCard icon={Clock} label="Loan Contg" value={contingenciesDue.length} color="#8b5cf6" onClick={() => {}} />
 
         {/* 11. DONUT CHART */}
         <div style={{ background: '#1e293b', borderRadius: '8px', padding: '6px 10px', border: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
