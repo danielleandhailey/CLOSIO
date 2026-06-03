@@ -55,10 +55,11 @@ const TasksSection = ({ borrower, ops }) => {
 
   return (
     <div>
-      <div className="section-heading">
-        ✅ Tasks & Appointments
-        <button type="button" className="btn-xs btn-ghost" onClick={() => setAdding(a => !a)} style={{ marginLeft: 'auto' }}>
-          <Plus size={10} /> Add
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b' }}>✅ TASKS & APPOINTMENTS</span>
+        <button type="button" onClick={() => setAdding(a => !a)}
+          style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+          + Add
         </button>
       </div>
 
@@ -95,12 +96,12 @@ const TasksSection = ({ borrower, ops }) => {
       })}
 
       {adding && (
-        <div style={{ background: '#22222e', border: '1px solid #333345', borderRadius: '6px', padding: '10px', marginTop: '6px' }}>
+        <div style={{ background: '#f0fdf4', border: '2px solid #22c55e', borderRadius: '6px', padding: '12px', marginTop: '8px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
             <select
               value={form.type}
               onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-              style={{ background: '#1a1a23', border: '1px solid #333345', color: '#e8e8f0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}
+              style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '6px 8px', borderRadius: '4px', fontSize: '12px' }}
             >
               <option value="task">Task</option>
               <option value="appointment">Appointment</option>
@@ -109,7 +110,7 @@ const TasksSection = ({ borrower, ops }) => {
               type="datetime-local"
               value={form.due_date}
               onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
-              style={{ background: '#1a1a23', border: '1px solid #333345', color: '#e8e8f0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}
+              style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '6px 8px', borderRadius: '4px', fontSize: '12px' }}
             />
           </div>
           <input
@@ -118,18 +119,24 @@ const TasksSection = ({ borrower, ops }) => {
             value={form.title}
             onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            style={{ width: '100%', background: '#1a1a23', border: '1px solid #333345', color: '#e8e8f0', padding: '5px 8px', borderRadius: '4px', fontSize: '12px', marginBottom: '6px', outline: 'none' }}
+            style={{ width: '100%', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '8px', borderRadius: '4px', fontSize: '12px', marginBottom: '6px', outline: 'none' }}
           />
           <input
             type="text"
             placeholder="Assign to (LO / LOA name)"
             value={form.assigned_to}
             onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))}
-            style={{ width: '100%', background: '#1a1a23', border: '1px solid #333345', color: '#e8e8f0', padding: '5px 8px', borderRadius: '4px', fontSize: '12px', marginBottom: '8px', outline: 'none' }}
+            style={{ width: '100%', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', padding: '8px', borderRadius: '4px', fontSize: '12px', marginBottom: '8px', outline: 'none' }}
           />
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button type="button" className="btn btn-primary btn-sm" onClick={handleAdd}>Save</button>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAdding(false)}>Cancel</button>
+            <button type="button" onClick={handleAdd}
+              style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+              Save
+            </button>
+            <button type="button" onClick={() => setAdding(false)}
+              style={{ background: '#e2e8f0', color: '#475569', border: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
