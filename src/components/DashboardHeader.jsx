@@ -62,15 +62,15 @@ const DonutChart = ({ data, size = 90 }) => {
   );
 };
 
-// Stat Card component
+// Stat Card component - compact
 const StatCard = ({ icon: Icon, label, value, subtext, color = '#3b82f6', onClick }) => (
   <div
     onClick={onClick}
     style={{
       background: '#1e293b',
-      borderRadius: '12px',
-      padding: '16px',
-      minWidth: '140px',
+      borderRadius: '8px',
+      padding: '10px 12px',
+      minWidth: '100px',
       cursor: onClick ? 'pointer' : 'default',
       border: '1px solid #334155',
       transition: 'all 0.2s',
@@ -78,36 +78,33 @@ const StatCard = ({ icon: Icon, label, value, subtext, color = '#3b82f6', onClic
     onMouseEnter={e => onClick && (e.currentTarget.style.borderColor = color)}
     onMouseLeave={e => e.currentTarget.style.borderColor = '#334155'}
   >
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-      <div style={{ background: `${color}20`, padding: '6px', borderRadius: '8px' }}>
-        <Icon size={16} style={{ color }} />
-      </div>
-      <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+      <Icon size={12} style={{ color }} />
+      <span style={{ fontSize: '9px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
     </div>
-    <div style={{ fontSize: '28px', fontWeight: '700', color: '#f1f5f9', lineHeight: 1 }}>{value}</div>
-    {subtext && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>{subtext}</div>}
+    <div style={{ fontSize: '20px', fontWeight: '700', color: '#f1f5f9', lineHeight: 1 }}>{value}</div>
   </div>
 );
 
-// Alert Item component
+// Alert Item component - compact
 const AlertItem = ({ icon: Icon, text, subtext, color, urgent, onClick }) => (
   <div
     onClick={onClick}
     style={{
-      display: 'flex', alignItems: 'center', gap: '10px',
-      padding: '10px 12px', borderRadius: '8px',
+      display: 'flex', alignItems: 'center', gap: '6px',
+      padding: '5px 8px', borderRadius: '5px',
       background: urgent ? `${color}15` : '#0f172a',
       border: `1px solid ${urgent ? color : '#1e293b'}`,
       cursor: 'pointer', transition: 'all 0.15s',
-      marginBottom: '6px',
+      marginBottom: '3px',
     }}
     onMouseEnter={e => e.currentTarget.style.background = `${color}20`}
     onMouseLeave={e => e.currentTarget.style.background = urgent ? `${color}15` : '#0f172a'}
   >
-    <Icon size={14} style={{ color, flexShrink: 0 }} />
+    <Icon size={10} style={{ color, flexShrink: 0 }} />
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: '12px', fontWeight: '600', color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
-      {subtext && <div style={{ fontSize: '10px', color: '#64748b' }}>{subtext}</div>}
+      <div style={{ fontSize: '10px', fontWeight: '600', color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
+      {subtext && <div style={{ fontSize: '9px', color: '#64748b' }}>{subtext}</div>}
     </div>
   </div>
 );
@@ -216,87 +213,56 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage }) => {
     stageCounts, donutData, barData, totalVolume, closingsThisMonth, processingCount, fundedCount, totalLoans,
   } = dashboardData;
 
-  return (
-    <div style={{ padding: '16px 20px', background: '#0f172a', borderBottom: '1px solid #1e293b' }}>
-      {/* Top Row - Key Metrics */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-        <StatCard icon={Users} label="Active Pipeline" value={totalLoans} subtext="Total loans" color="#8b5cf6" />
-        <StatCard icon={DollarSign} label="Total Volume" value={formatCurrency(totalVolume)} subtext="Loan amount" color="#22c55e" />
-        <StatCard icon={TrendingUp} label="Processing" value={processingCount} subtext="In progress" color="#3b82f6" onClick={() => onFilterStage('Processing')} />
-        <StatCard icon={Home} label="Closing Soon" value={closingsThisMonth} subtext="Next 30 days" color="#f59e0b" />
-        <StatCard icon={CheckSquare} label="Funded" value={fundedCount} subtext="Completed" color="#10b981" onClick={() => onFilterStage('Funded')} />
+  // Alert box component - compact
+  const AlertBox = ({ title, count, color, items, emptyText, renderItem }) => (
+    <div style={{ background: '#1e293b', borderRadius: '8px', padding: '10px', border: '1px solid #334155', minWidth: '140px', flex: 1 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        <span style={{ fontSize: '9px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase' }}>{title}</span>
+        <span style={{ background: color, color: '#fff', fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '8px' }}>{count}</span>
       </div>
+      <div style={{ maxHeight: '60px', overflowY: 'auto' }}>
+        {items.length === 0 ? (
+          <div style={{ fontSize: '9px', color: '#475569', fontStyle: 'italic' }}>{emptyText}</div>
+        ) : items.slice(0, 3).map(renderItem)}
+      </div>
+    </div>
+  );
 
-      {/* Middle Row - Charts & Alerts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-        {/* Donut Chart */}
-        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155' }}>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pipeline Mix</div>
-          <DonutChart data={donutData} size={100} />
-        </div>
+  return (
+    <div style={{ padding: '10px 16px', background: '#0f172a', borderBottom: '1px solid #1e293b' }}>
+      {/* Single Row - Stats, Alerts, Donut */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', overflowX: 'auto', alignItems: 'stretch' }}>
+        {/* Stat Cards */}
+        <StatCard icon={Users} label="Pipeline" value={totalLoans} color="#8b5cf6" />
+        <StatCard icon={DollarSign} label="Volume" value={formatCurrency(totalVolume)} color="#22c55e" />
+        <StatCard icon={TrendingUp} label="Processing" value={processingCount} color="#3b82f6" onClick={() => onFilterStage('Processing')} />
+        <StatCard icon={Home} label="Closing" value={closingsThisMonth} color="#f59e0b" />
+        <StatCard icon={CheckSquare} label="Funded" value={fundedCount} color="#10b981" onClick={() => onFilterStage('Funded')} />
 
-        {/* Today's Tasks */}
-        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', minWidth: '180px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase' }}>Today's Tasks</span>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px' }}>{tasksDueToday.length}</span>
-          </div>
-          <div style={{ maxHeight: '90px', overflowY: 'auto' }}>
-            {tasksDueToday.length === 0 ? (
-              <div style={{ fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>All caught up!</div>
-            ) : tasksDueToday.slice(0, 3).map((t, i) => (
-              <AlertItem key={i} icon={CheckSquare} text={t.borrower.name?.split(' ')[0]} subtext={t.title?.substring(0, 20)}
-                color={t.daysUntil < 0 ? '#ef4444' : '#3b82f6'} urgent={t.daysUntil < 0} onClick={() => onSelectBorrower(t.borrower.id)} />
-            ))}
-          </div>
-        </div>
+        {/* Divider */}
+        <div style={{ width: '1px', background: '#334155', margin: '0 4px' }} />
 
-        {/* Locks Expiring */}
-        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', minWidth: '180px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase' }}>Locks Expiring</span>
-            <span style={{ background: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px' }}>{locksExpiring.length}</span>
-          </div>
-          <div style={{ maxHeight: '90px', overflowY: 'auto' }}>
-            {locksExpiring.length === 0 ? (
-              <div style={{ fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>No locks expiring</div>
-            ) : locksExpiring.slice(0, 3).map((b, i) => (
-              <AlertItem key={i} icon={Lock} text={b.name?.split(' ')[0]} subtext={b.daysUntil === 0 ? 'TODAY!' : `${b.daysUntil} days`}
-                color="#ef4444" urgent={b.daysUntil <= 2} onClick={() => onSelectBorrower(b.id)} />
-            ))}
-          </div>
-        </div>
+        {/* Alert Boxes */}
+        <AlertBox title="Tasks" count={tasksDueToday.length} color="#3b82f6" items={tasksDueToday} emptyText="All caught up!"
+          renderItem={(t, i) => <AlertItem key={i} icon={CheckSquare} text={t.borrower.name?.split(' ')[0]} subtext={t.title?.substring(0, 15)}
+            color={t.daysUntil < 0 ? '#ef4444' : '#3b82f6'} urgent={t.daysUntil < 0} onClick={() => onSelectBorrower(t.borrower.id)} />} />
 
-        {/* Floating */}
-        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', minWidth: '180px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase' }}>Floating</span>
-            <span style={{ background: '#f59e0b', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px' }}>{floatingLoans.length}</span>
-          </div>
-          <div style={{ maxHeight: '90px', overflowY: 'auto' }}>
-            {floatingLoans.length === 0 ? (
-              <div style={{ fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>All locked</div>
-            ) : floatingLoans.slice(0, 3).map((b, i) => (
-              <AlertItem key={i} icon={AlertTriangle} text={b.name?.split(' ')[0]} subtext={b.stage}
-                color="#f59e0b" urgent={false} onClick={() => onSelectBorrower(b.id)} />
-            ))}
-          </div>
-        </div>
+        <AlertBox title="Locks" count={locksExpiring.length} color="#ef4444" items={locksExpiring} emptyText="No locks expiring"
+          renderItem={(b, i) => <AlertItem key={i} icon={Lock} text={b.name?.split(' ')[0]} subtext={b.daysUntil === 0 ? 'TODAY!' : `${b.daysUntil}d`}
+            color="#ef4444" urgent={b.daysUntil <= 2} onClick={() => onSelectBorrower(b.id)} />} />
 
-        {/* Contingencies */}
-        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', minWidth: '180px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase' }}>Contingencies</span>
-            <span style={{ background: '#8b5cf6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px' }}>{contingenciesDue.length}</span>
-          </div>
-          <div style={{ maxHeight: '90px', overflowY: 'auto' }}>
-            {contingenciesDue.length === 0 ? (
-              <div style={{ fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>No contingencies due</div>
-            ) : contingenciesDue.slice(0, 3).map((c, i) => (
-              <AlertItem key={i} icon={Clock} text={c.borrower.name?.split(' ')[0]} subtext={`${c.contingency} - ${c.daysUntil}d`}
-                color="#8b5cf6" urgent={c.daysUntil <= 2} onClick={() => onSelectBorrower(c.borrower.id)} />
-            ))}
-          </div>
+        <AlertBox title="Floating" count={floatingLoans.length} color="#f59e0b" items={floatingLoans} emptyText="All locked"
+          renderItem={(b, i) => <AlertItem key={i} icon={AlertTriangle} text={b.name?.split(' ')[0]} subtext={b.stage}
+            color="#f59e0b" urgent={false} onClick={() => onSelectBorrower(b.id)} />} />
+
+        <AlertBox title="Contingencies" count={contingenciesDue.length} color="#8b5cf6" items={contingenciesDue} emptyText="None due"
+          renderItem={(c, i) => <AlertItem key={i} icon={Clock} text={c.borrower.name?.split(' ')[0]} subtext={`${c.contingency} ${c.daysUntil}d`}
+            color="#8b5cf6" urgent={c.daysUntil <= 2} onClick={() => onSelectBorrower(c.borrower.id)} />} />
+
+        {/* Donut Chart - Far Right */}
+        <div style={{ background: '#1e293b', borderRadius: '8px', padding: '8px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <DonutChart data={donutData} size={70} />
+          <span style={{ fontSize: '8px', color: '#64748b', marginTop: '2px' }}>Pipeline</span>
         </div>
       </div>
 
