@@ -43,9 +43,14 @@ const TasksSection = ({ borrower, ops }) => {
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;
-    await ops.addTask({ ...form, borrower_id: borrower.id });
-    setForm({ title: '', due_date: '', type: 'task', assigned_to: '' });
-    setAdding(false);
+    try {
+      await ops.addTask({ ...form, borrower_id: borrower.id });
+      setForm({ title: '', due_date: '', type: 'task', assigned_to: '' });
+      setAdding(false);
+    } catch (e) {
+      console.error('Save task error:', e);
+      alert('Failed to save task: ' + e.message);
+    }
   };
 
   return (
@@ -1063,7 +1068,7 @@ const APPRAISAL_TYPES = [
 const IncomeSection = ({ borrower, onUpdate }) => {
   const incomes = borrower.incomes || [];
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ person: 'Borrower', employment_type: 'W2', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
+  const [form, setForm] = useState({ person: 'Borrower', employment_type: 'Employment', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
 
   const personOptions = ['Borrower'];
   const allCoBorrowers = borrower.co_borrowers?.length ? borrower.co_borrowers : (borrower.co_borrower ? [borrower.co_borrower] : []);
@@ -1071,10 +1076,15 @@ const IncomeSection = ({ borrower, onUpdate }) => {
   if (allCoBorrowers.length === 0) personOptions.push('Co-Borrower');
 
   const saveIncome = async () => {
-    const updated = [...incomes, { ...form, id: Date.now() }];
-    await onUpdate(borrower.id, { incomes: updated });
-    setForm({ person: 'Borrower', employment_type: 'W2', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
-    setAdding(false);
+    try {
+      const updated = [...incomes, { ...form, id: Date.now() }];
+      await onUpdate(borrower.id, { incomes: updated });
+      setForm({ person: 'Borrower', employment_type: 'Employment', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
+      setAdding(false);
+    } catch (e) {
+      console.error('Save income error:', e);
+      alert('Failed to save income: ' + e.message);
+    }
   };
 
   const removeIncome = async (id) => {
