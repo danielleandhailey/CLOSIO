@@ -64,32 +64,41 @@ const TasksSection = ({ borrower, ops }) => {
       </div>
 
       {tasks.map(task => {
-        const urgency = task.type === 'appointment' ? 'appointment' : (task.completed ? 'completed' : taskUrgency(task.due_date));
-        const colors = urgency === 'appointment'
-          ? { color: '#1e3a8a', bg: '#dbeafe' }
-          : urgency === 'completed'
-          ? { color: '#6a6a80', bg: '#22222e' }
-          : urgencyColor(urgency);
+        const isCompleted = task.completed;
+        const isAppt = task.type === 'appointment';
 
         return (
-          <div key={task.id} className={`task-item ${urgency}`} style={{ background: colors.bg, color: colors.color }}>
-            <input
-              type="checkbox"
-              checked={task.completed}
-              onChange={() => ops.updateTask(task.id, { completed: !task.completed })}
-              style={{ accentColor: colors.color, flexShrink: 0 }}
-            />
-            <span style={{ flex: 1, textDecoration: task.completed ? 'line-through' : 'none' }}>
-              {task.type === 'appointment' ? '📅 ' : ''}{task.title}
+          <div key={task.id} style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '8px 10px', marginBottom: '4px', borderRadius: '6px',
+            background: isCompleted ? '#f1f5f9' : (isAppt ? '#dbeafe' : '#fff'),
+            border: `1px solid ${isCompleted ? '#cbd5e1' : (isAppt ? '#3b82f6' : '#e2e8f0')}`,
+          }}>
+            <button
+              type="button"
+              onClick={() => ops.updateTask(task.id, { completed: !isCompleted })}
+              style={{
+                width: '22px', height: '22px', borderRadius: '4px', flexShrink: 0,
+                background: isCompleted ? '#22c55e' : '#fff',
+                border: `2px solid ${isCompleted ? '#22c55e' : '#cbd5e1'}`,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontSize: '12px', fontWeight: '700',
+              }}
+            >
+              {isCompleted ? '✓' : ''}
+            </button>
+            <span style={{ flex: 1, fontSize: '12px', color: isCompleted ? '#94a3b8' : '#1e293b', textDecoration: isCompleted ? 'line-through' : 'none' }}>
+              {isAppt ? '📅 ' : ''}{task.title}
             </span>
             {task.due_date && (
-              <span style={{ fontSize: '10px', fontFamily: 'Space Mono, monospace', flexShrink: 0 }}>
+              <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
                 {format(typeof task.due_date === 'string' ? parseISO(task.due_date) : task.due_date, 'M/d h:mma')}
               </span>
             )}
-            {task.assigned_to && <span style={{ fontSize: '10px', opacity: 0.7 }}>{task.assigned_to}</span>}
-            <button type="button" onClick={() => ops.deleteTask(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.6 }}>
-              <X size={12} />
+            {task.assigned_to && <span style={{ fontSize: '10px', color: '#94a3b8' }}>{task.assigned_to}</span>}
+            <button type="button" onClick={() => ops.deleteTask(task.id)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '14px', padding: '2px' }}>
+              ×
             </button>
           </div>
         );
