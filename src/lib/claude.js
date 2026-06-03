@@ -1,7 +1,8 @@
-import * as pdfjsLib from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.entry';
 
-// Set worker path
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
 
