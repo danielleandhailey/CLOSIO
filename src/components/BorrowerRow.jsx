@@ -612,14 +612,14 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Spacer to center Drop */}
-        <div style={{ flex: 1 }} />
+        {/* Spacer to position Drop */}
+        <div style={{ flex: 0.5 }} />
 
-        {/* Doc Drop Zone - centered */}
+        {/* Doc Drop Zone */}
         <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
 
         {/* Spacer to balance */}
-        <div style={{ flex: 1 }} />
+        <div style={{ flex: 1.5 }} />
 
         {/* Preapproved indicators */}
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
