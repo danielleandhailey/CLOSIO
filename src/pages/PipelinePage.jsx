@@ -127,6 +127,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         borrowers={borrowers}
         onSelectBorrower={handleSelectBorrower}
         onFilterStage={setFilterStage}
+        ops={ops}
       />
 
       {/* Toolbar */}
