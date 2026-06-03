@@ -467,9 +467,18 @@ const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
 
   const handleClick = (e) => {
     e.stopPropagation();
-    // Open file picker
+    onHighlight?.(true);
     inputRef.current?.click();
   };
+
+  // Clear highlight when file dialog closes
+  useEffect(() => {
+    const handleFocus = () => {
+      setTimeout(() => onHighlight?.(false), 200);
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [onHighlight]);
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
