@@ -1328,15 +1328,25 @@ const IncomeSection = ({ borrower, onUpdate }) => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
-        <button type="button" className="btn-xs btn-ghost" onClick={() => setAdding(a => !a)}>
-          <Plus size={10} /> Add Income
-        </button>
+      {/* Drop Zone for Income Docs */}
+      <div
+        style={{
+          padding: '16px', borderRadius: '8px', marginBottom: '12px',
+          background: '#f0fdf4', border: '2px dashed #22c55e', textAlign: 'center',
+        }}
+      >
+        <Upload size={20} style={{ color: '#22c55e', marginBottom: '6px' }} />
+        <div style={{ fontSize: '11px', color: '#166534', fontWeight: '600' }}>Drop VOE, Paystub, or Tax Return here</div>
+        <div style={{ fontSize: '10px', color: '#64748b' }}>to auto-populate income fields</div>
       </div>
 
-      {incomes.length === 0 && !adding && (
-        <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', padding: '20px' }}>No income added yet. Drop a VOE, paystub, or tax return to auto-populate.</div>
-      )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>INCOME ENTRIES</span>
+        <button type="button" onClick={() => setAdding(a => !a)}
+          style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+          + Add Income
+        </button>
+      </div>
 
       {incomes.map(inc => (
         <div key={inc.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px', marginBottom: '8px' }}>
