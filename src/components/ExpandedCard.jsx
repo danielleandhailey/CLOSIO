@@ -4,7 +4,7 @@ import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES, STIP_TEMPLATES, EMPLOYMENT_TYP
 import { formatDate, formatCurrency, formatRate, calcPI, calcLTV, taskUrgency, urgencyColor } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { claudeService } from '../lib/claude';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays } from 'date-fns';
 
 // ---- Notes Section ----
 const NotesSection = ({ borrower, onUpdate }) => {
@@ -1017,13 +1017,96 @@ const BorrowersSection = ({ borrower, onUpdate }) => {
 const PreapprovalSection = ({ borrower, onUpdate }) => {
   const [valApproved, setValApproved] = useState(borrower.val_approved || false);
   const [preapprovalSent, setPreapprovalSent] = useState(borrower.preapproval_sent || false);
-  const [preapprovalAmount, setPreapprovalAmount] = useState(borrower.preapproval_amount || '');
-  const [preapprovalExpires, setPreapprovalExpires] = useState(borrower.preapproval_expires || '');
+  const [copied, setCopied] = useState(false);
+
+  // Letter form state with auto-populated defaults
+  const [letter, setLetter] = useState({
+    term: '360',
+    program: 'Correspondent 20YR HELOC Adjustable Rate',
+    programType: 'Correspondent',
+    rateType: 'Adjustable',
+    occupancy: borrower.occupancy || 'Primary Residence',
+    salesPrice: borrower.purchase_price || '',
+    loanAmount: borrower.loan_amount || '',
+    downPayment: '',
+    ltv: borrower.ltv || '',
+    state: 'CA',
+  });
+
+  // Calculate down payment and LTV
+  const calcDownPayment = () => {
+    if (letter.salesPrice && letter.loanAmount) {
+      const dp = Number(letter.salesPrice) - Number(letter.loanAmount);
+      return dp > 0 ? dp : '';
+    }
+    return '';
+  };
+
+  const calcLtvPercent = () => {
+    if (letter.salesPrice && letter.loanAmount && Number(letter.salesPrice) > 0) {
+      return ((Number(letter.loanAmount) / Number(letter.salesPrice)) * 100).toFixed(3);
+    }
+    return '';
+  };
 
   const fieldStyle = { width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', background: '#fff' };
-  const labelStyle = { fontSize: '11px', color: '#64748b', marginBottom: '4px', fontWeight: '600' };
+  const labelStyle = { fontSize: '10px', color: '#64748b', marginBottom: '2px', fontWeight: '600', textTransform: 'uppercase' };
 
   const save = (field, val) => onUpdate(borrower.id, { [field]: val });
+
+  // Auto-populate borrower name
+  const borrowerName = borrower.name || 'Applicant';
+  const today = format(new Date(), 'MM/dd/yyyy');
+  const expiresDate = format(addDays(new Date(), 30), 'MM/dd/yyyy');
+  const termMonths = letter.term || '360';
+  const downPaymentCalc = calcDownPayment();
+  const downPaymentPercent = letter.salesPrice && downPaymentCalc ? ((downPaymentCalc / Number(letter.salesPrice)) * 100).toFixed(2) : '';
+  const ltvCalc = calcLtvPercent();
+
+  const generateLetterText = () => `WEST CAPITAL LENDING
+Mortgage Pre-Approval Letter
+${today}
+
+Congratulations! We are pleased to inform you that you have been pre-approved for a home loan with us. I'm looking forward to helping you purchase your new home. Please don't hesitate to call me with any questions.
+
+CLIENT INFORMATION
+Applicant(s): ${borrowerName}
+Property Address: ${letter.state}
+
+Terms: ${termMonths} months
+Program: ${letter.programType} ${letter.rateType === 'Fixed' ? 'Fixed Rate' : 'Adjustable Rate'}
+Sales Price: ${letter.salesPrice ? '$' + Number(letter.salesPrice).toLocaleString() : ''}
+Loan Amount: ${letter.loanAmount ? '$' + Number(letter.loanAmount).toLocaleString() : ''}
+Down Payment: ${downPaymentPercent ? downPaymentPercent + '%' : ''}
+Loan-to-Value: ${ltvCalc ? ltvCalc + '%' : ''}
+Occupancy: ${letter.occupancy}
+
+REVIEW PROGRESS
+A licensed Loan Officer has reviewed the following:
+✓ Reviewed applicant's credit report and credit score
+✓ Verified applicant's income
+✓ Reviewed applicant's debt to income ratio
+
+This approval expires after 30 days on ${expiresDate}.
+
+Sincerely,
+
+Danielle Regnier
+Loan Officer
+NMLS ID: 399441
+Work: (949) 799-2130
+Mobile: (949) 799-2130
+dregnier@westcapitallending.com
+
+West Capital Lending, Inc.
+NMLS ID: 1566096
+17911 Von Karman Avenue, suite 400 Irvine, CA 92614`;
+
+  const copyLetter = () => {
+    navigator.clipboard.writeText(generateLetterText());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1037,36 +1120,102 @@ const PreapprovalSection = ({ borrower, onUpdate }) => {
         </div>
       </div>
 
-      {/* Preapproval Letter */}
-      <div style={{ padding: '10px', background: preapprovalSent ? '#dbeafe' : '#f8fafc', borderRadius: '6px', border: `1px solid ${preapprovalSent ? '#3b82f6' : '#e2e8f0'}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <input type="checkbox" checked={preapprovalSent} onChange={e => { setPreapprovalSent(e.target.checked); save('preapproval_sent', e.target.checked); }}
-            style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }} />
-          <div style={{ fontWeight: '700', fontSize: '12px', color: preapprovalSent ? '#1d4ed8' : '#475569' }}>Preapproval Letter Sent</div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <div>
-            <div style={labelStyle}>Preapproval Amount</div>
-            <input type="number" style={fieldStyle} value={preapprovalAmount} onChange={e => setPreapprovalAmount(e.target.value)}
-              onBlur={() => save('preapproval_amount', preapprovalAmount)} placeholder="$0" />
-          </div>
-          <div>
-            <div style={labelStyle}>Expires</div>
-            <input type="date" style={fieldStyle} value={preapprovalExpires} onChange={e => { setPreapprovalExpires(e.target.value); save('preapproval_expires', e.target.value); }} />
-          </div>
-        </div>
+      {/* Preapproval Sent Toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: preapprovalSent ? '#dbeafe' : '#f8fafc', borderRadius: '6px', border: `1px solid ${preapprovalSent ? '#3b82f6' : '#e2e8f0'}` }}>
+        <input type="checkbox" checked={preapprovalSent} onChange={e => { setPreapprovalSent(e.target.checked); save('preapproval_sent', e.target.checked); }}
+          style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }} />
+        <div style={{ fontWeight: '700', fontSize: '12px', color: preapprovalSent ? '#1d4ed8' : '#475569' }}>Preapproval Letter Sent</div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button type="button" style={{ flex: 1, padding: '10px', background: '#0d9488', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-          📧 Email Preapproval Letter
-        </button>
-        <button type="button" style={{ flex: 1, padding: '10px', background: '#8b5cf6', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-          📱 Text Preapproval Letter
+      {/* Letter Generator */}
+      <div style={{ background: '#fffbeb', border: '2px solid #f59e0b', borderRadius: '8px', padding: '14px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', marginBottom: '12px' }}>📄 Generate Pre-Approval Letter</div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+          <div>
+            <div style={labelStyle}>Term (months)</div>
+            <select value={letter.term} onChange={e => setLetter(l => ({ ...l, term: e.target.value }))} style={fieldStyle}>
+              <option value="360">360 (30yr)</option>
+              <option value="240">240 (20yr)</option>
+              <option value="180">180 (15yr)</option>
+              <option value="120">120 (10yr)</option>
+            </select>
+          </div>
+          <div>
+            <div style={labelStyle}>Rate Type</div>
+            <select value={letter.rateType} onChange={e => setLetter(l => ({ ...l, rateType: e.target.value }))} style={fieldStyle}>
+              <option value="Fixed">Fixed</option>
+              <option value="Adjustable">Adjustable</option>
+            </select>
+          </div>
+          <div>
+            <div style={labelStyle}>Program Type</div>
+            <select value={letter.programType} onChange={e => setLetter(l => ({ ...l, programType: e.target.value }))} style={fieldStyle}>
+              <option value="Correspondent">Correspondent</option>
+              <option value="Wholesale">Wholesale</option>
+            </select>
+          </div>
+          <div>
+            <div style={labelStyle}>Occupancy</div>
+            <select value={letter.occupancy} onChange={e => setLetter(l => ({ ...l, occupancy: e.target.value }))} style={fieldStyle}>
+              <option value="Primary Residence">Primary Residence</option>
+              <option value="Secondary Residence">Secondary Residence</option>
+              <option value="Investment Property">Investment Property</option>
+            </select>
+          </div>
+          <div>
+            <div style={labelStyle}>Sales Price</div>
+            <input type="number" value={letter.salesPrice} onChange={e => setLetter(l => ({ ...l, salesPrice: e.target.value }))} style={fieldStyle} placeholder="$0" />
+          </div>
+          <div>
+            <div style={labelStyle}>Loan Amount</div>
+            <input type="number" value={letter.loanAmount} onChange={e => setLetter(l => ({ ...l, loanAmount: e.target.value }))} style={fieldStyle} placeholder="$0" />
+          </div>
+          <div>
+            <div style={labelStyle}>State</div>
+            <select value={letter.state} onChange={e => setLetter(l => ({ ...l, state: e.target.value }))} style={fieldStyle}>
+              <option value="CA">California</option>
+              <option value="AZ">Arizona</option>
+              <option value="NV">Nevada</option>
+              <option value="TX">Texas</option>
+              <option value="WA">Washington</option>
+              <option value="OR">Oregon</option>
+              <option value="CO">Colorado</option>
+              <option value="FL">Florida</option>
+            </select>
+          </div>
+          <div>
+            <div style={labelStyle}>Down Payment</div>
+            <div style={{ ...fieldStyle, background: '#f3f4f6', color: '#6b7280' }}>
+              {downPaymentCalc ? `$${Number(downPaymentCalc).toLocaleString()} (${downPaymentPercent}%)` : '—'}
+            </div>
+          </div>
+          <div>
+            <div style={labelStyle}>LTV</div>
+            <div style={{ ...fieldStyle, background: '#f3f4f6', color: '#6b7280' }}>
+              {ltvCalc ? `${ltvCalc}%` : '—'}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={copyLetter}
+          style={{
+            width: '100%', padding: '12px', background: copied ? '#22c55e' : '#f59e0b', color: '#fff',
+            border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+          }}
+        >
+          {copied ? '✓ Copied to Clipboard!' : '📋 Copy Pre-Approval Letter'}
         </button>
       </div>
-      <div style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>Template coming soon — provide a sample to customize</div>
+
+      {/* Preview */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px', maxHeight: '200px', overflowY: 'auto' }}>
+        <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>PREVIEW</div>
+        <pre style={{ fontSize: '10px', color: '#1e293b', whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0, lineHeight: 1.4 }}>
+          {generateLetterText()}
+        </pre>
+      </div>
     </div>
   );
 };
