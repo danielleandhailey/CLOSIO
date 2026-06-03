@@ -67,7 +67,7 @@ const AppInner = () => {
       {/* Top Nav */}
       <nav className="top-nav">
         <div className="brand">
-          CLOSIO™
+          <strong style={{ color: '#fff', fontWeight: '800', letterSpacing: '0.02em' }}>CLOSIO™</strong>
           <span>Close More. Pipeline Manager.</span>
         </div>
 
