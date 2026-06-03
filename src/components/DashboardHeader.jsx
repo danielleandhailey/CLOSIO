@@ -95,7 +95,8 @@ const DashboardHeader = ({ borrowers, onSelectBorrower, onFilterStage, ops }) =>
       });
     });
     allTasks.sort((a, b) => a.daysUntil - b.daysUntil);
-    const tasksDueToday = allTasks.filter(t => t.isToday || t.daysUntil < 0);
+    // Show tasks due today, overdue, or within next 7 days
+    const tasksDueToday = allTasks.filter(t => t.daysUntil <= 7);
     const todaysAppts = allTasks.filter(t => t.isToday && t.type === 'appointment');
 
     // Locks expiring
