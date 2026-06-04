@@ -685,14 +685,12 @@ const BorrowerRow = ({
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
           const allLines = (borrower.notes || '').split('\n').filter(line => line.trim());
-          // Filter out document entries and error messages
+          // Filter out document entries and error messages only
           const noteLines = allLines.filter(line => {
             const lower = line.toLowerCase();
-            return !lower.includes('goosecreek') &&
-                   !lower.includes('error') &&
-                   !lower.includes('.pdf') &&
-                   !lower.includes('document') &&
-                   !line.match(/^\[.*\d{1,2}:\d{2}(AM|PM).*\]/i); // no timestamps
+            // Skip document/error lines
+            if (lower.includes('.pdf') || lower.includes('error analyzing')) return false;
+            return true;
           });
 
           // If no notes, show + Note button that opens Notes tab
