@@ -11,11 +11,14 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [defaultTab, setDefaultTab] = useState(null); // which tab to open by default
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [filterType, setFilterType] = useState('All'); // Loan type filter
   const [filterStage, setFilterStage] = useState('All');
   const [sortBy, setSortBy] = useState('stage');
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBorrower, setEditingBorrower] = useState(null);
+
+  const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'Reverse', 'HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM'];
 
   // Stage counts
   const stageCounts = useMemo(() => {
@@ -28,7 +31,18 @@ const PipelinePage = ({ borrowers, ops }) => {
   // Filter + sort
   const displayedBorrowers = useMemo(() => {
     let list = borrowers;
+    // Filter by loan type
+    if (filterType !== 'All') {
+      list = list.filter(b => {
+        const loanType = (b.loan_type || '').toLowerCase();
+        const loanPurpose = (b.loan_purpose || '').toLowerCase();
+        const filterLower = filterType.toLowerCase();
+        return loanType.includes(filterLower) || loanPurpose.includes(filterLower);
+      });
+    }
+    // Filter by stage
     if (filterStage !== 'All') list = list.filter(b => b.stage === filterStage);
+    // Search
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(b =>
@@ -39,7 +53,7 @@ const PipelinePage = ({ borrowers, ops }) => {
       );
     }
     return sortBorrowers(list, sortBy, STAGES);
-  }, [borrowers, filterStage, sortBy, search]);
+  }, [borrowers, filterType, filterStage, sortBy, search]);
 
   const handleSelect = useCallback((id, checked) => {
     setSelectedIds(s => {
@@ -136,13 +150,20 @@ const PipelinePage = ({ borrowers, ops }) => {
 
       {/* Toolbar */}
       <div className="toolbar">
+        {/* Type filter */}
+        <select className="select-input" value={filterType} onChange={e => setFilterType(e.target.value)}>
+          {LOAN_TYPES.map(t => <option key={t} value={t}>{t === 'All' ? 'Type' : t}</option>)}
+        </select>
+
+        {/* Stage filter */}
         <select className="select-input" value={filterStage} onChange={e => setFilterStage(e.target.value)}>
-          <option value="All">All Stages</option>
+          <option value="All">Stages</option>
           {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
+        {/* Sort */}
         <select className="select-input" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>Sort: {o.label}</option>)}
+          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
 
         <div style={{ position: 'relative', flex: 1, maxWidth: '240px' }}>
