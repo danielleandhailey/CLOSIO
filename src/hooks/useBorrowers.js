@@ -17,10 +17,23 @@ export const useBorrowers = () => {
           tasks(*),
           contingencies(*),
           contacts(*),
-          stipulations(*),
-          notes_history(*)
+          stipulations(*)
         `)
         .order('created_at', { ascending: true });
+
+      // Fetch notes_history separately (table may not exist yet)
+      if (data) {
+        try {
+          const { data: notesData } = await supabase.from('notes_history').select('*');
+          if (notesData) {
+            data.forEach(b => {
+              b.notes_history = notesData.filter(n => n.borrower_id === b.id);
+            });
+          }
+        } catch (e) {
+          // notes_history table doesn't exist yet - that's ok
+        }
+      }
 
       if (error) throw error;
       setBorrowers(data || []);
