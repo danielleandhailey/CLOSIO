@@ -695,12 +695,12 @@ const BorrowerRow = ({
                    !line.match(/^\[.*\d{1,2}:\d{2}(AM|PM).*\]/i); // no timestamps
           });
 
-          // If no notes, show + Note button
+          // If no notes, show + Note button that opens Notes tab
           if (!noteLines.length) {
             return (
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); if (onAddNote) onAddNote(borrower.id, ''); else onExpand(borrower.id, 'notes'); }}
+                onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
                 style={{
                   marginLeft: '60px', background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
                   padding: '4px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer',
