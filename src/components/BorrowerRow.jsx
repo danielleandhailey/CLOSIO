@@ -820,7 +820,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginLeft: '60px', flex: 1 }}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '24px', marginLeft: '12px', flex: 1 }}
             >
               {noteLines.map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
@@ -831,17 +831,17 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', cursor: 'pointer', maxWidth: '700px' }}
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', minWidth: '250px', maxWidth: '400px', flex: 1 }}
                     title={noteText}
                   >
                     <button
                       type="button"
                       onClick={(e) => deleteNote(e, line)}
-                      style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '10px', padding: '0 2px', flexShrink: 0 }}
+                      style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '11px', padding: '0 2px', flexShrink: 0 }}
                       title="Delete this note"
                     >x</button>
-                    {dateStr && <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>}
-                    <span style={{ fontSize: '11px', color: '#cbd5e1', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {dateStr && <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>}
+                    <span style={{ fontSize: '12px', color: '#cbd5e1', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {noteText}
                     </span>
                   </div>
