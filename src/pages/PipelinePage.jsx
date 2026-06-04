@@ -226,6 +226,7 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onOpenCalendar={() => {}} // handled at app level
                 onUpdate={ops.updateBorrower}
                 onDocDrop={(id) => handleExpand(id)} // expand card to use existing doc drop
+                onAddNote={ops.addNote}
               />
               {expandedIds.has(borrower.id) && (
                 <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} defaultTab={defaultTab} />

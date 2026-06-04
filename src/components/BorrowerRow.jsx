@@ -433,6 +433,76 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
   );
 };
 
+// Quick Note Input
+const QuickNoteInput = ({ borrowerId, onAddNote }) => {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState('');
+  const inputRef = useRef();
+
+  const handleAdd = async () => {
+    if (!note.trim() || !onAddNote) return;
+    await onAddNote(borrowerId, note.trim());
+    setNote('');
+    setOpen(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAdd();
+    }
+    if (e.key === 'Escape') {
+      setOpen(false);
+      setNote('');
+    }
+  };
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
+            padding: '4px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer',
+          }}
+          title="Add quick note"
+        >+ Note</button>
+      ) : (
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Quick note..."
+            style={{
+              width: '150px', padding: '4px 8px', fontSize: '11px', border: '1px solid #3b82f6',
+              borderRadius: '4px', background: '#1e293b', color: '#e2e8f0',
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleAdd}
+            style={{ background: '#0d9488', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', color: '#fff', cursor: 'pointer' }}
+          >Add</button>
+          <button
+            type="button"
+            onClick={() => { setOpen(false); setNote(''); }}
+            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px' }}
+          >x</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Inline Doc Drop Zone
 const InlineDocDrop = ({ borrower, onDocDrop, onHighlight }) => {
   const [dragging, setDragging] = useState(false);
@@ -574,7 +644,7 @@ const BorrowerRow = ({
   borrower, isExpanded, isSelected,
   onSelect, onExpand, onEdit, onDelete,
   onTouch, onMoveStage, onAddTag, onRemoveTag,
-  onOpenCalendar, onUpdate, onDocDrop,
+  onOpenCalendar, onUpdate, onDocDrop, onAddNote,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
   const [dropHighlight, setDropHighlight] = useState(false);
@@ -612,10 +682,11 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Doc Drop Zone - positioned left of center */}
-        <div style={{ marginLeft: '40px' }}>
-          <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
-        </div>
+        {/* Spacer to push rest right */}
+        <div style={{ flex: 1 }} />
+
+        {/* Quick Note Button + Notes Display */}
+        <QuickNoteInput borrowerId={borrower.id} onAddNote={onAddNote} />
 
         {/* Latest Note from history - golden yellow date + preview */}
         {(() => {
@@ -625,7 +696,7 @@ const BorrowerRow = ({
           return (
             <div
               onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', maxWidth: '280px', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px', maxWidth: '280px', cursor: 'pointer' }}
               title={`${notesHistory.length} note${notesHistory.length > 1 ? 's' : ''} - click to view all`}
             >
               <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>
@@ -641,8 +712,10 @@ const BorrowerRow = ({
           );
         })()}
 
-        {/* Spacer to push rest right */}
-        <div style={{ flex: 1 }} />
+        {/* Doc Drop Zone - right side */}
+        <div style={{ marginLeft: '8px' }}>
+          <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
+        </div>
 
         {/* Preapproved indicators */}
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
