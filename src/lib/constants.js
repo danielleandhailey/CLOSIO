@@ -55,7 +55,7 @@ export const SORT_OPTIONS = [
   { value: 'new',           label: 'New' },
   { value: 'stips',         label: 'Stips Needed' },
   { value: 'coe_date',      label: 'COE Date' },
-  { value: 'floating',      label: 'Floating First' },
+  { value: 'floating',      label: 'Floating' },
   { value: 'contingencies', label: 'Contingencies Due' },
   { value: 'tasks',         label: 'Tasks by Date' },
   { value: 'last_touched',  label: 'Last Touched' },
