@@ -748,7 +748,7 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', cursor: 'pointer', maxWidth: '400px' }}
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', cursor: 'pointer', maxWidth: '700px' }}
                     title={noteText}
                   >
                     <button
