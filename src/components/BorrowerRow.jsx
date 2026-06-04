@@ -23,6 +23,56 @@ const appendLog = (existing, text) => {
   return existing ? `${existing}\n${entry}` : entry;
 };
 
+// Quick Note Input - inline on row
+const QuickNoteInput = ({ borrower, onAddNote }) => {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState('');
+  const inputRef = useRef();
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  const save = async () => {
+    if (!note.trim()) return;
+    const dateStamp = format(new Date(), 'M/d/yy');
+    const newNote = `[${dateStamp}] ${note.trim()}`;
+    const existing = borrower.notes || '';
+    await onAddNote(borrower.id, existing ? `${newNote}\n${existing}` : newNote);
+    setNote('');
+    setOpen(false);
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        style={{
+          background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
+          padding: '3px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer', marginRight: '12px',
+        }}
+      >+ Note</button>
+    );
+  }
+
+  return (
+    <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', marginRight: '12px' }}>
+      <input
+        ref={inputRef}
+        type="text"
+        value={note}
+        onChange={e => setNote(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setOpen(false); }}
+        placeholder="Quick note..."
+        style={{ width: '180px', padding: '3px 6px', fontSize: '11px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text)' }}
+      />
+      <button onClick={save} style={{ padding: '3px 8px', fontSize: '10px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Save</button>
+      <button onClick={() => setOpen(false)} style={{ padding: '3px 6px', fontSize: '10px', background: 'none', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>×</button>
+    </div>
+  );
+};
+
 // Quick Log + Summary Panel
 const QuickSummaryPanel = ({ borrower, onMoveStage, onClose }) => {
   const [showStageSelect, setShowStageSelect] = useState(false);
@@ -865,15 +915,8 @@ const BorrowerRow = ({
           )}
         </div>
 
-        {/* + Note button */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-          style={{
-            background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
-            padding: '3px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer', marginRight: '12px',
-          }}
-        >+ Note</button>
+        {/* Quick Note inline */}
+        <QuickNoteInput borrower={borrower} onAddNote={onAddNote} />
 
         {/* Touch stamp - right side */}
         <span className={`touch-stamp ${touched ? 'touched' : ''}`} style={{ marginRight: '8px' }}>

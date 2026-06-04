@@ -302,29 +302,29 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         </MediumCard>
 
         {/* 7. TASKS - Clean style */}
-        <MediumCard style={{ flex: 1.5, minWidth: '280px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <MediumCard style={{ flex: 1.5, minWidth: '280px', padding: '8px 12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowTasksModal(true)}>
               <CheckSquare size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>TASKS</span>
             </div>
             <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.length}</span>
           </div>
-          <div>
+          <div style={{ marginTop: '-4px' }}>
             {allTasks.length === 0 ? (
-              <div style={{ fontSize: '14px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
+              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
             ) : (
               <>
                 {allTasks.filter(t => t.daysUntil <= 0).slice(0, 2).map((t, i) => (
-                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '13px', color: 'var(--text)', cursor: 'pointer', padding: '5px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ color: '#ef4444', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
                     <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-                    {t.assigned_to && <span style={{ fontSize: '9px', color: '#fff', background: getAssigneeColor(t.assigned_to), padding: '1px 5px', borderRadius: '3px', fontWeight: '600', flexShrink: 0 }}>{t.assigned_to?.charAt(0)}</span>}
+                    {t.assigned_to && <span style={{ fontSize: '10px', color: t.assigned_to === 'Danielle' ? '#fbbf24' : '#22c55e', fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
                   </div>
                 ))}
                 {allTasks.filter(t => t.daysUntil <= 0).length > 2 && (
-                  <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#ef4444', cursor: 'pointer', padding: '4px 0', fontWeight: '600' }}>
+                  <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
                     +{allTasks.filter(t => t.daysUntil <= 0).length - 2} more for today...
                   </div>
                 )}
