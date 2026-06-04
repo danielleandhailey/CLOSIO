@@ -74,7 +74,7 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
       {open && (
         <div className="chat-window">
           <div className="chat-header">
-            <span>🤖 CLOSIO AI Assistant</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ background: '#d97706', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>C</span> Claude AI</span>
             <button type="button" className="btn-icon" onClick={() => setOpen(false)}><X size={14} /></button>
           </div>
 
@@ -109,8 +109,8 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
         </div>
       )}
 
-      <button type="button" className="chat-trigger" onClick={() => setOpen(o => !o)} title="AI Assistant">
-        🤖
+      <button type="button" className="chat-trigger" onClick={() => setOpen(o => !o)} title="Claude AI Assistant" style={{ background: '#d97706', fontSize: '14px', fontWeight: '700' }}>
+        C
       </button>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
