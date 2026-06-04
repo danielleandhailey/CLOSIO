@@ -765,6 +765,9 @@ const BorrowerRow = ({
           )}
         </span>
 
+        {/* Spacer to push notes to fixed position */}
+        <div style={{ width: '20px', flexShrink: 0 }} />
+
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
           const rawNotes = borrower.notes || '';
