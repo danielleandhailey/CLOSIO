@@ -65,12 +65,17 @@ const BonzoPullButton = () => {
     <button
       type="button"
       className="btn btn-ghost"
-      style={{ marginLeft: '12px' }}
+      style={{
+        marginLeft: '12px',
+        background: pulling ? '#fbbf24' : undefined,
+        color: pulling ? '#000' : undefined,
+        borderColor: pulling ? '#fbbf24' : undefined,
+      }}
       title="Sync leads from Bonzo CRM"
       onClick={handlePull}
       disabled={pulling}
     >
-      <Zap size={12} /> {pulling ? 'Pulling...' : 'Bonzo Pull'}
+      <Zap size={12} style={{ color: pulling ? '#000' : undefined }} /> {pulling ? 'Pulling...' : 'Bonzo Pull'}
     </button>
   );
 };
