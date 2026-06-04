@@ -3,10 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const BONZO_API_URL = 'https://api.getbonzo.com/v1';
 const BONZO_TOKEN = process.env.BONZO_API_TOKEN;
 
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY
-);
+// Supabase connection
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // Map Bonzo stage to CLOSIO stage
 const mapStage = (bonzoStage) => {
@@ -39,6 +40,10 @@ export default async function handler(req, res) {
 
   if (!BONZO_TOKEN) {
     return res.status(500).json({ error: 'Bonzo API token not configured' });
+  }
+
+  if (!supabase) {
+    return res.status(500).json({ error: 'Supabase not configured. Add SUPABASE_URL and SUPABASE_SERVICE_KEY env vars.' });
   }
 
   try {
