@@ -130,6 +130,8 @@ const PipelinePage = ({ borrowers, ops }) => {
         onSelectBorrower={handleSelectBorrower}
         onFilterStage={setFilterStage}
         ops={ops}
+        onToggleTask={(id, completed) => ops.updateTask(id, { completed })}
+        onDeleteTask={(id) => ops.deleteTask(id)}
       />
 
       {/* Toolbar */}
