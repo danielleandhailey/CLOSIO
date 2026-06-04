@@ -7,25 +7,50 @@ import { claudeService } from '../lib/claude';
 import { format, parseISO, addDays } from 'date-fns';
 
 // ---- Notes Section ----
-const NotesSection = ({ borrower, onUpdate }) => {
-  const [notes, setNotes] = useState(borrower.notes || '');
-  const timerRef = useRef();
+const NotesSection = ({ borrower, ops }) => {
+  const [newNote, setNewNote] = useState('');
+  const notesHistory = (borrower.notes_history || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  const handleChange = (val) => {
-    setNotes(val);
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => onUpdate(borrower.id, { notes: val }), 800);
+  const handleAdd = async () => {
+    if (!newNote.trim()) return;
+    await ops.addNote(borrower.id, newNote.trim());
+    setNewNote('');
   };
 
   return (
     <div>
-      <div className="section-heading">📝 Notes</div>
-      <textarea
-        className="notes-area"
-        value={notes}
-        onChange={e => handleChange(e.target.value)}
-        placeholder="Notes auto-save as you type…"
-      />
+      <div className="section-heading">Notes</div>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+        <textarea
+          className="notes-area"
+          value={newNote}
+          onChange={e => setNewNote(e.target.value)}
+          placeholder="Add a note..."
+          style={{ minHeight: '50px', flex: 1 }}
+        />
+        <button
+          type="button"
+          onClick={handleAdd}
+          style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer', alignSelf: 'flex-end' }}
+        >Add</button>
+      </div>
+      {notesHistory.length > 0 && (
+        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+          {notesHistory.map(n => (
+            <div key={n.id} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '8px', marginBottom: '4px', background: '#1e293b', borderRadius: '5px' }}>
+              <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '40px' }}>
+                {format(parseISO(n.created_at), 'M/d')}
+              </span>
+              <span style={{ fontSize: '12px', color: '#e2e8f0', flex: 1 }}>{n.note}</span>
+              <button
+                type="button"
+                onClick={() => ops.deleteNote(n.id)}
+                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px', padding: '0' }}
+              >x</button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -1756,7 +1781,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('notes') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📝 Notes & Tasks</div>
-            <NotesSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            <NotesSection borrower={borrower} ops={ops} />
             <TasksSection borrower={borrower} ops={ops} />
             {closeBtn('notes')}
           </div>

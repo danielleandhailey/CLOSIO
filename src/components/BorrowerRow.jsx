@@ -617,27 +617,29 @@ const BorrowerRow = ({
           <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
         </div>
 
-        {/* Latest Note - golden yellow date + preview + x to clear */}
-        {borrower.notes && String(borrower.notes).trim().length > 0 && (
-          <div
-            onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', maxWidth: '280px', cursor: 'pointer' }}
-            title="Click to open Notes"
-          >
-            <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>
-              {borrower.updated_at ? format(parseISO(borrower.updated_at), 'M/d') : ''}
-            </span>
-            <span style={{ fontSize: '11px', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {borrower.notes.substring(0, 30)}{borrower.notes.length > 30 ? '...' : ''}
-            </span>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { notes: '' }); }}
-              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '12px', padding: '0 2px', flexShrink: 0 }}
-              title="Clear note"
-            >×</button>
-          </div>
-        )}
+        {/* Latest Note from history - golden yellow date + preview */}
+        {(() => {
+          const notesHistory = (borrower.notes_history || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          const latestNote = notesHistory[0];
+          if (!latestNote) return null;
+          return (
+            <div
+              onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', maxWidth: '280px', cursor: 'pointer' }}
+              title={`${notesHistory.length} note${notesHistory.length > 1 ? 's' : ''} - click to view all`}
+            >
+              <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>
+                {format(parseISO(latestNote.created_at), 'M/d')}
+              </span>
+              <span style={{ fontSize: '11px', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {latestNote.note.substring(0, 30)}{latestNote.note.length > 30 ? '...' : ''}
+              </span>
+              {notesHistory.length > 1 && (
+                <span style={{ fontSize: '9px', color: '#94a3b8', flexShrink: 0 }}>+{notesHistory.length - 1}</span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Spacer to push rest right */}
         <div style={{ flex: 1 }} />

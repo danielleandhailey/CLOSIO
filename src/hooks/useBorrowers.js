@@ -17,7 +17,8 @@ export const useBorrowers = () => {
           tasks(*),
           contingencies(*),
           contacts(*),
-          stipulations(*)
+          stipulations(*),
+          notes_history(*)
         `)
         .order('created_at', { ascending: true });
 
@@ -196,6 +197,21 @@ export const useBorrowers = () => {
     await fetchBorrowers();
   };
 
+  // ---- Notes History ----
+  const addNote = async (borrowerId, note) => {
+    const { error } = await supabase.from('notes_history').insert([{ borrower_id: borrowerId, note }]);
+    if (error) throw error;
+    // Also update borrower.notes to latest note for quick display
+    await supabase.from('borrowers').update({ notes: note, updated_at: new Date().toISOString() }).eq('id', borrowerId);
+    await fetchBorrowers();
+  };
+
+  const deleteNote = async (noteId) => {
+    const { error } = await supabase.from('notes_history').delete().eq('id', noteId);
+    if (error) throw error;
+    await fetchBorrowers();
+  };
+
   // ---- Seed initial data ----
   const seedInitialData = async () => {
     const { data: existing } = await supabase.from('borrowers').select('id').limit(1);
@@ -258,6 +274,8 @@ export const useBorrowers = () => {
     addStipulation,
     markStipReceived,
     removeStipulation,
+    addNote,
+    deleteNote,
     seedInitialData,
   };
 };
