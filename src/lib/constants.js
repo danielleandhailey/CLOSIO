@@ -461,14 +461,8 @@ export const STIP_TEMPLATES = {
     'Schedule E from tax returns',
   ],
   Assets: [
-    'Checking account statements (2 months)',
-    'Savings account statements (2 months)',
-    '401(k) statements (most recent quarterly)',
-    'IRA statements (most recent quarterly)',
-    'Stock/bond statements',
-    'Retirement account statements',
-    'Investment account statements',
-    'Gift letter (if applicable)',
+    'Bank Statement(s) (most recent, all pages)',
+    '401k, Pension(s), IRA, Stock/Bond, Retirement, Investment statements - most recent quarterly (all that are applicable)',
   ],
 };
 
