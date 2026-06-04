@@ -711,6 +711,34 @@ const BorrowerRow = ({
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 
+        {/* Contact icons */}
+        <div style={{ display: 'flex', gap: '2px', marginRight: '4px' }}>
+          {borrower.email && (
+            <a
+              href={`mailto:${borrower.email}`}
+              onClick={e => e.stopPropagation()}
+              title={`Email: ${borrower.email}`}
+              style={{ fontSize: '12px', color: '#64748b', textDecoration: 'none' }}
+            >✉</a>
+          )}
+          {borrower.phone && (
+            <a
+              href={`tel:${borrower.phone}`}
+              onClick={e => e.stopPropagation()}
+              title={`Call: ${borrower.phone}`}
+              style={{ fontSize: '12px', color: '#64748b', textDecoration: 'none' }}
+            >📞</a>
+          )}
+          {borrower.phone && (
+            <a
+              href={`sms:${borrower.phone}`}
+              onClick={e => e.stopPropagation()}
+              title={`Text: ${borrower.phone}`}
+              style={{ fontSize: '12px', color: '#64748b', textDecoration: 'none' }}
+            >💬</a>
+          )}
+        </div>
+
         {/* Star/Favorite */}
         <span
           onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_favorite: !borrower.is_favorite }); }}

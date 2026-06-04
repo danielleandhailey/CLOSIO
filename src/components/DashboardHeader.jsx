@@ -278,26 +278,50 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 4. PROCESSING */}
         <SmallCard icon={TrendingUp} label="Processing" value={processingCount} color="#06b6d4" onClick={() => onFilterStage('Processing')} />
 
-        {/* 6. CALENDAR - Bigger, flex to fill */}
-        <MediumCard style={{ cursor: 'pointer', flex: 1, minWidth: '140px' }} onClick={() => setShowCalendar(true)}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '8px', color: '#ef4444', fontWeight: '700', textTransform: 'uppercase' }}>{format(new Date(), 'EEE')}</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{format(new Date(), 'd')}</div>
-              <div style={{ fontSize: '9px', color: 'var(--text3)', fontWeight: '600' }}>{format(new Date(), 'MMM')}</div>
+        {/* 6. CALENDAR - Like Tasks box */}
+        <MediumCard style={{ flex: 1.2, minWidth: '200px', padding: '8px 12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowCalendar(true)}>
+              <Calendar size={14} style={{ color: '#3b82f6' }} />
+              <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
-            <div style={{ flex: 1, borderLeft: '1px solid var(--border)', paddingLeft: '8px' }}>
-              {todaysAppts.length === 0 ? (
-                <div style={{ fontSize: '10px', color: 'var(--text3)', fontStyle: 'italic' }}>No appts today</div>
-              ) : (
-                todaysAppts.slice(0, 2).map((a, i) => (
-                  <div key={i} style={{ fontSize: '9px', color: 'var(--text)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {a.title?.substring(0, 12)}
-                  </div>
-                ))
-              )}
-              {todaysAppts.length > 2 && <div style={{ fontSize: '8px', color: 'var(--text3)' }}>+{todaysAppts.length - 2} more</div>}
-            </div>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '4px' }}>{format(new Date(), 'd')}</span>
+          </div>
+          <div style={{ marginTop: '-2px' }}>
+            {(() => {
+              const today = new Date();
+              const upcoming = [];
+              // Get appointments for next 5 days
+              for (let i = 0; i < 5; i++) {
+                const checkDate = new Date(today);
+                checkDate.setDate(today.getDate() + i);
+                const dayAppts = getApptsForDate(checkDate);
+                if (dayAppts.length > 0 || i === 0) {
+                  upcoming.push({ date: checkDate, appts: dayAppts, isToday: i === 0 });
+                }
+              }
+              if (upcoming.length === 0) {
+                return <div style={{ fontSize: '12px', color: 'var(--text3)', fontStyle: 'italic' }}>No upcoming appts</div>;
+              }
+              return upcoming.slice(0, 3).map((day, i) => (
+                <div key={i} style={{ fontSize: '12px', color: 'var(--text)', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{
+                    fontWeight: '700',
+                    flexShrink: 0,
+                    color: day.isToday ? '#fff' : '#f59e0b',
+                    background: day.isToday ? '#3b82f6' : 'transparent',
+                    padding: day.isToday ? '1px 6px' : '0',
+                    borderRadius: '4px',
+                  }}>
+                    {day.isToday ? 'TODAY' : format(day.date, 'M/d')}
+                  </span>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {day.appts.length > 0 ? day.appts[0].title : 'No appts'}
+                  </span>
+                  {day.appts.length > 1 && <span style={{ fontSize: '10px', color: 'var(--text3)' }}>+{day.appts.length - 1}</span>}
+                </div>
+              ));
+            })()}
           </div>
         </MediumCard>
 
