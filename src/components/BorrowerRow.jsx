@@ -894,9 +894,9 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px 24px', flex: 1, marginLeft: '96px' }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '24px', flex: 1, overflow: 'hidden' }}
             >
-              {noteLines.slice(0, 3).map((line, idx) => {
+              {noteLines.slice(0, 2).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
@@ -905,7 +905,7 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '5px', cursor: 'pointer', maxWidth: '864px' }}
+                    style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '5px', cursor: 'pointer', flexShrink: 0, maxWidth: '400px' }}
                     title={noteText}
                   >
                     <button
