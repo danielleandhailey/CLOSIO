@@ -618,6 +618,7 @@ const BorrowerRow = ({
         </div>
 
         {/* Latest Note - golden yellow date only + x to clear */}
+        {console.log('Borrower notes:', borrower.name, borrower.notes)}
         {borrower.notes && String(borrower.notes).trim().length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '8px' }}>
             <span style={{ fontSize: '10px', color: '#d97706', fontWeight: '600' }} title={borrower.notes}>
