@@ -278,14 +278,17 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 4. SHOPPING */}
         <SmallCard icon={Home} label="Shopping" value={stageCounts['Shopping'] || 0} color="#f59e0b" onClick={() => onFilterStage('Shopping')} />
 
-        {/* 5. CALENDAR - With day in blue box, TODAY row, 2 upcoming dates */}
+        {/* 5. CALENDAR - Day name over date in blue box */}
         <MediumCard style={{ flex: 1.2, minWidth: '200px', padding: '8px 12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowCalendar(true)}>
               <Calendar size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '4px' }}>{format(new Date(), 'EEE d')}</span>
+            <div style={{ background: '#3b82f6', color: '#fff', padding: '4px 10px', borderRadius: '4px', textAlign: 'center', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '10px', fontWeight: '600' }}>{format(new Date(), 'EEE')}</div>
+              <div style={{ fontSize: '16px', fontWeight: '700' }}>{format(new Date(), 'd')}</div>
+            </div>
           </div>
           <div>
             {(() => {
@@ -295,7 +298,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                 <>
                   {/* TODAY row */}
                   <div style={{ fontSize: '12px', color: 'var(--text)', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ background: '#3b82f6', color: '#fff', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>TODAY</span>
+                    <span style={{ color: '#3b82f6', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {todayAppts.length > 0 ? todayAppts[0].title : 'No appts'}
                     </span>
