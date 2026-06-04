@@ -21,6 +21,8 @@ export const useBorrowers = () => {
         `)
         .order('created_at', { ascending: true });
 
+      if (error) throw error;
+
       // Fetch notes_history separately (table may not exist yet)
       if (data) {
         try {
@@ -34,8 +36,6 @@ export const useBorrowers = () => {
           // notes_history table doesn't exist yet - that's ok
         }
       }
-
-      if (error) throw error;
       setBorrowers(data || []);
     } catch (e) {
       setError(e.message);
