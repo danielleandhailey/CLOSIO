@@ -682,16 +682,25 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Notes Display - all notes */}
+        {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
           const allLines = (borrower.notes || '').split('\n').filter(line => line.trim());
+          // Filter out document entries and error messages
+          const noteLines = allLines.filter(line => {
+            const lower = line.toLowerCase();
+            return !lower.includes('goosecreek') &&
+                   !lower.includes('error') &&
+                   !lower.includes('.pdf') &&
+                   !lower.includes('document') &&
+                   !line.match(/^\[.*\d{1,2}:\d{2}(AM|PM).*\]/i); // no timestamps
+          });
 
           // If no notes, show + Note button
-          if (!allLines.length) {
+          if (!noteLines.length) {
             return (
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
+                onClick={(e) => { e.stopPropagation(); if (onAddNote) onAddNote(borrower.id, ''); else onExpand(borrower.id, 'notes'); }}
                 style={{
                   marginLeft: '60px', background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
                   padding: '4px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer',
@@ -700,18 +709,18 @@ const BorrowerRow = ({
             );
           }
 
-          const deleteNote = async (e, idx) => {
+          const deleteNote = async (e, lineToDelete) => {
             e.stopPropagation();
-            const updatedLines = allLines.filter((_, i) => i !== idx);
+            const updatedLines = allLines.filter(line => line !== lineToDelete);
             await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
           };
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '60px', flex: 1, overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '60px', flex: 1, overflow: 'hidden' }}
             >
-              {allLines.map((line, idx) => {
-                // Try to parse [M/D/YY] prefix
+              {noteLines.map((line, idx) => {
+                // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
                 const noteText = match ? match[2] : line;
@@ -719,18 +728,18 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0, cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
                     title={noteText}
                   >
                     <button
                       type="button"
-                      onClick={(e) => deleteNote(e, idx)}
-                      style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '10px', padding: '0 2px' }}
-                      title="Delete note"
+                      onClick={(e) => deleteNote(e, line)}
+                      style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '10px', padding: '0 2px', flexShrink: 0 }}
+                      title="Delete this note"
                     >x</button>
-                    {dateStr && <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600' }}>{dateStr}</span>}
-                    <span style={{ fontSize: '11px', color: '#cbd5e1', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {noteText.substring(0, 25)}{noteText.length > 25 ? '...' : ''}
+                    {dateStr && <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>}
+                    <span style={{ fontSize: '11px', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
+                      {noteText}
                     </span>
                   </div>
                 );
