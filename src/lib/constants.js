@@ -450,11 +450,11 @@ export const STIP_TEMPLATES = {
   ],
   SSI: [
     'Social Security Award Letter',
-    'Proof of current receipt (bank statement)',
+    'Bank statement (most recent, all pages)',
   ],
   Retirement: [
     'Retirement/pension statements',
-    'Proof of current receipt',
+    'Bank statement (most recent, all pages)',
   ],
   Rental: [
     'Lease agreements for rental properties (if applicable)',
