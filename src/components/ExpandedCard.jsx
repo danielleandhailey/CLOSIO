@@ -210,7 +210,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
   const inputRef = useRef();
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('Documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
     setDocs(data || []);
   }, [borrower.id]);
 
@@ -258,14 +258,14 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
           let filePath = '';
           try {
             const path = `${borrower.id}/${Date.now()}_${file.name}`;
-            const { error: upErr } = await supabase.storage.from('Documents').upload(path, file);
+            const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
             if (!upErr) {
-              const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(path);
+              const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
               filePath = urlData.publicUrl;
             }
           } catch (e) { /* storage not configured */ }
 
-          await supabase.from('Documents').insert([{
+          await supabase.from('documents').insert([{
             borrower_id: borrower.id, name: file.name,
             file_path: filePath || file.name, file_type: file.type,
             file_size: file.size, ai_summary: aiSummary,
@@ -466,7 +466,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
               <span style={{ color: '#8080a8', flexShrink: 0, fontSize: '11px', fontFamily: 'monospace' }}>{formatDate(doc.created_at)}</span>
               <button type="button" onClick={async () => {
                 if (!window.confirm(`Delete "${doc.name}"?`)) return;
-                await supabase.from('Documents').delete().eq('id', doc.id);
+                await supabase.from('documents').delete().eq('id', doc.id);
                 loadDocs();
               }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }} title="Delete">
                 <X size={14} />
@@ -484,7 +484,7 @@ const DocumentStorage = ({ borrower }) => {
   const [docs, setDocs] = useState([]);
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('Documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
     setDocs(data || []);
   }, [borrower.id]);
 
@@ -492,10 +492,10 @@ const DocumentStorage = ({ borrower }) => {
 
   const deleteDoc = async (doc) => {
     if (!window.confirm(`Delete "${doc.name}"?`)) return;
-    await supabase.from('Documents').delete().eq('id', doc.id);
+    await supabase.from('documents').delete().eq('id', doc.id);
     if (doc.file_path && doc.file_path.includes('supabase')) {
       const path = doc.file_path.split('/documents/')[1];
-      if (path) await supabase.storage.from('Documents').remove([path]);
+      if (path) await supabase.storage.from('documents').remove([path]);
     }
     loadDocs();
   };
@@ -1303,7 +1303,22 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
   const inputRef = useRef();
 
   const creditData = borrower.credit_report || {};
-  const hasReport = creditData.file_url || creditData.uploaded_at;
+  const hasReport = creditData.file_path || creditData.file_url || creditData.uploaded_at;
+  const [signedUrl, setSignedUrl] = useState(null);
+
+  // Get signed URL when viewing
+  const openReport = async () => {
+    if (creditData.file_path) {
+      const { data } = await supabase.storage.from('documents').createSignedUrl(creditData.file_path, 3600); // 1 hour
+      if (data?.signedUrl) {
+        setSignedUrl(data.signedUrl);
+        setViewingReport(true);
+      }
+    } else if (creditData.file_url) {
+      setSignedUrl(creditData.file_url);
+      setViewingReport(true);
+    }
+  };
 
   const uploadFile = async (file) => {
     if (!file) return;
@@ -1311,15 +1326,13 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     try {
       // Upload to Supabase storage
       const fileName = `credit_${borrower.id}_${Date.now()}.pdf`;
-      const { data, error } = await supabase.storage.from('Documents').upload(fileName, file);
+      const { data, error } = await supabase.storage.from('documents').upload(fileName, file);
       if (error) throw error;
 
-      const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(fileName);
-
-      // Save credit report info
+      // Save credit report info - store path, not public URL
       await onUpdate(borrower.id, {
         credit_report: {
-          file_url: urlData.publicUrl,
+          file_path: fileName,
           file_name: file.name,
           uploaded_at: new Date().toISOString(),
           scores: creditData.scores || {},
@@ -1385,7 +1398,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
               📄 {creditData.file_name || 'Credit Report'}
             </div>
             <button
-              onClick={() => setViewingReport(true)}
+              onClick={openReport}
               style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
             >
               View Report
@@ -1431,7 +1444,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
       )}
 
       {/* Report Viewer Modal */}
-      {viewingReport && creditData.file_url && (
+      {viewingReport && signedUrl && (
         <>
           <div onClick={() => setViewingReport(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000 }} />
           <div style={{
@@ -1445,7 +1458,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
                 Close
               </button>
             </div>
-            <iframe src={creditData.file_url} style={{ flex: 1, border: 'none' }} title="Credit Report" />
+            <iframe src={signedUrl} style={{ flex: 1, border: 'none' }} title="Credit Report" />
           </div>
         </>
       )}
