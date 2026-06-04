@@ -715,6 +715,24 @@ const BorrowerRow = ({
             title={`Synced from Bonzo: ${format(parseISO(borrower.bonzo_last_sync), 'M/d h:mma')}`}
             >{format(parseISO(borrower.bonzo_last_sync), 'M/d')}</span>
           )}
+          {borrower.substage === 'Stips Needed' && (
+            <span style={{
+              marginLeft: '6px',
+              padding: '1px 6px',
+              background: '#fbbf24',
+              color: '#000',
+              fontSize: '9px',
+              fontWeight: '700',
+              borderRadius: '3px',
+              cursor: 'pointer',
+            }}
+            title="Click to clear"
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate(borrower.id, { substage: null });
+            }}
+            >STIPS</span>
+          )}
         </span>
 
         {/* Notes Display - notes only (no docs, no timestamps) */}
