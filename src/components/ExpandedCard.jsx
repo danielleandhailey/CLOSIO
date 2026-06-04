@@ -813,12 +813,13 @@ const StipulationsSection = ({ borrower, ops }) => {
   ];
 
   const incomeTemplates = [
-    { label: '💼 W2 Employee', keys: ['W2'], show: true },
-    { label: '📊 Self-Employed', keys: ['SelfEmployed'], show: true },
-    { label: '🎖️ VA Income', keys: ['VA'], show: true },
-    { label: '💳 SSI Income', keys: ['SSI'], show: true },
-    { label: '🏖️ Retirement', keys: ['Retirement'], show: true },
-    { label: '🏘️ Rental Income', keys: ['Rental'], show: true },
+    { label: 'W2 Employee', keys: ['W2'], show: true },
+    { label: 'Self-Employed', keys: ['SelfEmployed'], show: true },
+    { label: 'VA Income', keys: ['VA'], show: true },
+    { label: 'SSI Income', keys: ['SSI'], show: true },
+    { label: 'Retirement', keys: ['Retirement'], show: true },
+    { label: 'Rental Income', keys: ['Rental'], show: true },
+    { label: 'Assets', keys: ['Assets'], show: true },
   ];
 
   return (

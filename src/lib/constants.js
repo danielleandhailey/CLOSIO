@@ -460,6 +460,16 @@ export const STIP_TEMPLATES = {
     'Lease agreements for rental properties (if applicable)',
     'Schedule E from tax returns',
   ],
+  Assets: [
+    'Checking account statements (2 months)',
+    'Savings account statements (2 months)',
+    '401(k) statements (most recent quarterly)',
+    'IRA statements (most recent quarterly)',
+    'Stock/bond statements',
+    'Retirement account statements',
+    'Investment account statements',
+    'Gift letter (if applicable)',
+  ],
 };
 
 export const INCOME_TYPE_OPTIONS = ['W2', 'Self-Employed', 'VA', 'SSI', 'Retirement', 'Rental', 'Mixed'];
