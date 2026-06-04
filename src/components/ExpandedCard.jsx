@@ -1299,15 +1299,14 @@ const APPRAISAL_TYPES = [
 const CreditReportSection = ({ borrower, onUpdate }) => {
   const [uploading, setUploading] = useState(false);
   const [viewingReport, setViewingReport] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const inputRef = useRef();
 
   const creditData = borrower.credit_report || {};
   const hasReport = creditData.file_url || creditData.uploaded_at;
 
-  const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
+  const uploadFile = async (file) => {
     if (!file) return;
-
     setUploading(true);
     try {
       // Upload to Supabase storage
@@ -1323,7 +1322,6 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
           file_url: urlData.publicUrl,
           file_name: file.name,
           uploaded_at: new Date().toISOString(),
-          // Placeholder data - would be extracted by AI
           scores: creditData.scores || {},
           total_liabilities: creditData.total_liabilities || null,
           negative_marks: creditData.negative_marks || 0,
@@ -1336,23 +1334,45 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
       alert('Failed to upload: ' + err.message);
     }
     setUploading(false);
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    await uploadFile(file);
     if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      await uploadFile(file);
+    } else {
+      alert('Please drop a PDF file');
+    }
   };
 
   return (
     <div>
       {/* Drop Zone */}
       <div
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
         style={{
           padding: '20px', borderRadius: '8px', marginBottom: '16px',
-          background: '#fef3c7', border: '2px dashed #f59e0b', textAlign: 'center',
-          cursor: 'pointer',
+          background: dragging ? '#fef08a' : '#fef3c7',
+          border: `2px dashed ${dragging ? '#eab308' : '#f59e0b'}`,
+          textAlign: 'center', cursor: 'pointer',
+          transition: 'all 0.2s',
         }}
       >
         <FileText size={24} style={{ color: '#f59e0b', marginBottom: '6px' }} />
         <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '600' }}>
-          {uploading ? 'Uploading...' : 'Drop Credit Report PDF or Click to Browse'}
+          {uploading ? 'Uploading...' : dragging ? 'Drop it!' : 'Drop Credit Report PDF or Click to Browse'}
         </div>
         <input ref={inputRef} type="file" accept=".pdf" onChange={handleFileSelect} style={{ display: 'none' }} />
       </div>
