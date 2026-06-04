@@ -26,40 +26,40 @@ const MatrixPage = () => {
     setUploading(true);
     try {
       const path = `${user.id}/${Date.now()}_${file.name}`;
-      const { error: upErr } = await supabase.storage.from('matrices').upload(path, file);
-      if (upErr) throw upErr;
+      // Use Documents bucket (same as other uploads)
+      const { error: upErr } = await supabase.storage.from('Documents').upload(path, file);
+      if (upErr) {
+        alert('Upload failed: ' + upErr.message);
+        throw upErr;
+      }
 
-      const { data: urlData } = supabase.storage.from('matrices').getPublicUrl(path);
+      // Get signed URL for viewing
+      const { data: signedData } = await supabase.storage.from('Documents').createSignedUrl(path, 60 * 60 * 24 * 365);
+      const fileUrl = signedData?.signedUrl || '';
 
-      // AI index the PDF
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const base64 = ev.target.result.split(',')[1];
-        let aiIndex = '';
-        try {
-          const result = await claudeService.analyzeDocument(base64, 'application/pdf', file.name);
-          aiIndex = JSON.stringify({ summary: result.summary, extracted: result.extracted });
-        } catch (e) {
-          aiIndex = 'Index unavailable';
-        }
+      // Extract lender name from filename
+      const lenderName = file.name.replace(/\.(pdf)$/i, '').replace(/[-_]/g, ' ');
 
-        const lenderName = file.name.replace(/\.(pdf)$/i, '').replace(/[-_]/g, ' ');
+      // Save to lender_matrices table
+      const { error: dbErr } = await supabase.from('lender_matrices').upsert({
+        user_id: user.id,
+        lender_name: lenderName,
+        file_path: fileUrl,
+        storage_path: path,
+        ai_index: '',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'lender_name,user_id' });
 
-        await supabase.from('lender_matrices').upsert({
-          user_id: user.id,
-          lender_name: lenderName,
-          file_path: urlData.publicUrl,
-          ai_index: aiIndex,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'lender_name,user_id' });
+      if (dbErr) {
+        alert('Database error: ' + dbErr.message);
+        throw dbErr;
+      }
 
-        const { data } = await supabase.from('lender_matrices').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-        setMatrices(data || []);
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      const { data } = await supabase.from('lender_matrices').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+      setMatrices(data || []);
     } catch (e) {
       console.error('Matrix upload error:', e);
+    } finally {
       setUploading(false);
     }
   };
@@ -85,48 +85,71 @@ const MatrixPage = () => {
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
-      {/* Left: Upload */}
-      <div style={{ width: '280px', flexShrink: 0, borderRight: '1px solid #333345', padding: '16px', overflow: 'auto' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>🗂 Lender Matrices</div>
+      {/* Left: Current Matrices - clickable to view PDF */}
+      <div style={{ width: '300px', flexShrink: 0, borderRight: '1px solid #333345', padding: '16px', overflow: 'auto' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '16px' }}>CURRENT MATRICES</div>
 
-        <div
-          className="matrix-drop"
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
-          onClick={() => inputRef.current?.click()}
-        >
-          {uploading ? (
-            <><Loader size={20} style={{ animation: 'spin 1s linear infinite', marginBottom: '6px' }} /><div>Indexing PDF…</div></>
-          ) : (
-            <>
-              <Upload size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
-              <div style={{ fontWeight: '500', marginBottom: '4px' }}>Drop Lender PDF</div>
-              <div style={{ fontSize: '11px', opacity: 0.7 }}>AI reads and indexes privately per your account</div>
-            </>
-          )}
-        </div>
-        <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
-
-        {matrices.length > 0 && (
-          <div>
-            <div style={{ fontSize: '10px', fontWeight: '700', color: '#6a6a80', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Indexed Lenders</div>
+        {matrices.length === 0 ? (
+          <div style={{ color: '#6a6a80', fontSize: '12px', padding: '20px', textAlign: 'center' }}>
+            No matrices uploaded yet. Drop a PDF on the right to get started.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {matrices.map(m => (
-              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#22222e', borderRadius: '5px', marginBottom: '4px', fontSize: '12px' }}>
-                <FileText size={14} style={{ color: '#9f67f7', flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '500', color: '#e8e8f0' }}>{m.lender_name}</div>
-                  <div style={{ fontSize: '10px', color: '#6a6a80' }}>Updated {new Date(m.updated_at).toLocaleDateString()}</div>
-                </div>
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <a
+                  href={m.file_path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 12px', background: '#1e293b', borderRadius: '6px',
+                    textDecoration: 'none', cursor: 'pointer',
+                    border: '1px solid #334155', transition: 'all 0.15s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#334155'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#1e293b'}
+                >
+                  <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '600', color: '#3b82f6', fontSize: '12px' }}>{m.lender_name}</div>
+                    <div style={{ fontSize: '10px', color: '#64748b' }}>{new Date(m.updated_at).toLocaleDateString()}</div>
+                  </div>
+                </a>
                 <button type="button" onClick={async () => {
                   await supabase.from('lender_matrices').delete().eq('id', m.id);
                   setMatrices(prev => prev.filter(x => x.id !== m.id));
-                }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6a6a80' }}>
-                  <X size={12} />
+                }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
+                  <X size={14} />
                 </button>
               </div>
             ))}
           </div>
         )}
+      </div>
+
+      {/* Middle: Drop Zone */}
+      <div style={{ width: '280px', flexShrink: 0, borderRight: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>DROP MATRIX</div>
+
+        <div
+          className="matrix-drop"
+          style={{ flex: 1, minHeight: '200px' }}
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? (
+            <><Loader size={20} style={{ animation: 'spin 1s linear infinite', marginBottom: '6px' }} /><div>Indexing PDF...</div></>
+          ) : (
+            <>
+              <Upload size={32} style={{ marginBottom: '12px', opacity: 0.5 }} />
+              <div style={{ fontWeight: '600', marginBottom: '6px' }}>Drop Lender PDF</div>
+              <div style={{ fontSize: '11px', opacity: 0.7 }}>or click to browse</div>
+            </>
+          )}
+        </div>
+        <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
       </div>
 
       {/* Right: Q&A Chat */}

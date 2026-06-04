@@ -699,7 +699,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '60px', maxWidth: '500px', overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '60px', flex: 1, overflow: 'hidden' }}
             >
               {noteLines.map((line, idx) => {
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
