@@ -675,6 +675,27 @@ const BorrowerRow = ({
           {borrower.is_favorite ? '★' : '☆'}
         </span>
 
+        {/* Need button - adds STIPS pill */}
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            onUpdate(borrower.id, { substage: borrower.substage === 'Stips Needed' ? null : 'Stips Needed' });
+          }}
+          style={{
+            cursor: 'pointer',
+            fontSize: '9px',
+            fontWeight: '600',
+            color: borrower.substage === 'Stips Needed' ? '#fbbf24' : '#4a5568',
+            marginRight: '6px',
+            padding: '2px 4px',
+            border: `1px dashed ${borrower.substage === 'Stips Needed' ? '#fbbf24' : '#4a5568'}`,
+            borderRadius: '3px',
+          }}
+          title={borrower.substage === 'Stips Needed' ? 'Remove STIPS' : 'Add STIPS'}
+        >
+          Need
+        </span>
+
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
@@ -726,7 +747,7 @@ const BorrowerRow = ({
             title={`Synced from Bonzo: ${format(parseISO(borrower.bonzo_last_sync), 'M/d h:mma')}`}
             >{format(parseISO(borrower.bonzo_last_sync), 'M/d')}</span>
           )}
-          {borrower.substage === 'Stips Needed' ? (
+          {borrower.substage === 'Stips Needed' && (
             <span style={{
               marginLeft: '6px',
               padding: '1px 6px',
@@ -743,25 +764,6 @@ const BorrowerRow = ({
               onUpdate(borrower.id, { substage: null });
             }}
             >STIPS</span>
-          ) : (
-            <span style={{
-              marginLeft: '6px',
-              padding: '1px 5px',
-              background: 'transparent',
-              border: '1px dashed #fbbf24',
-              color: '#fbbf24',
-              fontSize: '8px',
-              fontWeight: '600',
-              borderRadius: '3px',
-              cursor: 'pointer',
-              opacity: 0.6,
-            }}
-            title="Add STIPS flag"
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpdate(borrower.id, { substage: 'Stips Needed' });
-            }}
-            >+STIPS</span>
           )}
         </span>
 
