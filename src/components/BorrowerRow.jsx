@@ -737,7 +737,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '60px', flex: 1, overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: '60px', flex: 1, overflow: 'hidden' }}
             >
               {noteLines.map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
@@ -748,7 +748,7 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', flexShrink: 0, maxWidth: '400px' }}
                     title={noteText}
                   >
                     <button
@@ -758,7 +758,7 @@ const BorrowerRow = ({
                       title="Delete this note"
                     >x</button>
                     {dateStr && <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>}
-                    <span style={{ fontSize: '11px', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {noteText}
                     </span>
                   </div>
