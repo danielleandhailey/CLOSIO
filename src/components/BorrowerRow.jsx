@@ -617,16 +617,19 @@ const BorrowerRow = ({
           <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
         </div>
 
-        {/* Latest Note - golden yellow date only + x to clear */}
+        {/* Latest Note - golden yellow date + preview + x to clear */}
         {borrower.notes && String(borrower.notes).trim().length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '8px' }}>
-            <span style={{ fontSize: '10px', color: '#d97706', fontWeight: '600' }} title={borrower.notes}>
-              {borrower.updated_at ? format(parseISO(borrower.updated_at), 'M/d') : 'note'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', maxWidth: '250px' }}>
+            <span style={{ fontSize: '10px', color: '#d97706', fontWeight: '600', flexShrink: 0 }}>
+              {borrower.updated_at ? format(parseISO(borrower.updated_at), 'M/d') : ''}
+            </span>
+            <span style={{ fontSize: '10px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={borrower.notes}>
+              {borrower.notes.substring(0, 25)}{borrower.notes.length > 25 ? '...' : ''}
             </span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { notes: '' }); }}
-              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '10px', padding: '0 2px' }}
+              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '12px', padding: '0 2px', flexShrink: 0 }}
               title="Clear note"
             >×</button>
           </div>
