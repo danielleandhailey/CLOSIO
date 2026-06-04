@@ -9,26 +9,24 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SE
 
 const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-// Map Bonzo stage to CLOSIO stage
-const mapStage = (bonzoStage) => {
+// ONLY these Bonzo stages get imported (null = skip)
+// Returns { stage, substage } or null to skip
+const mapBonzoStage = (bonzoStage) => {
+  const lower = (bonzoStage || '').toLowerCase().trim();
+
+  // Exact matches for stages to IMPORT
   const stageMap = {
-    'aged working': 'Working',
-    'working': 'Working',
-    'new lead': 'Working',
-    'new leads': 'Working',
-    'dr - leads': 'Working',
-    'shopping': 'Shopping',
-    'processing': 'Processing',
-    'funded': 'Funded',
-    'lp ready': 'LP Ready',
-    'paycom': 'Paycom',
-    'future deal': 'Future Deal',
-    'credit upgrade': 'Credit Upgrade',
-    'cxld': 'CXLD',
-    'cancelled': 'CXLD',
+    'stips needed': { stage: 'Working', substage: 'Stips Needed' },
+    'working': { stage: 'Working', substage: null },
+    'approved - need stips': { stage: 'Shopping', substage: 'Stips Needed' },
+    'pre-approved - shopping': { stage: 'Shopping', substage: null },
+    'in processing': { stage: 'Processing', substage: null },
+    'closed': { stage: 'Funded', substage: null },
+    'funded': { stage: 'Funded', substage: null },
+    'future deal': { stage: 'Future Deal', substage: null },
   };
-  const lower = (bonzoStage || '').toLowerCase();
-  return stageMap[lower] || 'Working';
+
+  return stageMap[lower] || null; // null = don't import
 };
 
 export default async function handler(req, res) {
@@ -108,13 +106,36 @@ export default async function handler(req, res) {
           continue;
         }
 
+        // Check if this Bonzo stage should be imported
+        const bonzoStageName = p.pipeline?.stage || p.stage || '';
+        const stageMapping = mapBonzoStage(bonzoStageName);
+
+        // Skip if stage not in our import list (unless already exists in CLOSIO)
+        let existingBorrowerCheck = null;
+        if (phone) {
+          const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+          const { data: byPhone } = await supabase
+            .from('borrowers')
+            .select('id')
+            .or(`phone.ilike.%${cleanPhone}%,bonzo_id.eq.${p.id}`)
+            .limit(1);
+          if (byPhone?.length) existingBorrowerCheck = byPhone[0];
+        }
+
+        if (!stageMapping && !existingBorrowerCheck) {
+          // Stage not importable and not already in CLOSIO - skip
+          results.skipped++;
+          continue;
+        }
+
         // Build borrower data - pull ALL fields from Bonzo
         const mortgage = p.mortgage || {};
         const borrowerData = {
           name: name || undefined,
           phone: phone || undefined,
           email: email || undefined,
-          stage: mapStage(p.pipeline?.stage || p.stage),
+          stage: stageMapping?.stage || 'Working',
+          substage: stageMapping?.substage || null,
           loan_purpose: mortgage.loan_purpose || p.loan_purpose || undefined,
           loan_type: mortgage.loan_type || p.loan_type || undefined,
           purchase_price: parseFloat(mortgage.purchase_price || p.purchase_price) || undefined,
