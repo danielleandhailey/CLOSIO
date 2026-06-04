@@ -803,18 +803,9 @@ const BorrowerRow = ({
             return true;
           });
 
-          // If no notes, show + Note button that opens Notes tab
+          // If no notes, return null - the + Note button is now on the right
           if (!noteLines.length) {
-            return (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                style={{
-                  background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
-                  padding: '4px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer',
-                }}
-              >+ Note</button>
-            );
+            return null;
           }
 
           const deleteNote = async (e, lineToDelete) => {
@@ -825,7 +816,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px 24px', flex: 1 }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px 24px', flex: 1, marginLeft: '96px' }}
             >
               {noteLines.slice(0, 3).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
@@ -846,7 +837,7 @@ const BorrowerRow = ({
                       title="Delete this note"
                     >x</button>
                     {dateStr && <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, whiteSpace: 'nowrap' }}>{dateStr}</span>}
-                    <span style={{ fontSize: '12px', color: '#cbd5e1', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                    <span style={{ fontSize: '12px', color: '#cbd5e1', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
                       {noteText}
                     </span>
                   </div>
@@ -873,6 +864,16 @@ const BorrowerRow = ({
             <span title="Preapproval Letter Sent" style={{ background: '#3b82f6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700' }}>PA</span>
           )}
         </div>
+
+        {/* + Note button */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
+          style={{
+            background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
+            padding: '3px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer', marginRight: '12px',
+          }}
+        >+ Note</button>
 
         {/* Touch stamp - right side */}
         <span className={`touch-stamp ${touched ? 'touched' : ''}`} style={{ marginRight: '8px' }}>
