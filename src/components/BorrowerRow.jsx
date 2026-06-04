@@ -617,6 +617,16 @@ const BorrowerRow = ({
           <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
         </div>
 
+        {/* Latest Note Date - yellow */}
+        {borrower.notes && borrower.updated_at && (
+          <span title={borrower.notes?.substring(0, 100)} style={{
+            fontSize: '10px', color: '#eab308', fontWeight: '600', marginLeft: '8px',
+            background: '#fef9c3', padding: '2px 6px', borderRadius: '4px',
+          }}>
+            📝 {format(parseISO(borrower.updated_at), 'M/d')}
+          </span>
+        )}
+
         {/* Spacer to push rest right */}
         <div style={{ flex: 1 }} />
 
