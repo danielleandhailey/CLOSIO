@@ -682,30 +682,47 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Notes Display - couple inches after name */}
+        {/* Notes Display - all notes that fit */}
         {(() => {
           const noteLines = (borrower.notes || '').split('\n').filter(line => line.trim());
           if (!noteLines.length) return null;
-          const firstLine = noteLines[0];
-          // Parse [M/D/YY] prefix
-          const match = firstLine.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
-          const dateStr = match ? match[1] : '';
-          const noteText = match ? match[2] : firstLine;
+
+          const deleteNote = async (e, idx) => {
+            e.stopPropagation();
+            const updatedNotes = noteLines.filter((_, i) => i !== idx).join('\n');
+            await onUpdate(borrower.id, { notes: updatedNotes });
+          };
+
           return (
             <div
-              onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '60px', maxWidth: '280px', cursor: 'pointer' }}
-              title={`${noteLines.length} note${noteLines.length > 1 ? 's' : ''} - click to view all`}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '60px', maxWidth: '450px', overflow: 'hidden' }}
             >
-              {dateStr && (
-                <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>
-              )}
-              <span style={{ fontSize: '11px', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {noteText.substring(0, 30)}{noteText.length > 30 ? '...' : ''}
-              </span>
-              {noteLines.length > 1 && (
-                <span style={{ fontSize: '9px', color: '#94a3b8', flexShrink: 0 }}>+{noteLines.length - 1}</span>
-              )}
+              {noteLines.map((line, idx) => {
+                const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
+                const dateStr = match ? match[1] : '';
+                const noteText = match ? match[2] : line;
+                return (
+                  <div
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0, cursor: 'pointer' }}
+                    title={noteText}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => deleteNote(e, idx)}
+                      style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '10px', padding: '0 2px' }}
+                      title="Delete note"
+                    >x</button>
+                    {dateStr && (
+                      <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600' }}>{dateStr}</span>
+                    )}
+                    <span style={{ fontSize: '11px', color: '#cbd5e1', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {noteText.substring(0, 20)}{noteText.length > 20 ? '...' : ''}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
