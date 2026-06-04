@@ -91,7 +91,21 @@ const AppInner = () => {
           ))}
 
           {/* Bonzo Buttons */}
-          <button type="button" className="btn btn-ghost" style={{ marginLeft: '12px' }} title="Sync leads from Bonzo CRM">
+          <button type="button" className="btn btn-ghost" style={{ marginLeft: '12px' }} title="Sync leads from Bonzo CRM"
+            onClick={async () => {
+              try {
+                const res = await fetch('/api/bonzo-pull');
+                const data = await res.json();
+                if (data.success) {
+                  alert(`Bonzo Pull: ${data.created} created, ${data.updated} updated`);
+                  window.location.reload();
+                } else {
+                  alert('Bonzo Pull failed: ' + (data.error || 'Unknown error'));
+                }
+              } catch (e) {
+                alert('Bonzo Pull error: ' + e.message);
+              }
+            }}>
             <Zap size={12} /> Bonzo Pull
           </button>
           <button type="button" className="btn btn-ghost" title="Push updates to Bonzo CRM">
