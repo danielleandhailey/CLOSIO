@@ -679,8 +679,30 @@ const BorrowerRow = ({
           {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
 
-        {/* Name */}
-        <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
+        {/* Name + NEW badge */}
+        <span className="borrower-name">
+          {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
+          {borrower.is_new && (
+            <span style={{
+              marginLeft: '8px',
+              padding: '1px 6px',
+              background: '#ff1493',
+              color: '#fff',
+              fontSize: '9px',
+              fontWeight: '700',
+              borderRadius: '3px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              cursor: 'pointer',
+            }}
+            title="Click to dismiss"
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate(borrower.id, { is_new: false });
+            }}
+            >NEW</span>
+          )}
+        </span>
 
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
