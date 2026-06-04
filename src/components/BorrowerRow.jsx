@@ -619,12 +619,16 @@ const BorrowerRow = ({
 
         {/* Latest Note - golden yellow date + preview + x to clear */}
         {borrower.notes && String(borrower.notes).trim().length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', maxWidth: '250px' }}>
-            <span style={{ fontSize: '10px', color: '#d97706', fontWeight: '600', flexShrink: 0 }}>
+          <div
+            onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', maxWidth: '280px', cursor: 'pointer' }}
+            title="Click to open Notes"
+          >
+            <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>
               {borrower.updated_at ? format(parseISO(borrower.updated_at), 'M/d') : ''}
             </span>
-            <span style={{ fontSize: '10px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={borrower.notes}>
-              {borrower.notes.substring(0, 25)}{borrower.notes.length > 25 ? '...' : ''}
+            <span style={{ fontSize: '11px', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {borrower.notes.substring(0, 30)}{borrower.notes.length > 30 ? '...' : ''}
             </span>
             <button
               type="button"

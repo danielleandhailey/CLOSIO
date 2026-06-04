@@ -1694,8 +1694,8 @@ const AppraisalSection = ({ borrower, onUpdate }) => {
 };
 
 // ---- Main Expanded Card ----
-const ExpandedCard = ({ borrower, ops, onClose }) => {
-  const [openTabs, setOpenTabs] = useState(new Set(['notes']));
+const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
+  const [openTabs, setOpenTabs] = useState(new Set([defaultTab || 'notes']));
   const [contactsExpanded, setContactsExpanded] = useState(false);
   const hasFullDetails = STAGES_WITH_FULL_DETAILS.includes(borrower.stage);
 

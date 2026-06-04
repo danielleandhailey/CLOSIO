@@ -9,6 +9,7 @@ import { sortBorrowers } from '../lib/utils';
 
 const PipelinePage = ({ borrowers, ops }) => {
   const [expandedIds, setExpandedIds] = useState(new Set());
+  const [defaultTab, setDefaultTab] = useState(null); // which tab to open by default
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [filterStage, setFilterStage] = useState('All');
   const [sortBy, setSortBy] = useState('stage');
@@ -48,7 +49,8 @@ const PipelinePage = ({ borrowers, ops }) => {
     });
   }, []);
 
-  const handleExpand = useCallback((id) => {
+  const handleExpand = useCallback((id, openTab = null) => {
+    setDefaultTab(openTab);
     setExpandedIds(prev => {
       // If clicking on same one, toggle it off
       if (prev.has(id)) {
@@ -226,7 +228,7 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onDocDrop={(id) => handleExpand(id)} // expand card to use existing doc drop
               />
               {expandedIds.has(borrower.id) && (
-                <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} />
+                <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} defaultTab={defaultTab} />
               )}
               </div>
             </React.Fragment>
