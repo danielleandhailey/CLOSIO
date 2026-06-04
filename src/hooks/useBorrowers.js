@@ -212,10 +212,18 @@ export const useBorrowers = () => {
 
   // ---- Notes History ----
   const addNote = async (borrowerId, note) => {
-    const { error } = await supabase.from('notes_history').insert([{ borrower_id: borrowerId, note }]);
-    if (error) throw error;
-    // Also update borrower.notes to latest note for quick display
-    await supabase.from('borrowers').update({ notes: note, updated_at: new Date().toISOString() }).eq('id', borrowerId);
+    const dateStamp = new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+    const stampedNote = `[${dateStamp}] ${note}`;
+
+    // Try notes_history table first
+    const { error: histError } = await supabase.from('notes_history').insert([{ borrower_id: borrowerId, note: stampedNote }]);
+
+    // Get current notes and prepend new one
+    const { data: borrower } = await supabase.from('borrowers').select('notes').eq('id', borrowerId).single();
+    const existingNotes = borrower?.notes || '';
+    const newNotes = existingNotes ? `${stampedNote}\n${existingNotes}` : stampedNote;
+
+    await supabase.from('borrowers').update({ notes: newNotes, updated_at: new Date().toISOString() }).eq('id', borrowerId);
     await fetchBorrowers();
   };
 

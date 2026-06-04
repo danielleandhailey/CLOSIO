@@ -9,7 +9,9 @@ import { format, parseISO, addDays } from 'date-fns';
 // ---- Notes Section ----
 const NotesSection = ({ borrower, ops }) => {
   const [newNote, setNewNote] = useState('');
-  const notesHistory = (borrower.notes_history || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  // Parse notes from borrower.notes field (each line is a dated note)
+  const noteLines = (borrower.notes || '').split('\n').filter(line => line.trim());
 
   const handleAdd = async () => {
     if (!newNote.trim()) return;
@@ -19,36 +21,38 @@ const NotesSection = ({ borrower, ops }) => {
 
   return (
     <div>
-      <div className="section-heading">Notes</div>
+      <div className="section-heading">NOTES</div>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-        <textarea
-          className="notes-area"
+        <input
+          type="text"
           value={newNote}
           onChange={e => setNewNote(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
           placeholder="Add a note..."
-          style={{ minHeight: '50px', flex: 1 }}
+          style={{ flex: 1, padding: '8px 12px', borderRadius: '5px', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: '12px' }}
         />
         <button
           type="button"
           onClick={handleAdd}
-          style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer', alignSelf: 'flex-end' }}
+          style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer' }}
         >Add</button>
       </div>
-      {notesHistory.length > 0 && (
+      {noteLines.length > 0 && (
         <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-          {notesHistory.map(n => (
-            <div key={n.id} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '8px', marginBottom: '4px', background: '#1e293b', borderRadius: '5px' }}>
-              <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '40px' }}>
-                {format(parseISO(n.created_at), 'M/d')}
-              </span>
-              <span style={{ fontSize: '12px', color: '#e2e8f0', flex: 1 }}>{n.note}</span>
-              <button
-                type="button"
-                onClick={() => ops.deleteNote(n.id)}
-                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px', padding: '0' }}
-              >x</button>
-            </div>
-          ))}
+          {noteLines.map((line, i) => {
+            // Parse [M/D/YY] prefix
+            const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
+            const dateStr = match ? match[1] : '';
+            const noteText = match ? match[2] : line;
+            return (
+              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '8px', marginBottom: '4px', background: '#1e293b', borderRadius: '5px' }}>
+                {dateStr && (
+                  <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '50px' }}>{dateStr}</span>
+                )}
+                <span style={{ fontSize: '12px', color: '#e2e8f0', flex: 1 }}>{noteText}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

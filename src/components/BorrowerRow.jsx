@@ -688,25 +688,29 @@ const BorrowerRow = ({
         {/* Quick Note Button + Notes Display */}
         <QuickNoteInput borrowerId={borrower.id} onAddNote={onAddNote} />
 
-        {/* Latest Note from history - golden yellow date + preview */}
+        {/* Latest Note - from borrower.notes field */}
         {(() => {
-          const notesHistory = (borrower.notes_history || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          const latestNote = notesHistory[0];
-          if (!latestNote) return null;
+          const noteLines = (borrower.notes || '').split('\n').filter(line => line.trim());
+          if (!noteLines.length) return null;
+          const firstLine = noteLines[0];
+          // Parse [M/D/YY] prefix
+          const match = firstLine.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
+          const dateStr = match ? match[1] : '';
+          const noteText = match ? match[2] : firstLine;
           return (
             <div
               onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
               style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px', maxWidth: '280px', cursor: 'pointer' }}
-              title={`${notesHistory.length} note${notesHistory.length > 1 ? 's' : ''} - click to view all`}
+              title={`${noteLines.length} note${noteLines.length > 1 ? 's' : ''} - click to view all`}
             >
-              <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>
-                {format(parseISO(latestNote.created_at), 'M/d')}
-              </span>
+              {dateStr && (
+                <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>
+              )}
               <span style={{ fontSize: '11px', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {latestNote.note.substring(0, 30)}{latestNote.note.length > 30 ? '...' : ''}
+                {noteText.substring(0, 30)}{noteText.length > 30 ? '...' : ''}
               </span>
-              {notesHistory.length > 1 && (
-                <span style={{ fontSize: '9px', color: '#94a3b8', flexShrink: 0 }}>+{notesHistory.length - 1}</span>
+              {noteLines.length > 1 && (
+                <span style={{ fontSize: '9px', color: '#94a3b8', flexShrink: 0 }}>+{noteLines.length - 1}</span>
               )}
             </div>
           );
