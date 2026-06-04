@@ -178,7 +178,7 @@ const PipelinePage = ({ borrowers, ops }) => {
           type="button"
           className={`stage-pill ${filterStage === 'All' ? 'active' : ''}`}
           style={{ background: '#22222e', color: '#a0a0b8', border: '1px solid #333345' }}
-          onClick={() => setFilterStage('All')}
+          onClick={() => { setFilterStage('All'); setSearch(''); }}
         >
           All <span style={{ marginLeft: '3px', fontWeight: '700' }}>{borrowers.length}</span>
         </button>
@@ -191,7 +191,7 @@ const PipelinePage = ({ borrowers, ops }) => {
               type="button"
               className={`stage-pill ${filterStage === s ? 'active' : ''}`}
               style={{ background: c.bg, color: c.text, opacity: count === 0 ? 0.4 : 1 }}
-              onClick={() => setFilterStage(prev => prev === s ? 'All' : s)}
+              onClick={() => { setFilterStage(prev => prev === s ? 'All' : s); setSearch(''); }}
             >
               {s} <span style={{ marginLeft: '3px', fontWeight: '700' }}>{count}</span>
             </button>
