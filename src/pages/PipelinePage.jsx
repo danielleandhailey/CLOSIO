@@ -152,7 +152,7 @@ const PipelinePage = ({ borrowers, ops }) => {
       <div className="toolbar">
         {/* Type filter */}
         <select className="select-input" value={filterType} onChange={e => setFilterType(e.target.value)}>
-          {LOAN_TYPES.map(t => <option key={t} value={t}>{t === 'All' ? 'Type' : t}</option>)}
+          {LOAN_TYPES.map(t => <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>)}
         </select>
 
         {/* Stage filter */}
