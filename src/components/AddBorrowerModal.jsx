@@ -23,7 +23,6 @@ const AddBorrowerModal = ({ onClose, onSave }) => {
       // Build payload with only valid DB columns
       const payload = {
         name: form.name,
-        non_borrowing_spouse: form.non_borrowing_spouse || null,
         stage: form.stage,
         loan_type: form.loan_type,
         lender: form.lender || null,
