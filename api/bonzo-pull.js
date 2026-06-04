@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const BONZO_API_URL = 'https://api.getbonzo.com/v1';
+const BONZO_API_URL = 'https://app.bonzo.com/api/v1';
 const BONZO_TOKEN = process.env.BONZO_API_TOKEN;
 
 // Supabase connection
