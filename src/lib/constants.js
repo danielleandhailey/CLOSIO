@@ -11,6 +11,7 @@ export const STAGES = [
   'Paycom',
   'Future Deal',
   'Credit Upgrade',
+  'DNQ',
   'CXLD',
 ];
 
@@ -23,6 +24,7 @@ export const STAGE_COLORS = {
   'Paycom':        { bg: '#f97316', text: '#fff', light: '#ffedd5' },
   'Future Deal':   { bg: '#14b8a6', text: '#fff', light: '#ccfbf1' },
   'Credit Upgrade':{ bg: '#ec4899', text: '#fff', light: '#fce7f3' },
+  'DNQ':           { bg: '#6b7280', text: '#fff', light: '#e5e7eb' },
   'CXLD':          { bg: '#ef4444', text: '#fff', light: '#fee2e2' },
 };
 
