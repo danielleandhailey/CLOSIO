@@ -109,8 +109,13 @@ export default async function handler(req, res) {
         }
 
         // Check if this Bonzo stage should be imported
-        const bonzoStageName = p.pipeline?.stage || p.stage || '';
+        const bonzoStageName = p.pipeline?.stage?.name || p.pipeline?.stage || p.stage?.name || p.stage || '';
         const stageMapping = mapBonzoStage(bonzoStageName);
+
+        // Log for debugging
+        if (name.toLowerCase().includes('soe') || name.toLowerCase().includes('aung')) {
+          console.log('DEBUG:', name, 'stage:', bonzoStageName, 'pipeline:', JSON.stringify(p.pipeline), 'mapping:', stageMapping);
+        }
 
         // Skip if stage not in our import list (unless already exists in CLOSIO)
         let existingBorrowerCheck = null;
