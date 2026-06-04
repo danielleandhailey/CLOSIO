@@ -805,7 +805,7 @@ const BorrowerRow = ({
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
                 style={{
-                  marginLeft: '60px', background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
+                  background: 'none', border: '1px dashed #64748b', borderRadius: '4px',
                   padding: '4px 8px', fontSize: '10px', color: '#94a3b8', cursor: 'pointer',
                 }}
               >+ Note</button>
@@ -814,13 +814,13 @@ const BorrowerRow = ({
 
           const deleteNote = async (e, lineToDelete) => {
             e.stopPropagation();
-            const updatedLines = allLines.filter(line => line !== lineToDelete);
+            const updatedLines = allNotes.filter(line => line !== lineToDelete);
             await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
           };
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', gap: '30px', flex: 1, overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px 24px', flex: 1 }}
             >
               {noteLines.slice(0, 3).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
@@ -831,7 +831,7 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', flex: 1, minWidth: 0 }}
+                    style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '5px', cursor: 'pointer', maxWidth: '864px' }}
                     title={noteText}
                   >
                     <button
@@ -840,8 +840,8 @@ const BorrowerRow = ({
                       style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '11px', padding: '0 2px', flexShrink: 0 }}
                       title="Delete this note"
                     >x</button>
-                    {dateStr && <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>}
-                    <span style={{ fontSize: '12px', color: '#cbd5e1', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
+                    {dateStr && <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, whiteSpace: 'nowrap' }}>{dateStr}</span>}
+                    <span style={{ fontSize: '12px', color: '#cbd5e1', whiteSpace: 'normal', wordBreak: 'break-word' }}>
                       {noteText}
                     </span>
                   </div>
