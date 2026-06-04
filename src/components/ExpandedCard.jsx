@@ -1784,6 +1784,24 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
 
   return (
     <div className="expanded-card">
+      {/* Contact Links Row - under borrower name area */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 16px', marginBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', gap: '12px', marginLeft: '100px' }}>
+          {borrower.phone && (
+            <a href={`tel:${borrower.phone}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>CALL</a>
+          )}
+          {borrower.phone && (
+            <a href={`sms:${borrower.phone}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>TEXT</a>
+          )}
+          {borrower.email && (
+            <a href={`mailto:${borrower.email}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>EMAIL</a>
+          )}
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {borrower.lender && <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{borrower.lender}</span>}
+        </div>
+      </div>
+
       {/* Tabs Row */}
       <div className="expanded-tabs">
         {tabs.map(t => (
