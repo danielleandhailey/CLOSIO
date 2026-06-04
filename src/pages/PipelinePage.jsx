@@ -101,14 +101,10 @@ const PipelinePage = ({ borrowers, ops }) => {
     }
     try {
       await ops.moveBorrower(id, newStage, fromStage);
-      const borrower = borrowers.find(b => b.id === id);
-      if (borrower?.bonzo_id) {
-        bonzoService.pushStageChange(borrower, newStage).catch(console.error);
-      }
     } catch (e) {
       alert('Move failed: ' + e.message);
     }
-  }, [ops, borrowers]);
+  }, [ops]);
 
   const handleCxldConfirm = async (reason) => {
     if (!cxldDialog) return;
