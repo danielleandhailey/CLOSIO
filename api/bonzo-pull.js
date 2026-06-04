@@ -14,20 +14,18 @@ const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPAB
 const mapBonzoStage = (bonzoStage) => {
   const lower = (bonzoStage || '').toLowerCase().trim();
 
-  // Exact matches for stages to IMPORT
-  const stageMap = {
-    'stips needed': { stage: 'Working', substage: 'Stips Needed' },
-    'working': { stage: 'Working', substage: null },
-    'aged working': { stage: 'Working', substage: null },
-    'approved - need stips': { stage: 'Shopping', substage: 'Stips Needed' },
-    'pre-approved - shopping': { stage: 'Shopping', substage: null },
-    'in processing': { stage: 'Processing', substage: null },
-    'closed': { stage: 'Funded', substage: null },
-    'funded': { stage: 'Funded', substage: null },
-    'future deal': { stage: 'Future Deal', substage: null },
-  };
+  // Check for keyword matches (more flexible)
+  if (lower.includes('stips needed') || lower.includes('need stips')) {
+    if (lower.includes('approved')) return { stage: 'Shopping', substage: 'Stips Needed' };
+    return { stage: 'Working', substage: 'Stips Needed' };
+  }
+  if (lower.includes('working') || lower === 'hot') return { stage: 'Working', substage: null };
+  if (lower.includes('pre-approved') || lower.includes('shopping')) return { stage: 'Shopping', substage: null };
+  if (lower.includes('processing')) return { stage: 'Processing', substage: null };
+  if (lower.includes('closed') || lower.includes('funded')) return { stage: 'Funded', substage: null };
+  if (lower.includes('future deal') || lower.includes('future')) return { stage: 'Future Deal', substage: null };
 
-  return stageMap[lower] || null; // null = don't import
+  return null; // null = don't import
 };
 
 export default async function handler(req, res) {
@@ -132,6 +130,7 @@ export default async function handler(req, res) {
 
         if (!stageMapping && !existingBorrowerCheck) {
           // Stage not importable and not already in CLOSIO - skip
+          console.log('SKIP:', name, 'stage:', bonzoStageName);
           results.skipped++;
           continue;
         }
