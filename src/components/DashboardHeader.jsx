@@ -225,21 +225,21 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops 
         </MediumCard>
 
         {/* 7. TASKS - Same size as calendar, flex to fill */}
-        <MediumCard style={{ flex: 1, minWidth: '140px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+        <MediumCard style={{ flex: 1, minWidth: '180px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <CheckSquare size={10} style={{ color: '#3b82f6' }} />
-              <span style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Tasks</span>
+              <CheckSquare size={12} style={{ color: '#3b82f6' }} />
+              <span style={{ fontSize: '10px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Tasks</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '8px' }}>{tasksDueToday.length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{tasksDueToday.length}</span>
           </div>
-          <div style={{ maxHeight: '50px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '60px', overflowY: 'auto' }}>
             {tasksDueToday.length === 0 ? (
-              <div style={{ fontSize: '10px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up!</div>
+              <div style={{ fontSize: '12px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up!</div>
             ) : (
-              tasksDueToday.slice(0, 3).map((t, i) => (
-                <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '9px', color: 'var(--text)', cursor: 'pointer', padding: '2px 0', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(' ')[0]}</span>: {t.title?.substring(0, 15)}
+              tasksDueToday.slice(0, 4).map((t, i) => (
+                <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title?.substring(0, 20)}
                 </div>
               ))
             )}
