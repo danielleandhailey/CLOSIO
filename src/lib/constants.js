@@ -69,6 +69,40 @@ export const CONTACT_ROLES = [
 
 export const EMPLOYMENT_TYPES = ['Employment', 'W2', 'Self-Employed', 'Retired', 'No Income (DSCR)', 'Other'];
 
+// Income Types by Category
+export const INCOME_TYPES_BY_CATEGORY = {
+  'Asset': [
+    'Checking Account', 'Savings Account', 'Cash On Hand', 'Retirement Account',
+    'Stock or Bond', 'Private Savings Club', 'Sale of Real Estate Owned', 'Gift',
+  ],
+  'Employment': [
+    'Full Time Employment', 'Part Time Employment', 'Overtime and Bonus',
+    'Seasonal Employment', 'Employer Housing Subsidy', 'Military Income',
+    'Self Employment', 'Family-owned Business', 'Commission',
+  ],
+  'Government': [
+    'Social Security Disability Benefits', 'Veterans Affairs Disability Benefits',
+    'Private Disability Benefits', 'Social Security Retirement',
+    'Government Assistance Non-Cash Benefits', 'Other Public Assistance',
+  ],
+  'Investment': [
+    'Investment', 'Capital Gains and Losses', 'Annuities or Similar Income',
+  ],
+  'Retirement': [
+    'Individual Retirement Account and 401(k)', 'Pension',
+  ],
+  'Alternative': [
+    'Expected Income', 'Notes Receivable', 'Rental Income from the Subject Property',
+    'Income from Boarders of the Subject Property', 'Automobile Allowances',
+    'Trust Accounts', 'Rental Income - Other Real Estate Holdings',
+    'Alimony, Child Support',
+  ],
+  'Compensating Factor': [
+    'Overtime, Seasonal, Part-Time, Bonus', 'Expected SSI or Pension',
+  ],
+};
+
+// Flat list for backwards compatibility
 export const INCOME_TYPES = [
   'Employment/Salary', 'Base Pay', 'Overtime', 'Bonus', 'Commission',
   '401K/IRA', 'Alimony', 'Asset Depletion', 'Automobile Expense Account', 'Boarder',
@@ -76,6 +110,7 @@ export const INCOME_TYPES = [
   'Mortgage Differential', 'Notes Receivable', 'Pension', 'Permanent Disability',
   'Public Assistance', 'Royalty Payment', 'Social Security', 'Temporary Disability',
   'Temporary Leave', 'Trust', 'Unemployment', 'VA Benefits Non Educational',
+  'Bank Statements', 'Asset Depletion',
 ];
 
 export const LENDER_OPTIONS = [
@@ -89,7 +124,7 @@ export const SECONDARY_LENDER = 'Flyhomes';
 
 export const LOAN_TYPE_OPTIONS = [
   'Conventional', 'FHA', 'DPA', 'VA', 'Reverse',
-  'Jumbo', 'OTC', 'Streamline', 'Other',
+  'Jumbo', 'OTC', 'Streamline', 'DSCR', 'Bank Statement', 'Other',
 ];
 
 // Stages where auto-tags show on condensed row
