@@ -210,7 +210,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
   const inputRef = useRef();
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('Documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
     setDocs(data || []);
   }, [borrower.id]);
 
@@ -258,14 +258,14 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
           let filePath = '';
           try {
             const path = `${borrower.id}/${Date.now()}_${file.name}`;
-            const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
+            const { error: upErr } = await supabase.storage.from('Documents').upload(path, file);
             if (!upErr) {
-              const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+              const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(path);
               filePath = urlData.publicUrl;
             }
           } catch (e) { /* storage not configured */ }
 
-          await supabase.from('documents').insert([{
+          await supabase.from('Documents').insert([{
             borrower_id: borrower.id, name: file.name,
             file_path: filePath || file.name, file_type: file.type,
             file_size: file.size, ai_summary: aiSummary,
@@ -466,7 +466,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
               <span style={{ color: '#8080a8', flexShrink: 0, fontSize: '11px', fontFamily: 'monospace' }}>{formatDate(doc.created_at)}</span>
               <button type="button" onClick={async () => {
                 if (!window.confirm(`Delete "${doc.name}"?`)) return;
-                await supabase.from('documents').delete().eq('id', doc.id);
+                await supabase.from('Documents').delete().eq('id', doc.id);
                 loadDocs();
               }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }} title="Delete">
                 <X size={14} />
@@ -484,7 +484,7 @@ const DocumentStorage = ({ borrower }) => {
   const [docs, setDocs] = useState([]);
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('Documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
     setDocs(data || []);
   }, [borrower.id]);
 
@@ -492,10 +492,10 @@ const DocumentStorage = ({ borrower }) => {
 
   const deleteDoc = async (doc) => {
     if (!window.confirm(`Delete "${doc.name}"?`)) return;
-    await supabase.from('documents').delete().eq('id', doc.id);
+    await supabase.from('Documents').delete().eq('id', doc.id);
     if (doc.file_path && doc.file_path.includes('supabase')) {
       const path = doc.file_path.split('/documents/')[1];
-      if (path) await supabase.storage.from('documents').remove([path]);
+      if (path) await supabase.storage.from('Documents').remove([path]);
     }
     loadDocs();
   };
@@ -1309,7 +1309,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
   // Get signed URL when viewing
   const openReport = async () => {
     if (creditData.file_path) {
-      const { data } = await supabase.storage.from('documents').createSignedUrl(creditData.file_path, 3600); // 1 hour
+      const { data } = await supabase.storage.from('Documents').createSignedUrl(creditData.file_path, 3600); // 1 hour
       if (data?.signedUrl) {
         setSignedUrl(data.signedUrl);
         setViewingReport(true);
@@ -1324,15 +1324,19 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     if (!file) return;
     setUploading(true);
     try {
-      // Upload to Supabase storage
+      // Upload to Supabase storage (public Documents bucket)
       const fileName = `credit_${borrower.id}_${Date.now()}.pdf`;
-      const { data, error } = await supabase.storage.from('documents').upload(fileName, file);
+      const { data, error } = await supabase.storage.from('Documents').upload(fileName, file);
       if (error) throw error;
 
-      // Save credit report info - store path, not public URL
+      // Get public URL
+      const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(fileName);
+
+      // Save credit report info
       await onUpdate(borrower.id, {
         credit_report: {
           file_path: fileName,
+          file_url: urlData.publicUrl,
           file_name: file.name,
           uploaded_at: new Date().toISOString(),
           scores: creditData.scores || {},
