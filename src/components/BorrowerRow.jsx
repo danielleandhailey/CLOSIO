@@ -705,12 +705,9 @@ const BorrowerRow = ({
           {borrower.bonzo_last_sync && !borrower.is_new && (
             <span style={{
               marginLeft: '6px',
-              padding: '1px 5px',
-              background: '#00ff7f',
-              color: '#000',
-              fontSize: '8px',
-              fontWeight: '700',
-              borderRadius: '3px',
+              color: '#00ff7f',
+              fontSize: '10px',
+              fontWeight: '600',
             }}
             title={`Synced from Bonzo: ${format(parseISO(borrower.bonzo_last_sync), 'M/d h:mma')}`}
             >{format(parseISO(borrower.bonzo_last_sync), 'M/d')}</span>

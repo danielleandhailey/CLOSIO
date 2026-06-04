@@ -18,6 +18,7 @@ const mapBonzoStage = (bonzoStage) => {
   const stageMap = {
     'stips needed': { stage: 'Working', substage: 'Stips Needed' },
     'working': { stage: 'Working', substage: null },
+    'aged working': { stage: 'Working', substage: null },
     'approved - need stips': { stage: 'Shopping', substage: 'Stips Needed' },
     'pre-approved - shopping': { stage: 'Shopping', substage: null },
     'in processing': { stage: 'Processing', substage: null },
@@ -74,7 +75,8 @@ export default async function handler(req, res) {
         const phone = p.phone || p.mobile || '';
         const email = p.email || '';
 
-        if (!name && !phone && !email) {
+        // Skip if no name (phone-only leads are not real borrowers)
+        if (!name || !name.trim()) {
           results.skipped++;
           continue;
         }

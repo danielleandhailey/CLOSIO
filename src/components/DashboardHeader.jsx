@@ -230,26 +230,26 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </MediumCard>
 
-        {/* 7. TASKS - Same size as calendar, flex to fill */}
-        <MediumCard style={{ flex: 1, minWidth: '220px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }} onClick={() => setShowTasksModal(true)}>
-              <CheckSquare size={12} style={{ color: '#3b82f6' }} />
-              <span style={{ fontSize: '10px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Tasks</span>
+        {/* 7. TASKS - BIGGER & BOLDER */}
+        <MediumCard style={{ flex: 1.5, minWidth: '280px', background: 'linear-gradient(135deg, var(--surface) 0%, #1a2535 100%)', border: '2px solid #3b82f6' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowTasksModal(true)}>
+              <CheckSquare size={16} style={{ color: '#3b82f6' }} />
+              <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TASKS</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: '700', padding: '3px 10px', borderRadius: '10px' }}>{allTasks.length}</span>
           </div>
-          <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '140px', overflowY: 'auto' }}>
             {allTasks.length === 0 ? (
-              <div style={{ fontSize: '12px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up!</div>
+              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
             ) : (
               <>
                 {allTasks.slice(0, 8).map((t, i) => (
-                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '600', marginRight: '4px' }}>
-                      {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : ''}
+                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '13px', color: 'var(--text)', cursor: 'pointer', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '700', marginRight: '6px' }}>
+                      {t.date ? (t.daysUntil <= 0 ? '🔥 TODAY' : format(t.date, 'M/d')) : '📌'}
                     </span>
-                    <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
+                    <span style={{ fontWeight: '700' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
                   </div>
                 ))}
               </>
