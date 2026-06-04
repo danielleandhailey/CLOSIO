@@ -101,8 +101,10 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops 
       });
     });
     allTasks.sort((a, b) => a.daysUntil - b.daysUntil);
-    // Show tasks due today, overdue, or within next 7 days
-    const tasksDueToday = allTasks.filter(t => t.daysUntil <= 7);
+    // Tasks due today or overdue
+    const tasksDueToday = allTasks.filter(t => t.daysUntil <= 0);
+    // Upcoming tasks (next 7 days, not today)
+    const upcomingTasks = allTasks.filter(t => t.daysUntil > 0 && t.daysUntil <= 7);
     const todaysAppts = allTasks.filter(t => t.isToday && t.type === 'appointment');
 
     // Locks expiring
@@ -225,23 +227,32 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops 
         </MediumCard>
 
         {/* 7. TASKS - Same size as calendar, flex to fill */}
-        <MediumCard style={{ flex: 1, minWidth: '180px' }}>
+        <MediumCard style={{ flex: 1, minWidth: '220px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <CheckSquare size={12} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '10px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Tasks</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{tasksDueToday.length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{tasksDueToday.length + upcomingTasks.length}</span>
           </div>
-          <div style={{ maxHeight: '80px', overflowY: 'auto' }}>
-            {tasksDueToday.length === 0 ? (
+          <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
+            {tasksDueToday.length === 0 && upcomingTasks.length === 0 ? (
               <div style={{ fontSize: '12px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up!</div>
             ) : (
-              tasksDueToday.slice(0, 6).map((t, i) => (
-                <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
-                </div>
-              ))
+              <>
+                {tasksDueToday.map((t, i) => (
+                  <div key={`today-${i}`} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: '#ef4444', fontWeight: '600', marginRight: '4px' }}>TODAY</span>
+                    <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
+                  </div>
+                ))}
+                {upcomingTasks.map((t, i) => (
+                  <div key={`up-${i}`} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: '#f59e0b', fontWeight: '600', marginRight: '4px' }}>{format(t.date, 'M/d')}</span>
+                    <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
+                  </div>
+                ))}
+              </>
             )}
           </div>
         </MediumCard>
