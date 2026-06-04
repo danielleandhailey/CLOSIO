@@ -233,13 +233,13 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops 
             </div>
             <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{tasksDueToday.length}</span>
           </div>
-          <div style={{ maxHeight: '60px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '80px', overflowY: 'auto' }}>
             {tasksDueToday.length === 0 ? (
               <div style={{ fontSize: '12px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up!</div>
             ) : (
-              tasksDueToday.slice(0, 4).map((t, i) => (
-                <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title?.substring(0, 20)}
+              tasksDueToday.slice(0, 6).map((t, i) => (
+                <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
                 </div>
               ))
             )}
