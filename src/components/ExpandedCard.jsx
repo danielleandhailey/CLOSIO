@@ -1295,6 +1295,144 @@ const APPRAISAL_TYPES = [
   'Other',
 ];
 
+// ---- Credit Report Section ----
+const CreditReportSection = ({ borrower, onUpdate }) => {
+  const [uploading, setUploading] = useState(false);
+  const [viewingReport, setViewingReport] = useState(false);
+  const inputRef = useRef();
+
+  const creditData = borrower.credit_report || {};
+  const hasReport = creditData.file_url || creditData.uploaded_at;
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // Upload to Supabase storage
+      const fileName = `credit_${borrower.id}_${Date.now()}.pdf`;
+      const { data, error } = await supabase.storage.from('documents').upload(fileName, file);
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName);
+
+      // Save credit report info
+      await onUpdate(borrower.id, {
+        credit_report: {
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          uploaded_at: new Date().toISOString(),
+          // Placeholder data - would be extracted by AI
+          scores: creditData.scores || {},
+          total_liabilities: creditData.total_liabilities || null,
+          negative_marks: creditData.negative_marks || 0,
+          public_records: creditData.public_records || 0,
+          discrepancies: creditData.discrepancies || [],
+        }
+      });
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Failed to upload: ' + err.message);
+    }
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  return (
+    <div>
+      {/* Drop Zone */}
+      <div
+        onClick={() => inputRef.current?.click()}
+        style={{
+          padding: '20px', borderRadius: '8px', marginBottom: '16px',
+          background: '#fef3c7', border: '2px dashed #f59e0b', textAlign: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <FileText size={24} style={{ color: '#f59e0b', marginBottom: '6px' }} />
+        <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '600' }}>
+          {uploading ? 'Uploading...' : 'Drop Credit Report PDF or Click to Browse'}
+        </div>
+        <input ref={inputRef} type="file" accept=".pdf" onChange={handleFileSelect} style={{ display: 'none' }} />
+      </div>
+
+      {/* Credit Report Summary */}
+      {hasReport && (
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#1e293b' }}>
+              📄 {creditData.file_name || 'Credit Report'}
+            </div>
+            <button
+              onClick={() => setViewingReport(true)}
+              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              View Report
+            </button>
+          </div>
+
+          {/* Summary Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+            <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>Scores</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                {creditData.scores?.equifax || '—'} / {creditData.scores?.experian || '—'} / {creditData.scores?.transunion || '—'}
+              </div>
+            </div>
+            <div style={{ background: creditData.negative_marks > 0 ? '#fee2e2' : '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>Negative Marks</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: creditData.negative_marks > 0 ? '#dc2626' : '#1e293b' }}>
+                {creditData.negative_marks || 0}
+              </div>
+            </div>
+            <div style={{ background: creditData.public_records > 0 ? '#fee2e2' : '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>Public Records</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: creditData.public_records > 0 ? '#dc2626' : '#1e293b' }}>
+                {creditData.public_records || 0}
+              </div>
+            </div>
+          </div>
+
+          {/* Discrepancies */}
+          {creditData.discrepancies?.length > 0 && (
+            <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '6px', marginBottom: '8px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>⚠️ Discrepancies</div>
+              {creditData.discrepancies.map((d, i) => (
+                <div key={i} style={{ fontSize: '11px', color: '#78350f' }}>• {d}</div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ fontSize: '10px', color: '#64748b' }}>
+            Uploaded: {creditData.uploaded_at ? format(parseISO(creditData.uploaded_at), 'M/d/yy h:mma') : '—'}
+          </div>
+        </div>
+      )}
+
+      {/* Report Viewer Modal */}
+      {viewingReport && creditData.file_url && (
+        <>
+          <div onClick={() => setViewingReport(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000 }} />
+          <div style={{
+            position: 'fixed', top: '5%', left: '5%', right: '5%', bottom: '5%',
+            background: '#fff', borderRadius: '12px', zIndex: 1001,
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: '600', color: '#1e293b' }}>Credit Report - {borrower.name}</span>
+              <button onClick={() => setViewingReport(false)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                Close
+              </button>
+            </div>
+            <iframe src={creditData.file_url} style={{ flex: 1, border: 'none' }} title="Credit Report" />
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // ---- Income/Employment Section ----
 const IncomeSection = ({ borrower, onUpdate }) => {
   const incomes = borrower.incomes || [];
@@ -1549,6 +1687,7 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
     { id: 'contacts', label: 'Contacts' },
     { id: 'stips',    label: 'Needs List' },
     { id: 'contingencies', label: 'Contingencies' },
+    { id: 'credit',   label: 'Credit Report' },
     { id: 'appraisal', label: 'Appraisal' },
     { id: 'preapproval', label: 'Preapproval' },
     { id: 'history',  label: 'History' },
@@ -1650,6 +1789,14 @@ const ExpandedCard = ({ borrower, ops, onClose }) => {
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>⚠️ Contingencies</div>
             <ContingenciesSection borrower={borrower} ops={ops} />
             {closeBtn('contingencies')}
+          </div>
+        )}
+
+        {openTabs.has('credit') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📊 Credit Report</div>
+            <CreditReportSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('credit')}
           </div>
         )}
 
