@@ -4,6 +4,68 @@ import { Calendar, Lock, AlertTriangle, Clock, CheckSquare, TrendingUp, DollarSi
 import { STAGES, STAGE_COLORS } from '../lib/constants';
 import { formatCurrency } from '../lib/utils';
 
+// Full Tasks Modal with sorting
+const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTask }) => {
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'borrower', 'assignee'
+
+  const sortedTasks = useMemo(() => {
+    const sorted = [...tasks];
+    if (sortBy === 'date') sorted.sort((a, b) => a.daysUntil - b.daysUntil);
+    if (sortBy === 'borrower') sorted.sort((a, b) => (a.borrower.name || '').localeCompare(b.borrower.name || ''));
+    if (sortBy === 'assignee') sorted.sort((a, b) => (a.assigned_to || '').localeCompare(b.assigned_to || ''));
+    return sorted;
+  }, [tasks, sortBy]);
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', zIndex: 1000, minWidth: '650px', maxWidth: '800px', maxHeight: '80vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>All Tasks ({tasks.length})</span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text3)' }}>Sort:</span>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+              <option value="date">Date</option>
+              <option value="borrower">Borrower</option>
+              <option value="assignee">Assigned To</option>
+            </select>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', marginLeft: '8px' }}><X size={20} /></button>
+          </div>
+        </div>
+        {tasks.length === 0 ? (
+          <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px', fontSize: '15px' }}>No tasks - you're all caught up! 🎉</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {sortedTasks.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil <= 0 ? '3px solid #ef4444' : '3px solid var(--border)' }}>
+                <input
+                  type="checkbox"
+                  checked={t.completed || false}
+                  onChange={() => onToggleTask?.(t.id, !t.completed)}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                />
+                <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '700', minWidth: '60px', fontSize: '14px' }}>
+                  {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '—'}
+                </span>
+                <span
+                  onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }}
+                  style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer' }}
+                >{t.borrower.name?.split(',')[0]}</span>
+                <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
+                {t.assigned_to && <span style={{ fontSize: '12px', color: 'var(--text3)', background: 'var(--surface3)', padding: '2px 8px', borderRadius: '4px' }}>{t.assigned_to}</span>}
+                <button
+                  onClick={() => onDeleteTask?.(t.id)}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
 // Donut chart component
 const DonutChart = ({ data, size = 90 }) => {
   const total = data.reduce((sum, d) => sum + d.value, 0);
@@ -230,24 +292,24 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </MediumCard>
 
-        {/* 7. TASKS - BIGGER & BOLDER */}
-        <MediumCard style={{ flex: 1.5, minWidth: '280px', background: 'linear-gradient(135deg, var(--surface) 0%, #1a2535 100%)', border: '2px solid #3b82f6' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        {/* 7. TASKS - Clean style */}
+        <MediumCard style={{ flex: 1.5, minWidth: '280px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowTasksModal(true)}>
-              <CheckSquare size={16} style={{ color: '#3b82f6' }} />
-              <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TASKS</span>
+              <CheckSquare size={14} style={{ color: '#3b82f6' }} />
+              <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>TASKS</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: '700', padding: '3px 10px', borderRadius: '10px' }}>{allTasks.length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.length}</span>
           </div>
           <div style={{ maxHeight: '140px', overflowY: 'auto' }}>
             {allTasks.length === 0 ? (
-              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
+              <div style={{ fontSize: '14px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
             ) : (
               <>
-                {allTasks.slice(0, 8).map((t, i) => (
-                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '13px', color: 'var(--text)', cursor: 'pointer', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '700', marginRight: '6px' }}>
-                      {t.date ? (t.daysUntil <= 0 ? '🔥 TODAY' : format(t.date, 'M/d')) : '📌'}
+                {allTasks.slice(0, 6).map((t, i) => (
+                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '14px', color: 'var(--text)', cursor: 'pointer', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '700', marginRight: '8px' }}>
+                      {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '•'}
                     </span>
                     <span style={{ fontWeight: '700' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
                   </div>
@@ -257,42 +319,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </MediumCard>
 
-        {/* Tasks Modal */}
+        {/* Tasks Modal - ALL TASKS */}
         {showTasksModal && (
-          <>
-            <div onClick={() => setShowTasksModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }} />
-            <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', zIndex: 1000, minWidth: '500px', maxHeight: '80vh', overflow: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text)' }}>All Tasks</span>
-                <button onClick={() => setShowTasksModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer' }}><X size={18} /></button>
-              </div>
-              {allTasks.length === 0 ? (
-                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '20px' }}>No tasks</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {allTasks.map((t, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', background: 'var(--surface2)', borderRadius: '6px' }}>
-                      <input
-                        type="checkbox"
-                        checked={t.completed || false}
-                        onChange={() => onToggleTask?.(t.id, !t.completed)}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                      />
-                      <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '600', minWidth: '50px' }}>
-                        {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '-'}
-                      </span>
-                      <span style={{ fontWeight: '600', color: 'var(--text)', minWidth: '120px' }}>{t.borrower.name?.split(',')[0]}</span>
-                      <span style={{ flex: 1, color: 'var(--text)' }}>{t.title}</span>
-                      <button
-                        onClick={() => onDeleteTask?.(t.id)}
-                        style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px' }}
-                      >x</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
+          <TasksModal
+            tasks={allTasks}
+            onClose={() => setShowTasksModal(false)}
+            onSelectBorrower={onSelectBorrower}
+            onToggleTask={onToggleTask}
+            onDeleteTask={onDeleteTask}
+          />
         )}
 
         {/* 8. FUNDED */}

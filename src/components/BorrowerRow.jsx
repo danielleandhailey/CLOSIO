@@ -661,6 +661,20 @@ const BorrowerRow = ({
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 
+        {/* Star/Favorite */}
+        <span
+          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_favorite: !borrower.is_favorite }); }}
+          style={{
+            cursor: 'pointer',
+            fontSize: '16px',
+            color: borrower.is_favorite ? '#fbbf24' : '#4a5568',
+            marginRight: '4px',
+          }}
+          title={borrower.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          {borrower.is_favorite ? '★' : '☆'}
+        </span>
+
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
