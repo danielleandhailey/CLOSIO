@@ -50,16 +50,16 @@ export const PRESET_TAGS = [
 
 export const SORT_OPTIONS = [
   { value: 'stage',         label: 'Stage' },
-  { value: 'new',           label: 'NEW First' },
-  { value: 'stips',         label: 'STIPS First' },
-  { value: 'duplicates',    label: 'Duplicates' },
-  { value: 'last_name',     label: 'Last Name' },
   { value: 'first_name',    label: 'First Name' },
+  { value: 'last_name',     label: 'Last Name' },
+  { value: 'new',           label: 'New' },
+  { value: 'stips',         label: 'Stips Needed' },
   { value: 'coe_date',      label: 'COE Date' },
   { value: 'floating',      label: 'Floating First' },
   { value: 'contingencies', label: 'Contingencies Due' },
   { value: 'tasks',         label: 'Tasks by Date' },
   { value: 'last_touched',  label: 'Last Touched' },
+  { value: 'duplicates',    label: 'Duplicates' },
 ];
 
 export const CONTACT_ROLES = [
