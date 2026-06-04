@@ -20,13 +20,29 @@ const AddBorrowerModal = ({ onClose, onSave }) => {
     if (!form.name.trim()) { setError('Borrower name is required'); return; }
     setSaving(true);
     try {
+      // Build payload with only valid DB columns
       const payload = {
-        ...form,
+        name: form.name,
+        non_borrowing_spouse: form.non_borrowing_spouse || null,
+        stage: form.stage,
+        loan_type: form.loan_type,
+        lender: form.lender || null,
         rate: form.rate ? parseFloat(form.rate) : null,
         purchase_price: form.purchase_price ? parseFloat(form.purchase_price) : null,
         loan_amount: form.loan_amount ? parseFloat(form.loan_amount) : null,
+        rate_status: form.rate_status,
+        coe_date: form.coe_date || null,
+        date_submitted: form.date_submitted || null,
         last_touched: form.last_touched || new Date().toISOString(),
+        notes: form.notes || null,
+        phone: form.phone || null,
+        email: form.email || null,
+        occupancy: form.occupancy || null,
       };
+      // Store co_borrower in co_borrowers array if provided
+      if (form.co_borrower?.trim()) {
+        payload.co_borrowers = [form.co_borrower.trim()];
+      }
       await onSave(payload);
       onClose();
     } catch (e) {
