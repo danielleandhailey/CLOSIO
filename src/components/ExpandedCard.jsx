@@ -1784,9 +1784,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
 
   return (
     <div className="expanded-card">
-      {/* Contact Links Row - under borrower name area */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 16px', marginBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', gap: '12px', marginLeft: '100px' }}>
+      {/* Contact Links Row - contact on left, lender on right */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', marginBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
           {borrower.phone && (
             <a href={`tel:${borrower.phone}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>CALL</a>
           )}
@@ -1797,8 +1797,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
             <a href={`mailto:${borrower.email}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>EMAIL</a>
           )}
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {borrower.lender && <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{borrower.lender}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {borrower.lender && <span style={{ fontSize: '12px', color: 'var(--text)', fontWeight: '600' }}>{borrower.lender}</span>}
         </div>
       </div>
 
