@@ -65,6 +65,11 @@ export default async function handler(req, res) {
 
     const results = { created: 0, updated: 0, skipped: 0, errors: [] };
 
+    // Log first prospect to see structure
+    if (prospects.length > 0) {
+      console.log('FIRST PROSPECT:', JSON.stringify(prospects[0], null, 2).slice(0, 3000));
+    }
+
     for (const p of prospects) {
       try {
         const firstName = p.first_name || '';
