@@ -4,15 +4,23 @@ import { Calendar, Lock, AlertTriangle, Clock, CheckSquare, TrendingUp, DollarSi
 import { STAGES, STAGE_COLORS } from '../lib/constants';
 import { formatCurrency } from '../lib/utils';
 
+// Assignee colors
+const ASSIGNEE_COLORS = {
+  'Danielle': '#ec4899',
+  'Hailey': '#8b5cf6',
+};
+const getAssigneeColor = (name) => ASSIGNEE_COLORS[name] || '#6b7280';
+
 // Full Tasks Modal with sorting
 const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTask }) => {
-  const [sortBy, setSortBy] = useState('date'); // 'date', 'borrower', 'assignee'
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'borrower', 'danielle', 'hailey'
 
   const sortedTasks = useMemo(() => {
-    const sorted = [...tasks];
+    let sorted = [...tasks];
     if (sortBy === 'date') sorted.sort((a, b) => a.daysUntil - b.daysUntil);
     if (sortBy === 'borrower') sorted.sort((a, b) => (a.borrower.name || '').localeCompare(b.borrower.name || ''));
-    if (sortBy === 'assignee') sorted.sort((a, b) => (a.assigned_to || '').localeCompare(b.assigned_to || ''));
+    if (sortBy === 'danielle') sorted = sorted.filter(t => t.assigned_to === 'Danielle').sort((a, b) => a.daysUntil - b.daysUntil);
+    if (sortBy === 'hailey') sorted = sorted.filter(t => t.assigned_to === 'Hailey').sort((a, b) => a.daysUntil - b.daysUntil);
     return sorted;
   }, [tasks, sortBy]);
 
@@ -27,12 +35,13 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
               <option value="date">Date</option>
               <option value="borrower">Borrower</option>
-              <option value="assignee">Assigned To</option>
+              <option value="danielle">Danielle</option>
+              <option value="hailey">Hailey</option>
             </select>
             <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', marginLeft: '8px' }}><X size={20} /></button>
           </div>
         </div>
-        {tasks.length === 0 ? (
+        {sortedTasks.length === 0 ? (
           <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px', fontSize: '15px' }}>No tasks - you're all caught up! 🎉</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -52,7 +61,7 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
                   style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer' }}
                 >{t.borrower.name?.split(',')[0]}</span>
                 <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
-                {t.assigned_to && <span style={{ fontSize: '11px', color: '#fff', background: '#8b5cf6', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>{t.assigned_to}</span>}
+                {t.assigned_to && <span style={{ fontSize: '11px', color: '#fff', background: getAssigneeColor(t.assigned_to), padding: '3px 8px', borderRadius: '4px', fontWeight: '600' }}>{t.assigned_to}</span>}
                 <button
                   onClick={() => onDeleteTask?.(t.id)}
                   style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}
@@ -307,11 +316,13 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             ) : (
               <>
                 {allTasks.slice(0, 6).map((t, i) => (
-                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '14px', color: 'var(--text)', cursor: 'pointer', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '700', marginRight: '8px' }}>
+                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '13px', color: 'var(--text)', cursor: 'pointer', padding: '5px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '700', flexShrink: 0 }}>
                       {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '•'}
                     </span>
-                    <span style={{ fontWeight: '700' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
+                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                    {t.assigned_to && <span style={{ fontSize: '9px', color: '#fff', background: getAssigneeColor(t.assigned_to), padding: '1px 5px', borderRadius: '3px', fontWeight: '600', flexShrink: 0 }}>{t.assigned_to?.charAt(0)}</span>}
                   </div>
                 ))}
               </>
