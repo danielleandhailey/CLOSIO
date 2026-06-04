@@ -682,20 +682,24 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Notes Display - all notes that fit */}
+        {/* Notes Display - only dated notes, no uploads */}
         {(() => {
-          const noteLines = (borrower.notes || '').split('\n').filter(line => line.trim());
+          const allLines = (borrower.notes || '').split('\n').filter(line => line.trim());
+          // Only show lines with date format [M/D/YY] - these are actual notes
+          const noteLines = allLines.filter(line => line.match(/^\[\d{1,2}\/\d{1,2}\/\d{2}\]/));
           if (!noteLines.length) return null;
 
           const deleteNote = async (e, idx) => {
             e.stopPropagation();
-            const updatedNotes = noteLines.filter((_, i) => i !== idx).join('\n');
-            await onUpdate(borrower.id, { notes: updatedNotes });
+            // Find and remove this specific line from all lines
+            const lineToDelete = noteLines[idx];
+            const updatedLines = allLines.filter(line => line !== lineToDelete);
+            await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
           };
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '60px', maxWidth: '450px', overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '60px', maxWidth: '500px', overflow: 'hidden' }}
             >
               {noteLines.map((line, idx) => {
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
@@ -705,7 +709,7 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0, cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0, cursor: 'pointer' }}
                     title={noteText}
                   >
                     <button
@@ -714,11 +718,9 @@ const BorrowerRow = ({
                       style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '10px', padding: '0 2px' }}
                       title="Delete note"
                     >x</button>
-                    {dateStr && (
-                      <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600' }}>{dateStr}</span>
-                    )}
-                    <span style={{ fontSize: '11px', color: '#cbd5e1', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {noteText.substring(0, 20)}{noteText.length > 20 ? '...' : ''}
+                    <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600' }}>{dateStr}</span>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {noteText.substring(0, 25)}{noteText.length > 25 ? '...' : ''}
                     </span>
                   </div>
                 );
