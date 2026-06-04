@@ -101,29 +101,43 @@ export default async function handler(req, res) {
           if (byEmail?.length) existingBorrower = byEmail[0];
         }
 
-        // Build borrower data
+        // Skip realtors/agents - only import borrowers
+        const prospectType = (p.prospect_type || p.type || '').toLowerCase();
+        if (prospectType.includes('realtor') || prospectType.includes('agent')) {
+          results.skipped++;
+          continue;
+        }
+
+        // Build borrower data - pull ALL fields from Bonzo
+        const mortgage = p.mortgage || {};
         const borrowerData = {
           name: name || undefined,
           phone: phone || undefined,
           email: email || undefined,
           stage: mapStage(p.pipeline?.stage || p.stage),
-          loan_purpose: p.loan_purpose || p.mortgage?.loan_purpose || undefined,
-          loan_type: p.loan_type || p.mortgage?.loan_type || undefined,
-          purchase_price: parseFloat(p.purchase_price || p.mortgage?.purchase_price) || undefined,
-          loan_amount: parseFloat(p.loan_amount || p.mortgage?.loan_amount) || undefined,
-          rate: parseFloat(p.interest_rate || p.mortgage?.interest_rate) || undefined,
-          rate_status: p.rate_is_locked === 'Yes' || p.mortgage?.rate_is_locked === 'Yes' ? 'Locked' : undefined,
-          coe_date: p.close_date || p.mortgage?.close_date || undefined,
-          lender: p.lender || p.mortgage?.lender || undefined,
+          loan_purpose: mortgage.loan_purpose || p.loan_purpose || undefined,
+          loan_type: mortgage.loan_type || p.loan_type || undefined,
+          purchase_price: parseFloat(mortgage.purchase_price || p.purchase_price) || undefined,
+          loan_amount: parseFloat(mortgage.loan_amount || p.loan_amount) || undefined,
+          rate: parseFloat(mortgage.interest_rate || p.interest_rate) || undefined,
+          rate_status: (mortgage.rate_is_locked === 'Yes' || p.rate_is_locked === 'Yes') ? 'Locked' : undefined,
+          coe_date: mortgage.close_date || p.close_date || undefined,
+          lender: mortgage.lender || p.lender || undefined,
           property_address: [
-            p.property_address || p.address,
-            p.property_city || p.city,
-            p.property_state || p.state,
-            p.property_zip || p.zip
+            mortgage.property_address || p.property_address || p.address,
+            mortgage.property_city || p.property_city || p.city,
+            mortgage.property_state || p.property_state || p.state,
+            mortgage.property_zip || p.property_zip || p.zip
           ].filter(Boolean).join(', ') || undefined,
-          occupancy: p.property_use || p.mortgage?.property_use || undefined,
+          occupancy: mortgage.property_use || p.property_use || undefined,
+          property_type: mortgage.property_type || p.property_type || undefined,
+          credit_score: parseInt(mortgage.credit_score || p.credit_score) || undefined,
           bonzo_id: String(p.id),
+          bonzo_last_sync: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          // Extra Bonzo fields for borrower card
+          lead_source: p.lead_source || p.source || undefined,
+          birthday: p.birthday || p.date_of_birth || undefined,
         };
 
         // Remove undefined values

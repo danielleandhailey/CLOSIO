@@ -679,7 +679,7 @@ const BorrowerRow = ({
           {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
 
-        {/* Name + NEW badge */}
+        {/* Name + NEW badge + Sync badge */}
         <span className="borrower-name">
           {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
           {borrower.is_new && (
@@ -701,6 +701,19 @@ const BorrowerRow = ({
               onUpdate(borrower.id, { is_new: false });
             }}
             >NEW</span>
+          )}
+          {borrower.bonzo_last_sync && !borrower.is_new && (
+            <span style={{
+              marginLeft: '6px',
+              padding: '1px 5px',
+              background: '#00ff7f',
+              color: '#000',
+              fontSize: '8px',
+              fontWeight: '700',
+              borderRadius: '3px',
+            }}
+            title={`Synced from Bonzo: ${format(parseISO(borrower.bonzo_last_sync), 'M/d h:mma')}`}
+            >{format(parseISO(borrower.bonzo_last_sync), 'M/d')}</span>
           )}
         </span>
 
