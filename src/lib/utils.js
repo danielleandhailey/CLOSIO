@@ -70,6 +70,21 @@ export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
     switch (sortBy) {
       case 'stage':
         return stageIdx(a.stage) - stageIdx(b.stage);
+      case 'new':
+        // NEW borrowers first (is_new = true)
+        if (a.is_new && !b.is_new) return -1;
+        if (!a.is_new && b.is_new) return 1;
+        return stageIdx(a.stage) - stageIdx(b.stage);
+      case 'stips':
+        // STIPS needed first (substage = 'Stips Needed')
+        if (a.substage === 'Stips Needed' && b.substage !== 'Stips Needed') return -1;
+        if (a.substage !== 'Stips Needed' && b.substage === 'Stips Needed') return 1;
+        return stageIdx(a.stage) - stageIdx(b.stage);
+      case 'duplicates':
+        // Duplicates first (is_duplicate = true)
+        if (a.is_duplicate && !b.is_duplicate) return -1;
+        if (!a.is_duplicate && b.is_duplicate) return 1;
+        return stageIdx(a.stage) - stageIdx(b.stage);
       case 'coe_date':
         if (!a.coe_date && !b.coe_date) return 0;
         if (!a.coe_date) return 1;

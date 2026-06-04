@@ -50,6 +50,9 @@ export const PRESET_TAGS = [
 
 export const SORT_OPTIONS = [
   { value: 'stage',         label: 'Stage' },
+  { value: 'new',           label: 'NEW First' },
+  { value: 'stips',         label: 'STIPS First' },
+  { value: 'duplicates',    label: 'Duplicates' },
   { value: 'last_name',     label: 'Last Name' },
   { value: 'first_name',    label: 'First Name' },
   { value: 'coe_date',      label: 'COE Date' },

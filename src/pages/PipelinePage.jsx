@@ -18,7 +18,7 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBorrower, setEditingBorrower] = useState(null);
 
-  const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'Reverse', 'HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM'];
+  const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'Reverse', 'HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM', 'DPA', 'OTC'];
 
   // Stage counts
   const stageCounts = useMemo(() => {
@@ -163,7 +163,8 @@ const PipelinePage = ({ borrowers, ops }) => {
 
         {/* Sort */}
         <select className="select-input" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          <option value="stage">Sort</option>
+          {SORT_OPTIONS.filter(o => o.value !== 'stage').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
 
         <div style={{ position: 'relative', flex: 1, maxWidth: '240px' }}>
