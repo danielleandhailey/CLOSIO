@@ -86,6 +86,7 @@ export const useBorrowers = () => {
   const deleteBorrower = async (id) => {
     const { error } = await supabase.from('borrowers').delete().eq('id', id);
     if (error) throw error;
+    await fetchBorrowers();
   };
 
   const touchBorrower = async (id) => {

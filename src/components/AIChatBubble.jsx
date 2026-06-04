@@ -109,8 +109,8 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
         </div>
       )}
 
-      <button type="button" className="chat-trigger" onClick={() => setOpen(o => !o)} title="Claude AI Assistant" style={{ background: '#d97706', fontSize: '14px', fontWeight: '700' }}>
-        C
+      <button type="button" className="chat-trigger" onClick={() => setOpen(o => !o)} title="Ask Claude AI" style={{ background: '#d97706', fontSize: '16px', fontWeight: '700' }}>
+        ?
       </button>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
