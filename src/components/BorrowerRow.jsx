@@ -684,11 +684,28 @@ const BorrowerRow = ({
 
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
-          const allLines = (borrower.notes || '').split('\n').filter(line => line.trim());
+          const rawNotes = borrower.notes || '';
+          // Split on lines that start with [date] pattern to handle multi-line notes
+          const noteParts = rawNotes.split(/(?=\[\d{1,2}\/\d{1,2}\/\d{2}\])/);
+          // Also include non-dated notes as separate entries (split by newline for those)
+          let allNotes = [];
+          noteParts.forEach(part => {
+            const trimmed = part.trim();
+            if (!trimmed) return;
+            if (trimmed.match(/^\[\d{1,2}\/\d{1,2}\/\d{2}\]/)) {
+              // Dated note - keep as one entry (replace internal newlines with space)
+              allNotes.push(trimmed.replace(/\n/g, ' '));
+            } else {
+              // Non-dated - split by newline
+              trimmed.split('\n').forEach(line => {
+                if (line.trim()) allNotes.push(line.trim());
+              });
+            }
+          });
+
           // Filter out document entries and error messages only
-          const noteLines = allLines.filter(line => {
+          const noteLines = allNotes.filter(line => {
             const lower = line.toLowerCase();
-            // Skip document/error lines
             if (lower.includes('.pdf') ||
                 lower.includes('error:') ||
                 lower.includes('error analyzing') ||
