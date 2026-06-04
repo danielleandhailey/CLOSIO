@@ -52,7 +52,7 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
                   style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer' }}
                 >{t.borrower.name?.split(',')[0]}</span>
                 <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
-                {t.assigned_to && <span style={{ fontSize: '12px', color: 'var(--text3)', background: 'var(--surface3)', padding: '2px 8px', borderRadius: '4px' }}>{t.assigned_to}</span>}
+                {t.assigned_to && <span style={{ fontSize: '11px', color: '#fff', background: '#8b5cf6', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>{t.assigned_to}</span>}
                 <button
                   onClick={() => onDeleteTask?.(t.id)}
                   style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}
