@@ -820,9 +820,9 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', gap: '24px', marginLeft: '12px', flex: 1 }}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '30px', flex: 1, overflow: 'hidden' }}
             >
-              {noteLines.map((line, idx) => {
+              {noteLines.slice(0, 3).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
@@ -831,7 +831,7 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', minWidth: '250px', maxWidth: '400px', flex: 1 }}
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', flex: 1, minWidth: 0 }}
                     title={noteText}
                   >
                     <button
@@ -841,7 +841,7 @@ const BorrowerRow = ({
                       title="Delete this note"
                     >x</button>
                     {dateStr && <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', flexShrink: 0 }}>{dateStr}</span>}
-                    <span style={{ fontSize: '12px', color: '#cbd5e1', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <span style={{ fontSize: '12px', color: '#cbd5e1', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
                       {noteText}
                     </span>
                   </div>
