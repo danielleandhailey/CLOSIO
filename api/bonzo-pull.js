@@ -102,7 +102,8 @@ export default async function handler(req, res) {
         }
 
         // Skip realtors/agents - only import borrowers
-        const prospectType = (p.prospect_type || p.type || '').toLowerCase();
+        const prospectTypeRaw = p.prospect_type?.name || p.prospect_type || p.type?.name || p.type || '';
+        const prospectType = (typeof prospectTypeRaw === 'string' ? prospectTypeRaw : '').toLowerCase();
         if (prospectType.includes('realtor') || prospectType.includes('agent')) {
           results.skipped++;
           continue;
