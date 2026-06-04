@@ -682,13 +682,7 @@ const BorrowerRow = ({
         {/* Name */}
         <span className="borrower-name">{formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
 
-        {/* Spacer to push rest right */}
-        <div style={{ flex: 1 }} />
-
-        {/* Quick Note Button + Notes Display */}
-        <QuickNoteInput borrowerId={borrower.id} onAddNote={onAddNote} />
-
-        {/* Latest Note - from borrower.notes field */}
+        {/* Notes Display - couple inches after name */}
         {(() => {
           const noteLines = (borrower.notes || '').split('\n').filter(line => line.trim());
           if (!noteLines.length) return null;
@@ -700,7 +694,7 @@ const BorrowerRow = ({
           return (
             <div
               onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px', maxWidth: '280px', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '60px', maxWidth: '280px', cursor: 'pointer' }}
               title={`${noteLines.length} note${noteLines.length > 1 ? 's' : ''} - click to view all`}
             >
               {dateStr && (
@@ -716,8 +710,11 @@ const BorrowerRow = ({
           );
         })()}
 
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
         {/* Doc Drop Zone - right side */}
-        <div style={{ marginLeft: '8px' }}>
+        <div>
           <InlineDocDrop borrower={borrower} onDocDrop={onDocDrop} onHighlight={setDropHighlight} />
         </div>
 

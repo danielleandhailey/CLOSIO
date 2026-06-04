@@ -7,7 +7,7 @@ import { claudeService } from '../lib/claude';
 import { format, parseISO, addDays } from 'date-fns';
 
 // ---- Notes Section ----
-const NotesSection = ({ borrower, ops }) => {
+const NotesSection = ({ borrower, ops, onClose }) => {
   const [newNote, setNewNote] = useState('');
 
   // Parse notes from borrower.notes field (each line is a dated note)
@@ -17,6 +17,13 @@ const NotesSection = ({ borrower, ops }) => {
     if (!newNote.trim()) return;
     await ops.addNote(borrower.id, newNote.trim());
     setNewNote('');
+  };
+
+  const handleSaveClose = async () => {
+    if (newNote.trim()) {
+      await ops.addNote(borrower.id, newNote.trim());
+    }
+    onClose?.();
   };
 
   return (
@@ -36,6 +43,11 @@ const NotesSection = ({ borrower, ops }) => {
           onClick={handleAdd}
           style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer' }}
         >Add</button>
+        <button
+          type="button"
+          onClick={handleSaveClose}
+          style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer', fontSize: '11px' }}
+        >Save/Close</button>
       </div>
       {noteLines.length > 0 && (
         <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
@@ -1785,7 +1797,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('notes') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📝 Notes & Tasks</div>
-            <NotesSection borrower={borrower} ops={ops} />
+            <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
             <TasksSection borrower={borrower} ops={ops} />
             {closeBtn('notes')}
           </div>
