@@ -84,7 +84,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
       };
     }
 
-    // All tasks/appointments (not just today)
+    // All tasks/appointments
     const allTasks = [];
     borrowers.forEach(b => {
       (b.tasks || []).forEach(t => {
@@ -92,12 +92,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         if (t.due_date) {
           try {
             const taskDate = parseISO(t.due_date);
-            if (isNaN(taskDate.getTime())) return; // Skip invalid dates
+            if (isNaN(taskDate.getTime())) return;
             const daysUntil = differenceInDays(taskDate, today);
             allTasks.push({ ...t, borrower: b, daysUntil, isToday: isSameDay(taskDate, today), date: taskDate });
           } catch (e) {
             console.warn('Invalid task date:', t.due_date);
           }
+        } else {
+          // Tasks without due date - show as "no date"
+          allTasks.push({ ...t, borrower: b, daysUntil: 999, isToday: false, date: null });
         }
       });
     });
@@ -244,7 +247,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                 {allTasks.slice(0, 8).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
                     <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '600', marginRight: '4px' }}>
-                      {t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')}
+                      {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : ''}
                     </span>
                     <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>: {t.title}
                   </div>
@@ -276,7 +279,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                       />
                       <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '600', minWidth: '50px' }}>
-                        {t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')}
+                        {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '-'}
                       </span>
                       <span style={{ fontWeight: '600', color: 'var(--text)', minWidth: '120px' }}>{t.borrower.name?.split(',')[0]}</span>
                       <span style={{ flex: 1, color: 'var(--text)' }}>{t.title}</span>
