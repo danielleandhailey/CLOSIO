@@ -689,7 +689,12 @@ const BorrowerRow = ({
           const noteLines = allLines.filter(line => {
             const lower = line.toLowerCase();
             // Skip document/error lines
-            if (lower.includes('.pdf') || lower.includes('error analyzing')) return false;
+            if (lower.includes('.pdf') ||
+                lower.includes('error:') ||
+                lower.includes('error analyzing') ||
+                lower.includes('unexpected token') ||
+                lower.includes('claude-sonnet') ||
+                lower.includes('doctype')) return false;
             return true;
           });
 
