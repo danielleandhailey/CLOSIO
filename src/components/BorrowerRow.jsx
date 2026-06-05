@@ -73,16 +73,16 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
   );
 };
 
-// Local time display component - uses timezone from Bonzo, defaults to Pacific
+// Local time display component - uses timezone from Bonzo
 const LocalTime = ({ timezone }) => {
   const [time, setTime] = useState('');
-  const tz = timezone || 'America/Los_Angeles'; // Default to Pacific
 
   useEffect(() => {
+    if (!timezone) return;
     const update = () => {
       try {
         const now = new Date();
-        const localTime = now.toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true });
+        const localTime = now.toLocaleTimeString('en-US', { timeZone: timezone, hour: 'numeric', minute: '2-digit', hour12: true });
         setTime(localTime);
       } catch (e) {
         setTime('');
@@ -91,9 +91,9 @@ const LocalTime = ({ timezone }) => {
     update();
     const interval = setInterval(update, 60000);
     return () => clearInterval(interval);
-  }, [tz]);
+  }, [timezone]);
 
-  if (!time) return null; // Hide if no time calculated
+  if (!timezone || !time) return null;
   return (
     <span style={{ color: '#fff', fontSize: '12px', fontWeight: '700', marginLeft: '50px' }}>
       {time}
