@@ -188,6 +188,15 @@ const AppInner = () => {
               <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
             </div>
           </div>
+
+          {/* Resources Dropdown */}
+          <div style={{ position: 'relative' }} className="nav-dropdown">
+            <button type="button" className="btn btn-ghost">
+              Resources ▾
+            </button>
+            <div className="dropdown-menu">
+            </div>
+          </div>
         </div>
 
         <div className="nav-right">
