@@ -148,6 +148,9 @@ const AppInner = () => {
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.lendingpad.com', '_blank')}>
             Lending Pad
           </button>
+          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://loanzify.com', '_blank')}>
+            Loanzify
+          </button>
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
             Bonzo
           </button>
@@ -178,13 +181,6 @@ const AppInner = () => {
               <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
             </div>
           </div>
-
-          <button type="button" className="btn btn-ghost" title="Send Email">
-            Email
-          </button>
-          <button type="button" className="btn btn-ghost" title="Send Text">
-            Text
-          </button>
         </div>
 
         <div className="nav-right">
