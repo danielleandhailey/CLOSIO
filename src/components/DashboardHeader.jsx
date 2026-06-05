@@ -336,8 +336,17 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 1. PIPELINE */}
         <SmallCard icon={Users} label="Pipeline" value={totalLoans} color="#8b5cf6" />
 
-        {/* 2. PROCESSING */}
-        <SmallCard icon={TrendingUp} label="Processing" value={processingCount} color="#06b6d4" onClick={() => onFilterStage('Processing')} />
+        {/* 2. PROCESSING + FUNDED stacked */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
+          <div onClick={() => onFilterStage('Processing')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Processing</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{processingCount}</div>
+          </div>
+          <div onClick={() => onFilterStage('Funded')} style={{ cursor: 'pointer', textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Funded</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{fundedCount}</div>
+          </div>
+        </div>
 
         {/* 3. WORKING */}
         <SmallCard icon={TrendingUp} label="Working" value={stageCounts['Working'] || 0} color="#3b82f6" onClick={() => onFilterStage('Working')} />
@@ -433,14 +442,17 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           />
         )}
 
-        {/* 8. FUNDED */}
-        <SmallCard icon={CheckSquare} label="Funded" value={fundedCount} color="#10b981" onClick={() => onFilterStage('Funded')} />
-
-        {/* 9. FLOATING */}
-        <SmallCard icon={AlertTriangle} label="Floating" value={floatingLoans.length} color="#f59e0b" onClick={() => {}} />
-
-        {/* 10. LOCK EXPIRY */}
-        <SmallCard icon={Lock} label="Lock Expiry" value={locksExpiring.length} color="#ef4444" onClick={() => {}} />
+        {/* 8. FLOATING + LOCK EXPIRY stacked */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{floatingLoans.length}</div>
+          </div>
+          <div style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{locksExpiring.length}</div>
+          </div>
+        </div>
 
         {/* 11. REVENUE & VOLUME */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '90px', border: '1px solid var(--border)' }}>
