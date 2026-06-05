@@ -47,10 +47,10 @@ export default async function handler(req, res) {
     // Fetch prospects from Bonzo - get multiple pages
     let allProspects = [];
     let page = 1;
-    const maxPages = 10; // Fetch up to 1,000 prospects - avoid timeout
+    const maxPages = 1; // Fetch 50 at a time
 
     while (page <= maxPages) {
-      const response = await fetch(`${BONZO_API_URL}/prospects?per_page=100&page=${page}&sort=-created_at`, {
+      const response = await fetch(`${BONZO_API_URL}/prospects?per_page=50&page=${page}&sort=-created_at`, {
         headers: {
           'Authorization': `Bearer ${BONZO_TOKEN}`,
           'Accept': 'application/json',
@@ -94,38 +94,20 @@ export default async function handler(req, res) {
         const phone = p.phone || p.mobile || '';
         const email = p.email || '';
 
-        // Skip if no name (phone-only leads are not real borrowers)
+        // ONLY pull from "DR - Purchase" pipeline (check FIRST to skip fast)
+        const pipelineName = p.pipeline?.name || p.pipeline || '';
+        if (pipelineName !== 'DR - Purchase') {
+          results.skipped++;
+          continue;
+        }
+
+        // Skip if no name
         if (!name || !name.trim()) {
           results.skipped++;
           continue;
         }
 
-        // Debug: Log if we see Hailey
-        if (name.toLowerCase().includes('hailey') || name.toLowerCase().includes('rose')) {
-          console.log('FOUND HAILEY/ROSE:', name, 'stage:', p.pipeline?.stage?.name || p.pipeline?.stage, 'type:', p.prospect_type);
-        }
-
-        // Check for existing borrower
-        let existingBorrower = null;
-        if (phone) {
-          const cleanPhone = phone.replace(/\D/g, '').slice(-10);
-          const { data: byPhone } = await supabase
-            .from('borrowers')
-            .select('*')
-            .or(`phone.ilike.%${cleanPhone}%,bonzo_id.eq.${p.id}`)
-            .limit(1);
-          if (byPhone?.length) existingBorrower = byPhone[0];
-        }
-        if (!existingBorrower && email) {
-          const { data: byEmail } = await supabase
-            .from('borrowers')
-            .select('*')
-            .ilike('email', email)
-            .limit(1);
-          if (byEmail?.length) existingBorrower = byEmail[0];
-        }
-
-        // Skip realtors/agents - only import borrowers
+        // Skip realtors/agents
         const prospectTypeRaw = p.prospect_type?.name || p.prospect_type || p.type?.name || p.type || '';
         const prospectType = (typeof prospectTypeRaw === 'string' ? prospectTypeRaw : '').toLowerCase();
         if (prospectType.includes('realtor') || prospectType.includes('agent')) {
@@ -133,28 +115,20 @@ export default async function handler(req, res) {
           continue;
         }
 
-        // Check if this Bonzo stage should be imported
-        // Debug first prospect to see full structure
-        if (results.created + results.updated + results.skipped === 0) {
-          console.log('FIRST PROSPECT FULL:', JSON.stringify(p, null, 2).slice(0, 2000));
-        }
+        // Check for existing borrower by bonzo_id
+        let existingBorrower = null;
+        const { data: byBonzoId } = await supabase
+          .from('borrowers')
+          .select('*')
+          .eq('bonzo_id', String(p.id))
+          .limit(1);
+        if (byBonzoId?.length) existingBorrower = byBonzoId[0];
 
+        // Check if this Bonzo stage should be imported
         const bonzoStageName = p.pipeline?.stage?.name || p.pipeline?.stage || p.pipeline_stage?.name || p.pipeline_stage || p.stage?.name || p.stage || '';
         const stageMapping = mapBonzoStage(bonzoStageName);
 
-        // Skip if stage not in our import list (unless already exists in CLOSIO)
-        let existingBorrowerCheck = null;
-        if (phone) {
-          const cleanPhone = phone.replace(/\D/g, '').slice(-10);
-          const { data: byPhone } = await supabase
-            .from('borrowers')
-            .select('id')
-            .or(`phone.ilike.%${cleanPhone}%,bonzo_id.eq.${p.id}`)
-            .limit(1);
-          if (byPhone?.length) existingBorrowerCheck = byPhone[0];
-        }
-
-        if (!stageMapping && !existingBorrowerCheck) {
+        if (!stageMapping && !existingBorrower) {
           // Stage not importable and not already in CLOSIO - skip
           console.log('SKIP:', name, 'stage:', bonzoStageName);
           results.skipped++;
@@ -222,10 +196,13 @@ export default async function handler(req, res) {
       }
     }
 
-    console.log('Bonzo pull results:', results);
+    const hasMore = prospects.length === 50;
+    console.log('Bonzo pull results:', results, 'hasMore:', hasMore);
     return res.status(200).json({
       success: true,
       total: prospects.length,
+      hasMore,
+      message: hasMore ? 'Pull again for more prospects' : 'All caught up',
       ...results
     });
 

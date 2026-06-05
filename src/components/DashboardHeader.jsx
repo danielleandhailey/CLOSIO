@@ -345,8 +345,8 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         <MediumCard style={{ flex: 1.5, minWidth: '280px', padding: '8px 12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowApptsModal(true)}>
-              <div style={{ textAlign: 'center', lineHeight: 1 }}>
-                <div style={{ fontSize: '9px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>{format(new Date(), 'EEE')}</div>
+              <div style={{ textAlign: 'center', lineHeight: 1, border: '1px solid #fff', borderRadius: '4px', padding: '4px 6px' }}>
+                <div style={{ fontSize: '9px', color: '#fff', fontWeight: '700', textTransform: 'uppercase' }}>{format(new Date(), 'EEE')}</div>
                 <div style={{ fontSize: '18px', color: '#fff', fontWeight: '800' }}>{format(new Date(), 'd')}</div>
               </div>
               <Calendar size={14} style={{ color: '#3b82f6' }} />
