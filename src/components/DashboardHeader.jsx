@@ -4,16 +4,16 @@ import { Calendar, Lock, AlertTriangle, Clock, CheckSquare, TrendingUp, DollarSi
 import { STAGES, STAGE_COLORS } from '../lib/constants';
 import { formatCurrency } from '../lib/utils';
 
-// Assignee colors
-const ASSIGNEE_COLORS = {
-  'Danielle': '#ec4899',
-  'Hailey': '#8b5cf6',
+// Assignee colors - text only, no pills
+const getAssigneeTextColor = (name) => {
+  if (name === 'Danielle') return '#fbbf24'; // yellow
+  if (name === 'Hailey') return '#22c55e'; // green
+  return '#6b7280';
 };
-const getAssigneeColor = (name) => ASSIGNEE_COLORS[name] || '#6b7280';
 
 // Full Tasks Modal with sorting
 const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTask }) => {
-  const [sortBy, setSortBy] = useState('date'); // 'date', 'borrower', 'danielle', 'hailey'
+  const [sortBy, setSortBy] = useState('date');
 
   const sortedTasks = useMemo(() => {
     let sorted = [...tasks];
@@ -61,9 +61,68 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
                   style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer' }}
                 >{t.borrower.name?.split(',')[0]}</span>
                 <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
-                {t.assigned_to && <span style={{ fontSize: '11px', color: '#fff', background: getAssigneeColor(t.assigned_to), padding: '3px 8px', borderRadius: '4px', fontWeight: '600' }}>{t.assigned_to}</span>}
+                {t.assigned_to && <span style={{ fontSize: '12px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700' }}>{t.assigned_to}</span>}
                 <button
                   onClick={() => onDeleteTask?.(t.id)}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+// Appointments Modal - like Tasks Modal
+const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAppt }) => {
+  const [sortBy, setSortBy] = useState('date');
+
+  const sortedAppts = useMemo(() => {
+    let sorted = [...appointments];
+    if (sortBy === 'date') sorted.sort((a, b) => a.daysUntil - b.daysUntil);
+    if (sortBy === 'borrower') sorted.sort((a, b) => (a.borrower.name || '').localeCompare(b.borrower.name || ''));
+    if (sortBy === 'danielle') sorted = sorted.filter(t => t.assigned_to === 'Danielle').sort((a, b) => a.daysUntil - b.daysUntil);
+    if (sortBy === 'hailey') sorted = sorted.filter(t => t.assigned_to === 'Hailey').sort((a, b) => a.daysUntil - b.daysUntil);
+    return sorted;
+  }, [appointments, sortBy]);
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', zIndex: 1000, minWidth: '650px', maxWidth: '800px', maxHeight: '80vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>All Appointments ({appointments.length})</span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text3)' }}>Sort:</span>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+              <option value="date">Date</option>
+              <option value="borrower">Borrower</option>
+              <option value="danielle">Danielle</option>
+              <option value="hailey">Hailey</option>
+            </select>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', marginLeft: '8px' }}><X size={20} /></button>
+          </div>
+        </div>
+        {sortedAppts.length === 0 ? (
+          <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px', fontSize: '15px' }}>No appointments scheduled</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {sortedAppts.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil <= 0 ? '3px solid #3b82f6' : '3px solid var(--border)' }}>
+                <input type="checkbox" style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                <span style={{ color: t.daysUntil <= 0 ? '#3b82f6' : '#f59e0b', fontWeight: '700', minWidth: '60px', fontSize: '14px' }}>
+                  {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '—'}
+                </span>
+                <span
+                  onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }}
+                  style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer' }}
+                >{t.borrower.name?.split(',')[0]}</span>
+                <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
+                {t.assigned_to && <span style={{ fontSize: '12px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700' }}>{t.assigned_to}</span>}
+                <button
+                  onClick={() => onDeleteAppt?.(t.id)}
                   style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}
                 >×</button>
               </div>
@@ -143,7 +202,8 @@ const MediumCard = ({ children, style = {} }) => (
 const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops, onToggleTask, onDeleteTask }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTasksModal, setShowTasksModal] = useState(false);
-  const [addingAppt, setAddingAppt] = useState(null); // { date, borrowerId }
+  const [showApptsModal, setShowApptsModal] = useState(false);
+  const [addingAppt, setAddingAppt] = useState(null);
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
 
   const dashboardData = useMemo(() => {
@@ -250,6 +310,9 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
     stageCounts, donutData, totalVolume, totalRevenue, processingCount, fundedCount, totalLoans,
   } = dashboardData;
 
+  // All appointments (type === 'appointment')
+  const allAppointments = allTasks.filter(t => t.type === 'appointment');
+
   // Get appointments for a specific date
   const getApptsForDate = (day) => {
     const today = new Date();
@@ -278,42 +341,45 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 4. SHOPPING */}
         <SmallCard icon={Home} label="Shopping" value={stageCounts['Shopping'] || 0} color="#f59e0b" onClick={() => onFilterStage('Shopping')} />
 
-        {/* 5. CALENDAR - Day name over date in blue box */}
+        {/* 5. CALENDAR - Like Tasks box, Thu 4 top left, click opens appointments list */}
         <MediumCard style={{ flex: 1.2, minWidth: '200px', padding: '8px 12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowCalendar(true)}>
-              <Calendar size={14} style={{ color: '#3b82f6' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowApptsModal(true)}>
+              <div style={{ textAlign: 'center', lineHeight: 1 }}>
+                <div style={{ fontSize: '10px', fontWeight: '700', color: '#3b82f6' }}>{format(new Date(), 'EEE')}</div>
+                <div style={{ fontSize: '18px', fontWeight: '800', color: '#3b82f6' }}>{format(new Date(), 'd')}</div>
+              </div>
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
-            <div style={{ background: '#3b82f6', color: '#fff', padding: '4px 10px', borderRadius: '4px', textAlign: 'center', lineHeight: 1.2 }}>
-              <div style={{ fontSize: '10px', fontWeight: '600' }}>{format(new Date(), 'EEE')}</div>
-              <div style={{ fontSize: '16px', fontWeight: '700' }}>{format(new Date(), 'd')}</div>
-            </div>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.length}</span>
           </div>
           <div>
             {(() => {
-              const todayAppts = allTasks.filter(t => t.type === 'appointment' && t.isToday);
-              const upcomingAppts = allTasks.filter(t => t.type === 'appointment' && t.daysUntil > 0 && t.daysUntil <= 7).slice(0, 2);
+              const todayAppts = allAppointments.filter(t => t.isToday);
+              const upcomingAppts = allAppointments.filter(t => t.daysUntil > 0).slice(0, 2);
               return (
                 <>
                   {/* TODAY row */}
                   <div style={{ fontSize: '12px', color: 'var(--text)', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#3b82f6', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
+                    <span style={{ color: '#ef4444', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
+                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{todayAppts.length > 0 ? todayAppts[0].borrower.name?.split(',')[0] : ''}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {todayAppts.length > 0 ? todayAppts[0].title : 'No appts'}
                     </span>
-                    {todayAppts.length > 1 && <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: '600' }}>+{todayAppts.length - 1}</span>}
+                    {todayAppts[0]?.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(todayAppts[0].assigned_to), fontWeight: '700' }}>{todayAppts[0].assigned_to}</span>}
                   </div>
                   {/* Next 2 upcoming */}
                   {upcomingAppts.map((t, i) => (
                     <div key={i} style={{ fontSize: '12px', color: 'var(--text)', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ color: '#f59e0b', fontWeight: '700', flexShrink: 0 }}>{format(t.date, 'M/d')}</span>
+                      <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
                       <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                      {t.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700' }}>{t.assigned_to}</span>}
                     </div>
                   ))}
-                  {allTasks.filter(t => t.type === 'appointment' && t.daysUntil > 0).length > 2 && (
-                    <div onClick={() => setShowCalendar(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
-                      +{allTasks.filter(t => t.type === 'appointment' && t.daysUntil > 0).length - 2} more...
+                  {allAppointments.filter(t => t.daysUntil > 0).length > 2 && (
+                    <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
+                      +{allAppointments.filter(t => t.daysUntil > 0).length - 2} more...
                     </div>
                   )}
                 </>
@@ -321,6 +387,16 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             })()}
           </div>
         </MediumCard>
+
+        {/* Appointments Modal */}
+        {showApptsModal && (
+          <AppointmentsModal
+            appointments={allAppointments}
+            onClose={() => setShowApptsModal(false)}
+            onSelectBorrower={onSelectBorrower}
+            onDeleteAppt={onDeleteTask}
+          />
+        )}
 
         {/* 7. TASKS - Clean style */}
         <MediumCard style={{ flex: 1.5, minWidth: '280px', padding: '8px 12px' }}>

@@ -897,19 +897,22 @@ const BorrowerRow = ({
         }}>
           {/* Contact methods on left */}
           <div style={{ display: 'flex', gap: '16px' }}>
-            {borrower.phone && (
+            {borrower.phone ? (
               <a href={`tel:${borrower.phone}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>CALL</a>
-            )}
-            {borrower.phone && (
+            ) : <span style={{ color: '#64748b', fontSize: '11px' }}>CALL</span>}
+            {borrower.phone ? (
               <a href={`sms:${borrower.phone}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>TEXT</a>
-            )}
-            {borrower.email && (
+            ) : <span style={{ color: '#64748b', fontSize: '11px' }}>TEXT</span>}
+            {borrower.email ? (
               <a href={`mailto:${borrower.email}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>EMAIL</a>
-            )}
+            ) : <span style={{ color: '#64748b', fontSize: '11px' }}>EMAIL</span>}
           </div>
 
-          {/* Tags in middle (grow to fill space) */}
-          <div style={{ flex: 1, display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'flex-end' }}>
+          {/* Spacer */}
+          <div style={{ flex: 1 }} />
+
+          {/* Tags go LEFT of +buttons */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             {tags.map(t => (
               <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
             ))}
