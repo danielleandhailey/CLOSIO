@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3 } from 'lucide-react';
-import { STAGE_COLORS, STAGES, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS } from '../lib/constants';
+import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS } from '../lib/constants';
 import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
@@ -484,7 +484,7 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
           background: '#fff', border: '1px solid #ddd', borderRadius: '6px',
           boxShadow: '0 4px 16px rgba(0,0,0,0.15)', minWidth: '150px', padding: '4px',
         }}>
-          {STAGES.filter(s => s !== borrower.stage).map(s => {
+          {(STAGES_BY_TYPE[borrower.loan_type] || STAGES_BY_TYPE[borrower.loan_purpose] || STAGES).filter(s => s !== borrower.stage).map(s => {
             const c = STAGE_COLORS[s];
             return (
               <button

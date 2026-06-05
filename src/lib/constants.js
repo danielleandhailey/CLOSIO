@@ -16,6 +16,14 @@ export const STAGES = [
   'CXLD',
 ];
 
+// Stages by loan type - Shopping removed for Refi
+export const STAGES_BY_TYPE = {
+  'Purchase': STAGES,
+  'Refinance': STAGES.filter(s => s !== 'Shopping'),
+  'HELOC': ['Working', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
+  'Reverse': ['Working', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
+};
+
 export const STAGE_COLORS = {
   'Working':       { bg: '#a855f7', text: '#fff', light: '#f3e8ff' },
   'Shopping':      { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
