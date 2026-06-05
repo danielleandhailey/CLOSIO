@@ -346,15 +346,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         <SmallCard icon={Home} label="Shopping" value={stageCounts['Shopping'] || 0} color="#f59e0b" onClick={() => onFilterStage('Shopping')} />
 
         {/* 5. CALENDAR - ONLY appointments */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flex: '1 1 20%', minWidth: '280px', padding: '4px 10px', gap: '8px' }}>
-          {/* Date box - F R I vertical on left of 5 - INSIDE the box */}
-          <div onClick={() => setShowApptsModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', paddingRight: '8px', borderRight: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-              {format(new Date(), 'EEE').toUpperCase().split('').map((letter, i) => (
-                <span key={i} style={{ fontSize: '9px', color: '#64748b', fontWeight: '700' }}>{letter}</span>
-              ))}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flex: '1 1 20%', minWidth: '280px', padding: '6px 10px', gap: '10px' }}>
+          {/* Date box - F R I vertical LEFT of 5 - INSIDE the box */}
+          <div onClick={() => setShowApptsModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', paddingRight: '10px', borderRight: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', lineHeight: 1.1 }}>F</span>
+              <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', lineHeight: 1.1 }}>R</span>
+              <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', lineHeight: 1.1 }}>I</span>
             </div>
-            <div style={{ fontSize: '26px', color: '#fff', fontWeight: '800', lineHeight: 1 }}>{format(new Date(), 'd')}</div>
+            <div style={{ fontSize: '28px', color: '#fff', fontWeight: '800', lineHeight: 1 }}>{format(new Date(), 'd')}</div>
           </div>
           {/* Content */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
