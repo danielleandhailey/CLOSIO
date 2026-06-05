@@ -44,22 +44,38 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch prospects from Bonzo
-    const response = await fetch(`${BONZO_API_URL}/prospects?per_page=100`, {
-      headers: {
-        'Authorization': `Bearer ${BONZO_TOKEN}`,
-        'Accept': 'application/json',
-      },
-    });
+    // Fetch prospects from Bonzo - get multiple pages
+    let allProspects = [];
+    let page = 1;
+    const maxPages = 5; // Fetch up to 500 prospects
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Bonzo API error:', response.status, errText);
-      return res.status(response.status).json({ error: `Bonzo API error: ${response.status}` });
+    while (page <= maxPages) {
+      const response = await fetch(`${BONZO_API_URL}/prospects?per_page=100&page=${page}`, {
+        headers: {
+          'Authorization': `Bearer ${BONZO_TOKEN}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Bonzo API error:', response.status, errText);
+        return res.status(response.status).json({ error: `Bonzo API error: ${response.status}` });
+      }
+
+      const bonzoData = await response.json();
+      const pageProspects = bonzoData.data || bonzoData || [];
+
+      if (pageProspects.length === 0) break; // No more pages
+
+      allProspects = allProspects.concat(pageProspects);
+      console.log(`Fetched page ${page}: ${pageProspects.length} prospects`);
+
+      if (pageProspects.length < 100) break; // Last page
+      page++;
     }
 
-    const bonzoData = await response.json();
-    const prospects = bonzoData.data || bonzoData || [];
+    const prospects = allProspects;
 
     console.log(`Fetched ${prospects.length} prospects from Bonzo`);
 
