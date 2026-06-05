@@ -352,15 +352,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <Calendar size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.filter(t => t.daysUntil <= 0).length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.filter(t => t.daysUntil === 0).length}</span>
           </div>
           <div style={{ marginTop: '-4px' }}>
-            {allAppointments.length === 0 ? (
-              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>No appointments</div>
+            {allAppointments.filter(t => t.daysUntil === 0).length === 0 && allAppointments.filter(t => t.daysUntil < 0).length === 0 ? (
+              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>No appointments today</div>
             ) : (
               <>
                 {/* Show up to 2 TODAY appts */}
-                {allAppointments.filter(t => t.daysUntil <= 0).slice(0, 2).map((t, i) => (
+                {allAppointments.filter(t => t.daysUntil === 0).slice(0, 2).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ color: '#ef4444', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
                     <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
@@ -369,13 +369,19 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                   </div>
                 ))}
                 {/* +X more for today */}
-                {allAppointments.filter(t => t.daysUntil <= 0).length > 2 && (
+                {allAppointments.filter(t => t.daysUntil === 0).length > 2 && (
                   <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
-                    +{allAppointments.filter(t => t.daysUntil <= 0).length - 2} more for today...
+                    +{allAppointments.filter(t => t.daysUntil === 0).length - 2} more for today...
+                  </div>
+                )}
+                {/* Overdue link */}
+                {allAppointments.filter(t => t.daysUntil < 0).length > 0 && (
+                  <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#ef4444', cursor: 'pointer', padding: '3px 0', fontWeight: '700' }}>
+                    ⚠️ {allAppointments.filter(t => t.daysUntil < 0).length} OVERDUE
                   </div>
                 )}
                 {/* Show upcoming dates if space (when less than 2 today) */}
-                {allAppointments.filter(t => t.daysUntil <= 0).length < 2 && allAppointments.filter(t => t.daysUntil > 0).slice(0, 2 - allAppointments.filter(t => t.daysUntil <= 0).length).map((t, i) => (
+                {allAppointments.filter(t => t.daysUntil === 0).length < 2 && allAppointments.filter(t => t.daysUntil > 0).slice(0, 2 - allAppointments.filter(t => t.daysUntil === 0).length).map((t, i) => (
                   <div key={`upcoming-${i}`} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ color: '#f59e0b', fontWeight: '700', flexShrink: 0 }}>{format(t.date, 'M/d')}</span>
                     <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
@@ -405,14 +411,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <CheckSquare size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>TASKS</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.filter(t => t.daysUntil <= 0).length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.filter(t => t.daysUntil === 0).length}</span>
           </div>
           <div style={{ marginTop: '-4px' }}>
-            {allTasks.length === 0 ? (
+            {allTasks.filter(t => t.daysUntil === 0).length === 0 && allTasks.filter(t => t.daysUntil < 0).length === 0 ? (
               <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
             ) : (
               <>
-                {allTasks.filter(t => t.daysUntil <= 0).slice(0, 2).map((t, i) => (
+                {/* Today's tasks */}
+                {allTasks.filter(t => t.daysUntil === 0).slice(0, 2).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ color: '#ef4444', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
                     <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
@@ -420,9 +427,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                     {t.assigned_to && <span style={{ fontSize: '10px', color: t.assigned_to === 'Danielle' ? '#fbbf24' : '#22c55e', fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
                   </div>
                 ))}
-                {allTasks.filter(t => t.daysUntil <= 0).length > 2 && (
+                {allTasks.filter(t => t.daysUntil === 0).length > 2 && (
                   <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
-                    +{allTasks.filter(t => t.daysUntil <= 0).length - 2} more for today...
+                    +{allTasks.filter(t => t.daysUntil === 0).length - 2} more for today...
+                  </div>
+                )}
+                {/* Overdue link */}
+                {allTasks.filter(t => t.daysUntil < 0).length > 0 && (
+                  <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#ef4444', cursor: 'pointer', padding: '3px 0', fontWeight: '700' }}>
+                    ⚠️ {allTasks.filter(t => t.daysUntil < 0).length} OVERDUE
                   </div>
                 )}
               </>
