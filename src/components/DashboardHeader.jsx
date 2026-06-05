@@ -184,12 +184,12 @@ const SmallCard = ({ icon: Icon, label, value, color = '#3b82f6', onClick }) => 
   </div>
 );
 
-// Medium card for Calendar and Tasks (larger, centered)
+// Medium card for Calendar and Tasks
 const MediumCard = ({ children, style = {} }) => (
   <div style={{
-    background: 'var(--surface2)', borderRadius: '8px', padding: '10px 14px',
+    background: 'var(--surface2)', borderRadius: '8px', padding: '4px 8px',
     minWidth: '130px', border: '1px solid var(--border)',
-    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
     ...style
   }}>
     {children}
@@ -308,8 +308,13 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
     stageCounts, donutData, totalVolume, totalRevenue, processingCount, fundedCount, totalLoans,
   } = dashboardData;
 
-  // All appointments (type === 'appointment')
+  // Separate appointments and tasks - check type field explicitly
   const allAppointments = allTasks.filter(t => t.type === 'appointment');
+  const onlyTasks = allTasks.filter(t => t.type !== 'appointment');
+
+  // Debug: log what's in each
+  console.log('All tasks types:', allTasks.map(t => ({ title: t.title, type: t.type })));
+  console.log('Appointments:', allAppointments.length, 'Tasks:', onlyTasks.length);
 
   // Get appointments for a specific date
   const getApptsForDate = (day) => {
@@ -339,52 +344,39 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 4. SHOPPING */}
         <SmallCard icon={Home} label="Shopping" value={stageCounts['Shopping'] || 0} color="#f59e0b" onClick={() => onFilterStage('Shopping')} />
 
-        {/* 5. CALENDAR - Exactly like Tasks box */}
-        <MediumCard style={{ flex: 1.5, minWidth: '280px', padding: '8px 12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowApptsModal(true)}>
-              <div style={{ textAlign: 'center', lineHeight: 1, border: '1px solid #fff', borderRadius: '4px', padding: '4px 6px' }}>
-                <div style={{ fontSize: '9px', color: '#fff', fontWeight: '700', textTransform: 'uppercase' }}>{format(new Date(), 'EEE')}</div>
-                <div style={{ fontSize: '18px', color: '#fff', fontWeight: '800' }}>{format(new Date(), 'd')}</div>
-              </div>
-              <Calendar size={14} style={{ color: '#3b82f6' }} />
-              <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
-            </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.filter(t => t.daysUntil === 0).length}</span>
+        {/* 5. CALENDAR - ONLY appointments */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flex: '1 1 18%', minWidth: '220px' }}>
+          {/* Date box on left - FRI stacked on 5 */}
+          <div onClick={() => setShowApptsModal(true)} style={{ background: '#1e293b', borderRadius: '6px 0 0 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4px 10px', cursor: 'pointer', borderRight: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase' }}>{format(new Date(), 'EEE')}</div>
+            <div style={{ fontSize: '24px', color: '#fff', fontWeight: '800', lineHeight: 1 }}>{format(new Date(), 'd')}</div>
           </div>
-          <div style={{ marginTop: '-4px' }}>
-            {allAppointments.filter(t => t.daysUntil === 0).length === 0 && allAppointments.filter(t => t.daysUntil < 0).length === 0 ? (
-              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>No appointments today</div>
+          {/* Content */}
+          <div style={{ flex: 1, padding: '3px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+              <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '700' }}>CALENDAR</span>
+              <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '10px' }}>{allAppointments.filter(t => t.daysUntil >= 0).length}</span>
+            </div>
+            {allAppointments.filter(t => t.daysUntil >= 0).length === 0 ? (
+              <div style={{ fontSize: '10px', color: 'var(--text3)' }}>No appointments</div>
             ) : (
               <>
-                {/* Show up to 2 TODAY appts */}
-                {allAppointments.filter(t => t.daysUntil === 0).slice(0, 2).map((t, i) => (
-                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ color: '#fbbf24', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
-                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-                    {t.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
+                {allAppointments.filter(t => t.daysUntil >= 0).slice(0, 2).map((t, i) => (
+                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '10px', color: 'var(--text)', cursor: 'pointer', lineHeight: 1.4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700' }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
+                    <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#94a3b8' }}>{t.title}</span>
                   </div>
                 ))}
-                {/* +X more for today */}
-                {allAppointments.filter(t => t.daysUntil === 0).length > 2 && (
-                  <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
-                    +{allAppointments.filter(t => t.daysUntil === 0).length - 2} more for today...
+                {allAppointments.filter(t => t.daysUntil >= 0).length > 2 && (
+                  <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '10px', color: '#22c55e', cursor: 'pointer', fontWeight: '600' }}>
+                    +{allAppointments.filter(t => t.daysUntil >= 0).length - 2} more...
                   </div>
                 )}
-                {/* Show upcoming dates if space (when less than 2 today) */}
-                {allAppointments.filter(t => t.daysUntil === 0).length < 2 && allAppointments.filter(t => t.daysUntil > 0).slice(0, 2 - allAppointments.filter(t => t.daysUntil === 0).length).map((t, i) => (
-                  <div key={`upcoming-${i}`} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ color: '#f59e0b', fontWeight: '700', flexShrink: 0 }}>{format(t.date, 'M/d')}</span>
-                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-                    {t.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
-                  </div>
-                ))}
               </>
             )}
           </div>
-        </MediumCard>
+        </div>
 
         {/* Appointments Modal */}
         {showApptsModal && (
@@ -396,43 +388,36 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           />
         )}
 
-        {/* 7. TASKS - Clean style */}
-        <MediumCard style={{ flex: 1.5, minWidth: '280px', padding: '8px 12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowTasksModal(true)}>
-              <CheckSquare size={14} style={{ color: '#3b82f6' }} />
-              <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>TASKS</span>
-            </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.filter(t => t.daysUntil === 0).length}</span>
+        {/* 7. TASKS - ONLY tasks (not appointments) */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', flex: '1 1 18%', minWidth: '220px', padding: '3px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+            <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '700' }}>TASKS</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '10px' }}>{onlyTasks.filter(t => t.daysUntil >= 0).length}</span>
           </div>
-          <div style={{ marginTop: '0' }}>
-            {allTasks.length === 0 ? (
-              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
-            ) : (
-              <>
-                {/* Today's tasks first, then upcoming */}
-                {allTasks.filter(t => t.daysUntil >= 0).slice(0, 2).map((t, i) => (
-                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700', flexShrink: 0 }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
-                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-                    {t.assigned_to && <span style={{ fontSize: '10px', color: t.assigned_to === 'Danielle' ? '#fbbf24' : '#22c55e', fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
-                  </div>
-                ))}
-                {allTasks.filter(t => t.daysUntil >= 0).length > 2 && (
-                  <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
-                    +{allTasks.filter(t => t.daysUntil >= 0).length - 2} more...
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </MediumCard>
+          {onlyTasks.filter(t => t.daysUntil >= 0).length === 0 ? (
+            <div style={{ fontSize: '10px', color: 'var(--text3)' }}>All caught up! 🎉</div>
+          ) : (
+            <>
+              {onlyTasks.filter(t => t.daysUntil >= 0).slice(0, 2).map((t, i) => (
+                <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '10px', color: 'var(--text)', cursor: 'pointer', lineHeight: 1.4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700' }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
+                  <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#94a3b8' }}>{t.title}</span>
+                </div>
+              ))}
+              {onlyTasks.filter(t => t.daysUntil >= 0).length > 2 && (
+                <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '10px', color: '#22c55e', cursor: 'pointer', fontWeight: '600' }}>
+                  +{onlyTasks.filter(t => t.daysUntil >= 0).length - 2} more...
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-        {/* Tasks Modal - ALL TASKS */}
+        {/* Tasks Modal - ONLY TASKS (not appointments) */}
         {showTasksModal && (
           <TasksModal
-            tasks={allTasks}
+            tasks={onlyTasks}
             onClose={() => setShowTasksModal(false)}
             onSelectBorrower={onSelectBorrower}
             onToggleTask={onToggleTask}

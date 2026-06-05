@@ -138,17 +138,20 @@ const TasksSection = ({ borrower, ops }) => {
               type="button"
               onClick={() => ops.updateTask(task.id, { completed: !isCompleted })}
               style={{
-                width: '22px', height: '22px', borderRadius: '4px', flexShrink: 0,
+                width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0,
                 background: isCompleted ? '#22c55e' : '#fff',
                 border: `2px solid ${isCompleted ? '#22c55e' : '#cbd5e1'}`,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontSize: '12px', fontWeight: '700',
+                color: '#fff', fontSize: '11px', fontWeight: '700',
               }}
             >
               {isCompleted ? '✓' : ''}
             </button>
+            <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '3px', background: isAppt ? '#3b82f6' : '#22c55e', color: '#fff', flexShrink: 0 }}>
+              {isAppt ? 'APPT' : 'TASK'}
+            </span>
             <span style={{ flex: 1, fontSize: '12px', color: isCompleted ? '#94a3b8' : '#1e293b', textDecoration: isCompleted ? 'line-through' : 'none' }}>
-              {isAppt ? '📅 ' : ''}{task.title}
+              {task.title}
             </span>
             {task.due_date && (
               <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
