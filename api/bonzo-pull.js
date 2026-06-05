@@ -94,7 +94,26 @@ export default async function handler(req, res) {
         const phone = p.phone || p.mobile || '';
         const email = p.email || '';
 
-        // ONLY pull from "DR - Purchase" pipeline (check FIRST to skip fast)
+        // Check for existing borrower by bonzo_id FIRST (before pipeline check)
+        let existingBorrower = null;
+        const { data: byBonzoId } = await supabase
+          .from('borrowers')
+          .select('*')
+          .eq('bonzo_id', String(p.id))
+          .limit(1);
+        if (byBonzoId?.length) existingBorrower = byBonzoId[0];
+
+        // If existing borrower, update timezone regardless of pipeline
+        if (existingBorrower && p.timezone) {
+          await supabase
+            .from('borrowers')
+            .update({ timezone: p.timezone, bonzo_last_sync: new Date().toISOString() })
+            .eq('id', existingBorrower.id);
+          results.updated++;
+          continue;
+        }
+
+        // For NEW imports: only from "DR - Purchase" pipeline
         const pipelineName = p.pipeline?.name || p.pipeline || '';
         if (pipelineName !== 'DR - Purchase') {
           results.skipped++;
@@ -115,21 +134,12 @@ export default async function handler(req, res) {
           continue;
         }
 
-        // Check for existing borrower by bonzo_id
-        let existingBorrower = null;
-        const { data: byBonzoId } = await supabase
-          .from('borrowers')
-          .select('*')
-          .eq('bonzo_id', String(p.id))
-          .limit(1);
-        if (byBonzoId?.length) existingBorrower = byBonzoId[0];
-
         // Check if this Bonzo stage should be imported
         const bonzoStageName = p.pipeline?.stage?.name || p.pipeline?.stage || p.pipeline_stage?.name || p.pipeline_stage || p.stage?.name || p.stage || '';
         const stageMapping = mapBonzoStage(bonzoStageName);
 
-        if (!stageMapping && !existingBorrower) {
-          // Stage not importable and not already in CLOSIO - skip
+        if (!stageMapping) {
+          // Stage not importable - skip
           console.log('SKIP:', name, 'stage:', bonzoStageName);
           results.skipped++;
           continue;
