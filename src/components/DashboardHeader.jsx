@@ -460,11 +460,22 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           />
         )}
 
-        {/* 8. EMPTY - placeholder */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)' }}></div>
+        {/* 8. ACCOUNT BAL + MONTHLY SPEND stacked */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Account Bal.</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>$0</div>
+          </div>
+          <div style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Monthly Spend</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>$0</div>
+          </div>
+        </div>
 
-        {/* 9. EMPTY - placeholder */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)' }}></div>
+        {/* 9. LEAD STORE */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Lead Store</div>
+        </div>
 
         {/* 11. REVENUE & VOLUME */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '90px', border: '1px solid var(--border)' }}>
