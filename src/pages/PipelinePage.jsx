@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Zap } from 'lucide-react';
 import BorrowerRow from '../components/BorrowerRow';
 import ExpandedCard from '../components/ExpandedCard';
 import AddBorrowerModal from '../components/AddBorrowerModal';
@@ -193,7 +193,13 @@ const PipelinePage = ({ borrowers, ops }) => {
           )}
         </div>
 
-        <button type="button" className="btn btn-ghost" style={{ marginLeft: 'auto' }} onClick={() => window.dispatchEvent(new CustomEvent('openMatrix'))}>
+        <button type="button" className="btn btn-ghost" style={{ marginLeft: 'auto' }} onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
+          <Zap size={12} /> Bonzo
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={() => window.open('https://brokerflow.com', '_blank')}>
+          <Zap size={12} /> BrokerFlow
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={() => window.dispatchEvent(new CustomEvent('openMatrix'))}>
           🗂 Matrix
         </button>
         <button type="button" className="btn btn-primary" onClick={() => setShowAddModal(true)}>

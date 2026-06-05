@@ -137,20 +137,6 @@ const AppInner = () => {
             </button>
           ))}
 
-          {/* Bonzo Buttons */}
-          <BonzoPullButton />
-          <button type="button" className="btn btn-ghost" title="Push updates to Bonzo CRM">
-            <Zap size={12} /> Bonzo Push
-          </button>
-
-          {/* BrokerFlow */}
-          <button type="button" className="btn btn-ghost" title="Pull from BrokerFlow">
-            <Zap size={12} /> BrokerFlow Pull
-          </button>
-          <button type="button" className="btn btn-ghost" title="Push to BrokerFlow">
-            <Zap size={12} /> BrokerFlow Push
-          </button>
-
           {/* External Links */}
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.lendingpad.com', '_blank')}>
             Lending Pad
@@ -158,14 +144,8 @@ const AppInner = () => {
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://loanzify.com', '_blank')}>
             Loanzify
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
-            Bonzo
-          </button>
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://loansifter.com', '_blank')}>
             LoanSifter
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://brokerflow.com', '_blank')}>
-            BF
           </button>
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.mortgagecalculator.org', '_blank')}>
             Calculators
