@@ -194,10 +194,10 @@ const PipelinePage = ({ borrowers, ops }) => {
         </div>
 
         <button type="button" className="btn btn-ghost" style={{ marginLeft: 'auto' }}>
-          RC
+          Teams
         </button>
         <button type="button" className="btn btn-ghost">
-          Teams
+          Ring
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
           <Zap size={12} /> Bonzo
