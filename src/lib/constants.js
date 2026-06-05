@@ -27,14 +27,14 @@ export const STAGES_BY_TYPE = {
 };
 
 export const STAGE_COLORS = {
-  'Working':       { bg: '#a855f7', text: '#fff', light: '#f3e8ff' },
+  'Working':       { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
   'Stips Needed':  { bg: '#fbbf24', text: '#000', light: '#fef3c7' },
   'Credit Upgrade':{ bg: '#ec4899', text: '#fff', light: '#fce7f3' },
   'Shopping':      { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
   'Processing':    { bg: '#f59e0b', text: '#fff', light: '#fef3c7' },
   'Funded':        { bg: '#10b981', text: '#fff', light: '#d1fae5' },
   'Closed/Paid':   { bg: '#059669', text: '#fff', light: '#d1fae5' },
-  'LP Ready':      { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
+  'LP Ready':      { bg: '#a855f7', text: '#fff', light: '#f3e8ff' },
   'Paycom':        { bg: '#f97316', text: '#fff', light: '#ffedd5' },
   'Future Deal':   { bg: '#14b8a6', text: '#fff', light: '#ccfbf1' },
   'DNQ':           { bg: '#6b7280', text: '#fff', light: '#e5e7eb' },
