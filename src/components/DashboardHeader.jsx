@@ -152,9 +152,9 @@ const BorrowerListModal = ({ title, borrowers, onClose, onSelectBorrower }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {borrowers.map((b, i) => (
               <div key={i} onClick={() => { onSelectBorrower(b.id); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--surface2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <span style={{ fontWeight: '700', color: '#fff', flex: 1 }}>{b.name}</span>
+                <span style={{ fontWeight: '700', color: '#3b82f6', flex: 1 }}>{b.name}</span>
                 <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{b.stage}</span>
-                {b.lock_expiration && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: '600' }}>{b.lock_expiration}</span>}
+                {b.lock_expiration && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: '600' }}>{format(parseISO(b.lock_expiration), 'M/d/yy')}</span>}
                 {b.lender && <span style={{ fontSize: '12px', color: '#a855f7' }}>{b.lender}</span>}
               </div>
             ))}
