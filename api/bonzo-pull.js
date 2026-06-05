@@ -100,6 +100,11 @@ export default async function handler(req, res) {
           continue;
         }
 
+        // Debug: Log if we see Hailey
+        if (name.toLowerCase().includes('hailey') || name.toLowerCase().includes('rose')) {
+          console.log('FOUND HAILEY/ROSE:', name, 'stage:', p.pipeline?.stage?.name || p.pipeline?.stage, 'type:', p.prospect_type);
+        }
+
         // Check for existing borrower
         let existingBorrower = null;
         if (phone) {
