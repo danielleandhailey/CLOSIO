@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { format, parseISO, differenceInDays, isSameDay } from 'date-fns';
+import { format, parseISO, differenceInDays, isSameDay, startOfDay } from 'date-fns';
 import { Calendar, Lock, AlertTriangle, Clock, CheckSquare, TrendingUp, DollarSign, Home, Users, X } from 'lucide-react';
 import { STAGES, STAGE_COLORS } from '../lib/constants';
 import { formatCurrency } from '../lib/utils';
@@ -219,10 +219,11 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         if (t.completed) return;
         if (t.due_date) {
           try {
-            const taskDate = parseISO(t.due_date);
+            const taskDate = startOfDay(parseISO(t.due_date));
+            const todayStart = startOfDay(today);
             if (isNaN(taskDate.getTime())) return;
-            const daysUntil = differenceInDays(taskDate, today);
-            allTasks.push({ ...t, borrower: b, daysUntil, isToday: isSameDay(taskDate, today), date: taskDate });
+            const daysUntil = differenceInDays(taskDate, todayStart);
+            allTasks.push({ ...t, borrower: b, daysUntil, isToday: daysUntil === 0, date: taskDate });
           } catch (e) {
             console.warn('Invalid task date:', t.due_date);
           }
