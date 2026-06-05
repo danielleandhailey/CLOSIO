@@ -348,11 +348,20 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </div>
 
-        {/* 3. WORKING */}
-        <SmallCard icon={TrendingUp} label="Working" value={stageCounts['Working'] || 0} color="#3b82f6" onClick={() => onFilterStage('Working')} />
+        {/* 3. WORKING + SHOPPING stacked */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
+          <div onClick={() => onFilterStage('Working')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Working</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{stageCounts['Working'] || 0}</div>
+          </div>
+          <div onClick={() => onFilterStage('Shopping')} style={{ cursor: 'pointer', textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Shopping</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{stageCounts['Shopping'] || 0}</div>
+          </div>
+        </div>
 
-        {/* 4. SHOPPING */}
-        <SmallCard icon={Home} label="Shopping" value={stageCounts['Shopping'] || 0} color="#f59e0b" onClick={() => onFilterStage('Shopping')} />
+        {/* 4. EMPTY - placeholder */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)' }}></div>
 
         {/* 5. CALENDAR - ONLY appointments */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flex: '1 1 20%', minWidth: '280px', padding: '6px 10px', gap: '10px' }}>
