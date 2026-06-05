@@ -38,7 +38,7 @@ const useTheme = (userId) => {
   return [dark, setDark];
 };
 
-const TABS = ['Pipeline', 'Calendar', 'Rate Retread', 'RC', 'Teams'];
+const TABS = ['Pipeline', 'Calendar', 'Rate Retread', 'RC', 'Teams', 'Matrix'];
 
 // Bonzo Pull button with loading state
 const BonzoPullButton = () => {
@@ -94,6 +94,13 @@ const AppInner = () => {
       seedInitialData().catch(console.error);
     }
   }, [user, loadingBorrowers, seedInitialData]);
+
+  // Listen for Matrix open event from Pipeline
+  useEffect(() => {
+    const handler = () => setActiveTab('Matrix');
+    window.addEventListener('openMatrix', handler);
+    return () => window.removeEventListener('openMatrix', handler);
+  }, []);
 
   if (loading) {
     return (
