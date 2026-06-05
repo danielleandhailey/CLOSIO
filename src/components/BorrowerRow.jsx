@@ -73,14 +73,14 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
   );
 };
 
-// Faint background by loan type
-const getTypeBackground = (type) => {
+// Left border color by loan type
+const getTypeBorderColor = (type) => {
   if (!type) return 'transparent';
   const t = type.toLowerCase();
-  if (t.includes('purchase')) return 'rgba(168, 85, 247, 0.08)';  // faint purple
-  if (t.includes('refi')) return 'rgba(59, 130, 246, 0.08)';      // faint blue
-  if (t.includes('heloc')) return 'rgba(20, 184, 166, 0.08)';     // faint teal
-  if (t.includes('reverse')) return 'rgba(236, 72, 153, 0.08)';   // faint pink
+  if (t.includes('purchase')) return '#a855f7';  // purple
+  if (t.includes('refi')) return '#3b82f6';      // blue
+  if (t.includes('heloc')) return '#14b8a6';     // teal
+  if (t.includes('reverse')) return '#ec4899';   // pink
   return 'transparent';
 };
 
@@ -677,8 +677,8 @@ const BorrowerRow = ({
   return (
     <div style={{ position: 'relative' }}>
       <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={{
-        background: dropHighlight ? '#e0f2fe' : getTypeBackground(borrower.loan_type || borrower.loan_purpose),
-        boxShadow: dropHighlight ? '0 0 0 2px #7dd3fc' : 'none',
+        borderLeft: `3px solid ${getTypeBorderColor(borrower.loan_type || borrower.loan_purpose)}`,
+        ...(dropHighlight ? { background: '#e0f2fe', boxShadow: '0 0 0 2px #7dd3fc' } : {}),
       }}>
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />

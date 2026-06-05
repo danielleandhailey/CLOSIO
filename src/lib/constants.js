@@ -23,6 +23,7 @@ export const STAGES_BY_TYPE = {
   'Refinance': STAGES.filter(s => s !== 'Shopping'),
   'HELOC': ['Working', 'Stips Needed', 'Credit Upgrade', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
   'Reverse': ['Working', 'Stips Needed', 'Credit Upgrade', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
+  'Refi/HELOC': STAGES.filter(s => s !== 'Shopping'),
 };
 
 export const STAGE_COLORS = {

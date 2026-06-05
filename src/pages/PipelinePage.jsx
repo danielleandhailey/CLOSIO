@@ -18,7 +18,7 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBorrower, setEditingBorrower] = useState(null);
 
-  const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'Reverse', 'HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM', 'DPA', 'OTC'];
+  const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'HELOC', 'Reverse', 'Refi/HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM', 'DPA', 'OTC'];
 
   // Stage counts
   const stageCounts = useMemo(() => {
@@ -36,6 +36,11 @@ const PipelinePage = ({ borrowers, ops }) => {
       list = list.filter(b => {
         const loanType = (b.loan_type || '').toLowerCase();
         const loanPurpose = (b.loan_purpose || '').toLowerCase();
+        // Handle combo filter
+        if (filterType === 'Refi/HELOC') {
+          return loanType.includes('refi') || loanPurpose.includes('refi') ||
+                 loanType.includes('heloc') || loanPurpose.includes('heloc');
+        }
         const filterLower = filterType.toLowerCase();
         return loanType.includes(filterLower) || loanPurpose.includes(filterLower);
       });
