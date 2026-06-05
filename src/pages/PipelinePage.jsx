@@ -49,6 +49,8 @@ const PipelinePage = ({ borrowers, ops }) => {
         b.name.toLowerCase().includes(q) ||
         (b.lender || '').toLowerCase().includes(q) ||
         (b.loan_type || '').toLowerCase().includes(q) ||
+        (b.phone || '').toLowerCase().includes(q) ||
+        (b.email || '').toLowerCase().includes(q) ||
         (b.borrower_tags || []).some(t => t.tag.toLowerCase().includes(q))
       );
     }
