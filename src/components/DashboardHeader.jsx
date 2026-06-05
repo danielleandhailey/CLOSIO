@@ -136,6 +136,34 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
   );
 };
 
+// Borrower List Modal - for clickable counts
+const BorrowerListModal = ({ title, borrowers, onClose, onSelectBorrower }) => {
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', zIndex: 1000, minWidth: '500px', maxWidth: '700px', maxHeight: '80vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{title} ({borrowers.length})</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: '20px' }}>×</button>
+        </div>
+        {borrowers.length === 0 ? (
+          <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px' }}>No borrowers</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {borrowers.map((b, i) => (
+              <div key={i} onClick={() => { onSelectBorrower(b.id); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--surface2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <span style={{ fontWeight: '700', color: '#3b82f6', flex: 1 }}>{b.name}</span>
+                <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{b.stage}</span>
+                {b.lender && <span style={{ fontSize: '12px', color: '#a855f7' }}>{b.lender}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
 // Donut chart component
 const DonutChart = ({ data, size = 90 }) => {
   const total = data.reduce((sum, d) => sum + d.value, 0);
@@ -205,6 +233,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTasksModal, setShowTasksModal] = useState(false);
   const [showApptsModal, setShowApptsModal] = useState(false);
+  const [showListModal, setShowListModal] = useState(null); // 'processing', 'funded', 'working', 'shopping', 'floating', 'lockexpiry'
   const [addingAppt, setAddingAppt] = useState(null);
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
 
@@ -360,11 +389,11 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
 
         {/* 4. FLOATING + LOCK EXPIRY stacked */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
-          <div style={{ textAlign: 'center' }}>
+          <div onClick={() => setShowListModal('floating')} style={{ textAlign: 'center', cursor: 'pointer' }}>
             <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{floatingLoans.length}</div>
           </div>
-          <div style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+          <div onClick={() => setShowListModal('lockexpiry')} style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px', cursor: 'pointer' }}>
             <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{locksExpiring.length}</div>
           </div>
@@ -601,6 +630,24 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         </div>
       )}
       {showCalendar && <div onClick={() => setShowCalendar(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }} />}
+
+      {/* Borrower List Modals */}
+      {showListModal === 'floating' && (
+        <BorrowerListModal
+          title="Floating Loans"
+          borrowers={floatingLoans}
+          onClose={() => setShowListModal(null)}
+          onSelectBorrower={onSelectBorrower}
+        />
+      )}
+      {showListModal === 'lockexpiry' && (
+        <BorrowerListModal
+          title="Lock Expiring Soon"
+          borrowers={locksExpiring}
+          onClose={() => setShowListModal(null)}
+          onSelectBorrower={onSelectBorrower}
+        />
+      )}
     </div>
   );
 };
