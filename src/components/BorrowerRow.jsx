@@ -895,29 +895,30 @@ const BorrowerRow = ({
           padding: '8px 16px', marginLeft: '60px',
           background: '#1a1a28', borderBottom: '1px solid #2a2a40',
         }}>
-          {/* Contact methods - link to Bonzo if available, else tel/sms/mailto */}
+          {/* Contact methods - direct tel/sms/mailto + Bonzo link */}
           <div style={{ display: 'flex', gap: '36px', marginLeft: '50px' }}>
             <a
-              href={borrower.bonzo_id ? `https://platform.getbonzo.com/conversations/${borrower.bonzo_id}` : (borrower.phone ? `tel:${borrower.phone}` : '#')}
-              target={borrower.bonzo_id ? '_blank' : undefined}
-              rel={borrower.bonzo_id ? 'noopener noreferrer' : undefined}
+              href={borrower.phone ? `tel:${borrower.phone}` : '#'}
               onClick={e => e.stopPropagation()}
               style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '700', textDecoration: 'none', letterSpacing: '0.5px' }}
             >CALL</a>
             <a
-              href={borrower.bonzo_id ? `https://platform.getbonzo.com/conversations/${borrower.bonzo_id}` : (borrower.phone ? `sms:${borrower.phone}` : '#')}
-              target={borrower.bonzo_id ? '_blank' : undefined}
-              rel={borrower.bonzo_id ? 'noopener noreferrer' : undefined}
+              href={borrower.phone ? `sms:${borrower.phone}` : '#'}
               onClick={e => e.stopPropagation()}
               style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '700', textDecoration: 'none', letterSpacing: '0.5px' }}
             >TEXT</a>
             <a
-              href={borrower.bonzo_id ? `https://platform.getbonzo.com/conversations/${borrower.bonzo_id}` : (borrower.email ? `mailto:${borrower.email}` : '#')}
-              target={borrower.bonzo_id ? '_blank' : undefined}
-              rel={borrower.bonzo_id ? 'noopener noreferrer' : undefined}
+              href={borrower.email ? `mailto:${borrower.email}` : '#'}
               onClick={e => e.stopPropagation()}
               style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '700', textDecoration: 'none', letterSpacing: '0.5px' }}
             >EMAIL</a>
+            <a
+              href={borrower.bonzo_id ? `https://platform.getbonzo.com/conversations/${borrower.bonzo_id}` : 'https://platform.getbonzo.com'}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{ color: '#ec4899', fontSize: '12px', fontWeight: '700', textDecoration: 'none', letterSpacing: '0.5px' }}
+            >BONZO</a>
           </div>
 
           {/* Spacer */}
