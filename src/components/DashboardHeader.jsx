@@ -339,12 +339,12 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 2. PROCESSING + FUNDED */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '6px 12px', minWidth: '70px', border: '1px solid var(--border)', cursor: 'pointer' }}>
           <div onClick={() => onFilterStage('Processing')} style={{ marginBottom: '4px' }}>
-            <div style={{ fontSize: '8px', color: '#06b6d4', fontWeight: '600', textTransform: 'uppercase' }}>Processing</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff' }}>{processingCount}</div>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Processing</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>{processingCount}</div>
           </div>
           <div onClick={() => onFilterStage('Funded')}>
-            <div style={{ fontSize: '8px', color: '#10b981', fontWeight: '600', textTransform: 'uppercase' }}>Funded</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff' }}>{fundedCount}</div>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Funded</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>{fundedCount}</div>
           </div>
         </div>
 
@@ -445,12 +445,12 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 8. FLOATING + LOCK EXPIRY */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '6px 12px', minWidth: '70px', border: '1px solid var(--border)' }}>
           <div style={{ marginBottom: '4px' }}>
-            <div style={{ fontSize: '8px', color: '#f59e0b', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff' }}>{floatingLoans.length}</div>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>{floatingLoans.length}</div>
           </div>
           <div>
-            <div style={{ fontSize: '8px', color: '#ef4444', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff' }}>{locksExpiring.length}</div>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>{locksExpiring.length}</div>
           </div>
         </div>
 
