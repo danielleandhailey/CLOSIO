@@ -244,6 +244,8 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
   const [showListModal, setShowListModal] = useState(null); // 'processing', 'funded', 'working', 'shopping', 'floating', 'lockexpiry'
   const [extendDialog, setExtendDialog] = useState(null); // { borrowerId, currentDate }
   const [extendDate, setExtendDate] = useState('');
+  const [lockDialog, setLockDialog] = useState(null); // { borrowerId } for floating -> locked
+  const [lockDate, setLockDate] = useState('');
   const [addingAppt, setAddingAppt] = useState(null);
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
 
@@ -646,12 +648,35 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
 
       {/* Borrower List Modals */}
       {showListModal === 'floating' && (
-        <BorrowerListModal
-          title="Floating Loans"
-          borrowers={floatingLoans}
-          onClose={() => setShowListModal(null)}
-          onSelectBorrower={onSelectBorrower}
-        />
+        <>
+          <div onClick={() => setShowListModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', zIndex: 1000, minWidth: '500px', maxWidth: '700px', maxHeight: '80vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>Floating Loans ({floatingLoans.length})</span>
+              <button onClick={() => setShowListModal(null)} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: '20px' }}>×</button>
+            </div>
+            {floatingLoans.length === 0 ? (
+              <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px' }}>No floating loans</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {floatingLoans.map((b, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--surface2)', borderRadius: '8px' }}>
+                    <span onClick={() => { onSelectBorrower(b.id, 'terms'); setShowListModal(null); }} style={{ fontWeight: '700', color: '#3b82f6', flex: 1, cursor: 'pointer' }}>{b.name}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{b.stage}</span>
+                    {b.lender && (
+                      <span
+                        onClick={() => { setLockDialog({ borrowerId: b.id }); setLockDate(''); }}
+                        style={{ fontSize: '12px', color: '#a855f7', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        {b.lender}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
       {showListModal === 'lockexpiry' && (
         <BorrowerListModal
@@ -664,6 +689,45 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             setExtendDate('');
           }}
         />
+      )}
+
+      {/* Now Locked Dialog */}
+      {lockDialog && (
+        <>
+          <div onClick={() => setLockDialog(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', zIndex: 1101, minWidth: '300px' }}>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text)', marginBottom: '16px' }}>Now Locked?</div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text3)', display: 'block', marginBottom: '4px' }}>Lock Expiration Date</label>
+              <input
+                type="date"
+                value={lockDate}
+                onChange={e => setLockDate(e.target.value)}
+                style={{ width: '100%', padding: '8px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={async () => {
+                  if (lockDate) {
+                    await ops.updateBorrower(lockDialog.borrowerId, { floating: false, lock_expiration: lockDate });
+                    setLockDialog(null);
+                    setShowListModal(null);
+                  }
+                }}
+                style={{ flex: 1, padding: '10px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Yes, Locked
+              </button>
+              <button
+                onClick={() => setLockDialog(null)}
+                style={{ padding: '10px 16px', background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Extend Lock Dialog */}
