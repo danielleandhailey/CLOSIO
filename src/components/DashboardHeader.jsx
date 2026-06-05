@@ -181,7 +181,7 @@ const SmallCard = ({ icon: Icon, label, value, color = '#3b82f6', onClick }) => 
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px' }}>
       <Icon size={10} style={{ color }} />
-      <span style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
+      <span style={{ fontSize: '8px', color: '#a0a0b8', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
     </div>
     <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{value}</div>
   </div>
@@ -348,7 +348,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <Calendar size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.filter(t => t.isToday).length}</span>
           </div>
           <div style={{ marginTop: '-4px' }}>
             {(() => {
@@ -402,7 +402,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <CheckSquare size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>TASKS</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.filter(t => t.daysUntil <= 0).length}</span>
           </div>
           <div style={{ marginTop: '-4px' }}>
             {allTasks.length === 0 ? (
