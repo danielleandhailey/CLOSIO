@@ -341,17 +341,17 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 4. SHOPPING */}
         <SmallCard icon={Home} label="Shopping" value={stageCounts['Shopping'] || 0} color="#f59e0b" onClick={() => onFilterStage('Shopping')} />
 
-        {/* 5. CALENDAR - Like Tasks box, Thu 4 top left, click opens appointments list */}
+        {/* 5. CALENDAR - Like Tasks box */}
         <MediumCard style={{ flex: 1.2, minWidth: '200px', padding: '8px 12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowApptsModal(true)}>
-              <div style={{ textAlign: 'center', lineHeight: 1 }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', color: '#3b82f6' }}>{format(new Date(), 'EEE')}</div>
-                <div style={{ fontSize: '18px', fontWeight: '800', color: '#3b82f6' }}>{format(new Date(), 'd')}</div>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowApptsModal(true)}>
+              <Calendar size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.length}</span>
+            <div style={{ background: '#3b82f6', color: '#fff', padding: '2px 8px', borderRadius: '8px', textAlign: 'center', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '9px', fontWeight: '600' }}>{format(new Date(), 'EEE')}</div>
+              <div style={{ fontSize: '14px', fontWeight: '700' }}>{format(new Date(), 'd')}</div>
+            </div>
           </div>
           <div>
             {(() => {

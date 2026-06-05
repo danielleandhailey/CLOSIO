@@ -895,17 +895,11 @@ const BorrowerRow = ({
           padding: '8px 16px', marginLeft: '60px',
           background: '#1a1a28', borderBottom: '1px solid #2a2a40',
         }}>
-          {/* Contact methods on left */}
-          <div style={{ display: 'flex', gap: '16px' }}>
-            {borrower.phone ? (
-              <a href={`tel:${borrower.phone}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>CALL</a>
-            ) : <span style={{ color: '#64748b', fontSize: '11px' }}>CALL</span>}
-            {borrower.phone ? (
-              <a href={`sms:${borrower.phone}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>TEXT</a>
-            ) : <span style={{ color: '#64748b', fontSize: '11px' }}>TEXT</span>}
-            {borrower.email ? (
-              <a href={`mailto:${borrower.email}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>EMAIL</a>
-            ) : <span style={{ color: '#64748b', fontSize: '11px' }}>EMAIL</span>}
+          {/* Contact methods - always blue, spaced out */}
+          <div style={{ display: 'flex', gap: '24px', marginLeft: '40px' }}>
+            <a href={borrower.phone ? `tel:${borrower.phone}` : '#'} onClick={e => { if (!borrower.phone) e.preventDefault(); e.stopPropagation(); }} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>CALL</a>
+            <a href={borrower.phone ? `sms:${borrower.phone}` : '#'} onClick={e => { if (!borrower.phone) e.preventDefault(); e.stopPropagation(); }} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>TEXT</a>
+            <a href={borrower.email ? `mailto:${borrower.email}` : '#'} onClick={e => { if (!borrower.email) e.preventDefault(); e.stopPropagation(); }} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>EMAIL</a>
           </div>
 
           {/* Spacer */}
