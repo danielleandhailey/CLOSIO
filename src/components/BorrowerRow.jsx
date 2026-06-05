@@ -767,9 +767,6 @@ const BorrowerRow = ({
           >STIPS</span>
         )}
 
-        {/* Spacer to push notes to fixed position */}
-        <div style={{ width: '20px', flexShrink: 0 }} />
-
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
           const rawNotes = borrower.notes || '';
@@ -816,7 +813,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '40px', flex: 1, overflow: 'hidden' }}
+              style={{ position: 'absolute', left: '280px', right: '280px', display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '40px', overflow: 'hidden' }}
             >
               {noteLines.slice(0, 2).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
