@@ -901,11 +901,13 @@ const BorrowerRow = ({
           padding: '8px 16px', marginLeft: '60px',
           background: '#1a1a28', borderBottom: '1px solid #2a2a40',
         }}>
-          {/* Local time in white */}
-          <LocalTime timezone={borrower.timezone} />
+          {/* Local time in white - fixed width so it always takes space */}
+          <div style={{ minWidth: '80px', marginLeft: '50px' }}>
+            <LocalTime timezone={borrower.timezone} />
+          </div>
 
-          {/* Contact methods - direct tel/sms/mailto + Bonzo link */}
-          <div style={{ display: 'flex', gap: '36px', marginLeft: '40px' }}>
+          {/* Contact methods - pushed right to Income area */}
+          <div style={{ display: 'flex', gap: '36px', marginLeft: '300px' }}>
             <a
               href={borrower.phone ? `tel:${borrower.phone}` : '#'}
               onClick={e => e.stopPropagation()}
