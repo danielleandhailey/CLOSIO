@@ -405,23 +405,23 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             </div>
             <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allTasks.filter(t => t.daysUntil === 0).length}</span>
           </div>
-          <div style={{ marginTop: '-4px' }}>
-            {allTasks.filter(t => t.daysUntil === 0).length === 0 && allTasks.filter(t => t.daysUntil < 0).length === 0 ? (
+          <div style={{ marginTop: '0' }}>
+            {allTasks.length === 0 ? (
               <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>All caught up! 🎉</div>
             ) : (
               <>
-                {/* Today's tasks */}
-                {allTasks.filter(t => t.daysUntil === 0).slice(0, 2).map((t, i) => (
+                {/* Today's tasks first, then upcoming */}
+                {allTasks.filter(t => t.daysUntil >= 0).slice(0, 2).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ color: '#fbbf24', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
+                    <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700', flexShrink: 0 }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
                     <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     {t.assigned_to && <span style={{ fontSize: '10px', color: t.assigned_to === 'Danielle' ? '#fbbf24' : '#22c55e', fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
                   </div>
                 ))}
-                {allTasks.filter(t => t.daysUntil === 0).length > 2 && (
+                {allTasks.filter(t => t.daysUntil >= 0).length > 2 && (
                   <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
-                    +{allTasks.filter(t => t.daysUntil === 0).length - 2} more for today...
+                    +{allTasks.filter(t => t.daysUntil >= 0).length - 2} more...
                   </div>
                 )}
               </>
