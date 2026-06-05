@@ -435,7 +435,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <div style={{ fontSize: '12px', color: 'var(--text3)' }}>No appointments</div>
             ) : (
               <>
-                {allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).slice(0, 2).map((t, i) => (
+                {allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).slice(0, 3).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700' }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
                     <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>
@@ -443,9 +443,9 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                     {t.assigned_to && <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: '600' }}>{t.assigned_to}</span>}
                   </div>
                 ))}
-                {allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).length > 2 && (
+                {allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).length > 3 && (
                   <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', fontWeight: '600' }}>
-                    +{allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).length - 2} more...
+                    +{allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).length - 3} more...
                   </div>
                 )}
               </>
@@ -474,7 +474,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             <div style={{ fontSize: '12px', color: 'var(--text3)' }}>All caught up!</div>
           ) : (
             <>
-              {onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).slice(0, 2).map((t, i) => (
+              {onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).slice(0, 3).map((t, i) => (
                 <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700' }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
                   <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>
@@ -482,9 +482,9 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                   {t.assigned_to && <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: '600' }}>{t.assigned_to}</span>}
                 </div>
               ))}
-              {onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).length > 2 && (
+              {onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).length > 3 && (
                 <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', fontWeight: '600' }}>
-                  +{onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).length - 2} more...
+                  +{onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).length - 3} more...
                 </div>
               )}
             </>
