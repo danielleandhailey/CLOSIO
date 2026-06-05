@@ -351,7 +351,6 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.length}</span>
           </div>
           <div style={{ marginTop: '-4px' }}>
-          <div>
             {(() => {
               const todayAppts = allAppointments.filter(t => t.isToday);
               const upcomingAppts = allAppointments.filter(t => t.daysUntil > 0).slice(0, 2);
