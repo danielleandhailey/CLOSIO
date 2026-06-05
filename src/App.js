@@ -154,6 +154,12 @@ const AppInner = () => {
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
             Bonzo
           </button>
+          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://loansifter.com', '_blank')}>
+            LoanSifter
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://brokerflow.com', '_blank')}>
+            BF
+          </button>
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.mortgagecalculator.org', '_blank')}>
             Calculators
           </button>

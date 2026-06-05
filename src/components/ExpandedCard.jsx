@@ -1043,7 +1043,33 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
           />
         </div>
         <Field label="Lock Exp" value={borrower.lock_expiration} dbKey="lock_expiration" type="date" />
-        <Field label="Rate Extended" value={borrower.rate_extended} dbKey="rate_extended" type="date" />
+        <div className="loan-field">
+          <label style={{ color: '#f59e0b' }}>Lock Extended?</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <select
+              value={borrower.lock_extended ? 'yes' : 'no'}
+              onChange={e => {
+                const isYes = e.target.value === 'yes';
+                if (isYes) {
+                  const newDate = prompt('Enter new lock expiration date (MM/DD/YYYY):');
+                  if (newDate) {
+                    const parsed = new Date(newDate);
+                    if (!isNaN(parsed)) {
+                      onUpdate(borrower.id, { lock_extended: true, rate_extended: parsed.toISOString().split('T')[0] });
+                    }
+                  }
+                } else {
+                  onUpdate(borrower.id, { lock_extended: false, rate_extended: null });
+                }
+              }}
+              style={{ padding: '6px 10px', borderRadius: '5px', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: '12px' }}
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+        </div>
+        <Field label="New Lock Exp" value={borrower.rate_extended} dbKey="rate_extended" type="date" />
         <Field label="Purchase Price" value={borrower.purchase_price} dbKey="purchase_price" type="number" />
         <Field label="Loan Amount" value={borrower.loan_amount} dbKey="loan_amount" type="number" />
         <Field label="Rate (%)" value={borrower.rate} dbKey="rate" type="number" />
