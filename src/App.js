@@ -38,7 +38,7 @@ const useTheme = (userId) => {
   return [dark, setDark];
 };
 
-const TABS = ['Pipeline', 'Calendar', 'Rate Retread', 'Matrix'];
+const TABS = ['Pipeline', 'Calendar', 'Rate Retread', 'RC', 'Teams', 'Matrix'];
 
 // Bonzo Pull button with loading state
 const BonzoPullButton = () => {
@@ -138,10 +138,10 @@ const AppInner = () => {
 
           {/* BrokerFlow */}
           <button type="button" className="btn btn-ghost" title="Pull from BrokerFlow">
-            BrokerFlow Pull
+            <Zap size={12} /> BrokerFlow Pull
           </button>
           <button type="button" className="btn btn-ghost" title="Push to BrokerFlow">
-            BrokerFlow Push
+            <Zap size={12} /> BrokerFlow Push
           </button>
 
           {/* External Links */}

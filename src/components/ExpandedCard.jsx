@@ -1055,7 +1055,8 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
                   if (newDate) {
                     const parsed = new Date(newDate);
                     if (!isNaN(parsed)) {
-                      onUpdate(borrower.id, { lock_extended: true, rate_extended: parsed.toISOString().split('T')[0] });
+                      // New lock date replaces original - clear original lock_expiration
+                      onUpdate(borrower.id, { lock_extended: true, rate_extended: parsed.toISOString().split('T')[0], lock_expiration: null });
                     }
                   }
                 } else {
