@@ -14,16 +14,16 @@ const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPAB
 const mapBonzoStage = (bonzoStage) => {
   const lower = (bonzoStage || '').toLowerCase().trim();
 
-  // Check for keyword matches (more flexible)
-  if (lower.includes('stips needed') || lower.includes('need stips')) {
-    if (lower.includes('approved')) return { stage: 'Shopping', substage: 'Stips Needed' };
-    return { stage: 'Working', substage: 'Stips Needed' };
-  }
-  if (lower.includes('working') || lower === 'hot') return { stage: 'Working', substage: null };
-  if (lower.includes('pre-approved') || lower.includes('shopping')) return { stage: 'Shopping', substage: null };
-  if (lower.includes('processing')) return { stage: 'Processing', substage: null };
-  if (lower.includes('closed') || lower.includes('funded')) return { stage: 'Funded', substage: null };
-  if (lower.includes('future deal') || lower.includes('future')) return { stage: 'Future Deal', substage: null };
+  // EXACT matches for Bonzo stages
+  if (lower === 'stips needed') return { stage: 'Working', substage: 'Stips Needed' };
+  if (lower === 'working') return { stage: 'Working', substage: null };
+  if (lower === 'approved - need stips') return { stage: 'Shopping', substage: 'Stips Needed' };
+  if (lower === 'pre-approved - shopping') return { stage: 'Shopping', substage: null };
+  if (lower === 'in processing') return { stage: 'Processing', substage: null };
+  if (lower === 'closed / paid') return { stage: 'Closed/Paid', substage: null };
+  if (lower === 'funded') return { stage: 'Funded', substage: null };
+  if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
+  if (lower === 'dnq') return { stage: 'DNQ', substage: null };
 
   return null; // null = don't import
 };
