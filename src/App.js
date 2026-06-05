@@ -38,7 +38,7 @@ const useTheme = (userId) => {
   return [dark, setDark];
 };
 
-const TABS = ['Pipeline', 'Calendar', 'Rate Retread', 'Matrix'];
+const TABS = ['Pipeline', 'Calendar', 'Rate Retread'];
 
 // Bonzo Pull button with loading state
 const BonzoPullButton = () => {
