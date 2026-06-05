@@ -722,21 +722,6 @@ const BorrowerRow = ({
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
-        {/* Expand toggle — right after stage for easy access */}
-        <button
-          type="button"
-          onClick={() => onExpand(borrower.id)}
-          title="Expand / Collapse"
-          style={{
-            width: '26px', height: '26px', borderRadius: '5px', border: `1px solid ${STAGE_COLORS[borrower.stage]?.bg || '#50507a'}`,
-            background: isExpanded ? STAGE_COLORS[borrower.stage]?.bg : 'var(--surface2)', color: 'var(--text)',
-            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, fontSize: '13px', fontWeight: '900', transition: 'all 0.15s',
-          }}
-        >
-          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-        </button>
-
         {/* Name + NEW badge + Sync badge */}
         <span className="borrower-name">
           {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
@@ -789,6 +774,21 @@ const BorrowerRow = ({
             >STIPS</span>
           )}
         </span>
+
+        {/* Expand toggle — right after name */}
+        <button
+          type="button"
+          onClick={() => onExpand(borrower.id)}
+          title="Expand / Collapse"
+          style={{
+            width: '26px', height: '26px', borderRadius: '5px', border: `1px solid ${STAGE_COLORS[borrower.stage]?.bg || '#50507a'}`,
+            background: isExpanded ? STAGE_COLORS[borrower.stage]?.bg : 'var(--surface2)', color: 'var(--text)',
+            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, fontSize: '13px', fontWeight: '900', transition: 'all 0.15s', marginLeft: '8px',
+          }}
+        >
+          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
 
         {/* Spacer to push notes to fixed position */}
         <div style={{ width: '20px', flexShrink: 0 }} />
