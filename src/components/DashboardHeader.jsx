@@ -75,7 +75,7 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
 };
 
 // Appointments Modal - like Tasks Modal
-const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAppt }) => {
+const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAppt, onToggleAppt }) => {
   const [sortBy, setSortBy] = useState('date');
 
   const sortedAppts = useMemo(() => {
@@ -110,13 +110,18 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {sortedAppts.map((t, i) => (
-              <div key={i} onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil < 0 ? '3px solid #ef4444' : t.daysUntil === 0 ? '3px solid #3b82f6' : '3px solid var(--border)', cursor: 'pointer' }}>
-                <input type="checkbox" onClick={(e) => e.stopPropagation()} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
-                <span style={{ color: t.daysUntil < 0 ? '#ef4444' : t.daysUntil === 0 ? '#3b82f6' : '#a0a0b8', fontWeight: '700', minWidth: '70px', fontSize: '14px' }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: t.completed ? '#1e293b' : 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil < 0 ? '3px solid #ef4444' : t.daysUntil === 0 ? '3px solid #3b82f6' : '3px solid var(--border)' }}>
+                <input
+                  type="checkbox"
+                  checked={t.completed || false}
+                  onChange={(e) => { e.stopPropagation(); onToggleAppt?.(t.id, !t.completed); }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                />
+                <span onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }} style={{ color: t.daysUntil < 0 ? '#ef4444' : t.daysUntil === 0 ? '#3b82f6' : '#a0a0b8', fontWeight: '700', minWidth: '70px', fontSize: '14px', cursor: 'pointer', textDecoration: t.completed ? 'line-through' : 'none' }}>
                   {t.date ? (t.daysUntil < 0 ? 'OVERDUE' : t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')) : '—'}
                 </span>
-                <span style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px' }}>{t.borrower.name?.split(',')[0]}</span>
-                <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
+                <span onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }} style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer', textDecoration: t.completed ? 'line-through' : 'none' }}>{t.borrower.name?.split(',')[0]}</span>
+                <span onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }} style={{ flex: 1, color: 'var(--text)', fontSize: '14px', cursor: 'pointer', textDecoration: t.completed ? 'line-through' : 'none' }}>{t.title}</span>
                 {t.assigned_to && <span style={{ fontSize: '12px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700' }}>{t.assigned_to}</span>}
                 <button
                   onClick={(e) => { e.stopPropagation(); onDeleteAppt?.(t.id); }}
@@ -355,13 +360,13 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           <div style={{ flex: 1, padding: '4px 10px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
               <span onClick={() => setShowApptsModal(true)} style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', cursor: 'pointer' }}>CALENDAR</span>
-              <span onClick={() => setShowApptsModal(true)} style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', cursor: 'pointer' }}>{allAppointments.filter(t => t.daysUntil >= 0).length}</span>
+              <span onClick={() => setShowApptsModal(true)} style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', cursor: 'pointer' }}>{allAppointments.filter(t => t.daysUntil === 0).length}</span>
             </div>
-            {allAppointments.filter(t => t.daysUntil >= 0).length === 0 ? (
+            {allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).length === 0 ? (
               <div style={{ fontSize: '12px', color: 'var(--text3)' }}>No appointments</div>
             ) : (
               <>
-                {allAppointments.filter(t => t.daysUntil >= 0).slice(0, 3).map((t, i) => (
+                {allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).slice(0, 2).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700' }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
                     <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>
@@ -369,9 +374,9 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                     {t.assigned_to && <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: '600' }}>{t.assigned_to}</span>}
                   </div>
                 ))}
-                {allAppointments.filter(t => t.daysUntil >= 0).length > 3 && (
+                {allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).length > 2 && (
                   <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', fontWeight: '600' }}>
-                    +{allAppointments.filter(t => t.daysUntil >= 0).length - 3} more...
+                    +{allAppointments.filter(t => t.daysUntil >= 0 && !t.completed).length - 2} more...
                   </div>
                 )}
               </>
@@ -386,6 +391,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             onClose={() => setShowApptsModal(false)}
             onSelectBorrower={onSelectBorrower}
             onDeleteAppt={onDeleteTask}
+            onToggleAppt={onToggleTask}
           />
         )}
 
@@ -393,13 +399,13 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', flex: '1 1 20%', minWidth: '280px', padding: '4px 10px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
             <span onClick={() => setShowTasksModal(true)} style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', cursor: 'pointer' }}>TASKS</span>
-            <span onClick={() => setShowTasksModal(true)} style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', cursor: 'pointer' }}>{onlyTasks.filter(t => t.daysUntil >= 0).length}</span>
+            <span onClick={() => setShowTasksModal(true)} style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', cursor: 'pointer' }}>{onlyTasks.filter(t => t.daysUntil === 0).length}</span>
           </div>
-          {onlyTasks.filter(t => t.daysUntil >= 0).length === 0 ? (
+          {onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).length === 0 ? (
             <div style={{ fontSize: '12px', color: 'var(--text3)' }}>All caught up!</div>
           ) : (
             <>
-              {onlyTasks.filter(t => t.daysUntil >= 0).slice(0, 3).map((t, i) => (
+              {onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).slice(0, 2).map((t, i) => (
                 <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '11px', color: 'var(--text)', cursor: 'pointer', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ color: t.daysUntil === 0 ? '#fbbf24' : '#f59e0b', fontWeight: '700' }}>{t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')}</span>
                   <span style={{ fontWeight: '600' }}>{t.borrower.name?.split(',')[0]}</span>
@@ -407,9 +413,9 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                   {t.assigned_to && <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: '600' }}>{t.assigned_to}</span>}
                 </div>
               ))}
-              {onlyTasks.filter(t => t.daysUntil >= 0).length > 3 && (
+              {onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).length > 2 && (
                 <div onClick={() => setShowTasksModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', fontWeight: '600' }}>
-                  +{onlyTasks.filter(t => t.daysUntil >= 0).length - 3} more...
+                  +{onlyTasks.filter(t => t.daysUntil >= 0 && !t.completed).length - 2} more...
                 </div>
               )}
             </>
