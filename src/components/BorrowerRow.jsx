@@ -722,60 +722,12 @@ const BorrowerRow = ({
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
-        {/* Name + NEW badge + Sync badge */}
+        {/* Name */}
         <span className="borrower-name">
           {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
-          {borrower.is_new && (
-            <span style={{
-              marginLeft: '8px',
-              padding: '1px 6px',
-              background: '#ff1493',
-              color: '#fff',
-              fontSize: '9px',
-              fontWeight: '700',
-              borderRadius: '3px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              cursor: 'pointer',
-            }}
-            title="Click to dismiss"
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpdate(borrower.id, { is_new: false });
-            }}
-            >NEW</span>
-          )}
-          {borrower.bonzo_last_sync && !borrower.is_new && (
-            <span style={{
-              marginLeft: '6px',
-              color: '#00ff7f',
-              fontSize: '10px',
-              fontWeight: '600',
-            }}
-            title={`Synced from Bonzo: ${format(parseISO(borrower.bonzo_last_sync), 'M/d h:mma')}`}
-            >{format(parseISO(borrower.bonzo_last_sync), 'M/d')}</span>
-          )}
-          {borrower.substage === 'Stips Needed' && (
-            <span style={{
-              marginLeft: '6px',
-              padding: '1px 6px',
-              background: '#fbbf24',
-              color: '#000',
-              fontSize: '9px',
-              fontWeight: '700',
-              borderRadius: '3px',
-              cursor: 'pointer',
-            }}
-            title="Click to clear"
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpdate(borrower.id, { substage: null });
-            }}
-            >STIPS</span>
-          )}
         </span>
 
-        {/* Expand toggle — right after name */}
+        {/* Expand toggle — right after name, before badges */}
         <button
           type="button"
           onClick={() => onExpand(borrower.id)}
@@ -789,6 +741,32 @@ const BorrowerRow = ({
         >
           {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
+
+        {/* Badges after expand button */}
+        {borrower.is_new && (
+          <span style={{
+            marginLeft: '8px', padding: '1px 6px', background: '#ff1493', color: '#fff',
+            fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
+            letterSpacing: '0.5px', cursor: 'pointer',
+          }}
+          title="Click to dismiss"
+          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_new: false }); }}
+          >NEW</span>
+        )}
+        {borrower.bonzo_last_sync && !borrower.is_new && (
+          <span style={{ marginLeft: '6px', color: '#00ff7f', fontSize: '10px', fontWeight: '600' }}
+          title={`Synced from Bonzo: ${format(parseISO(borrower.bonzo_last_sync), 'M/d h:mma')}`}
+          >{format(parseISO(borrower.bonzo_last_sync), 'M/d')}</span>
+        )}
+        {borrower.substage === 'Stips Needed' && (
+          <span style={{
+            marginLeft: '6px', padding: '1px 6px', background: '#fbbf24', color: '#000',
+            fontSize: '9px', fontWeight: '700', borderRadius: '3px', cursor: 'pointer',
+          }}
+          title="Click to clear"
+          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { substage: null }); }}
+          >STIPS</span>
+        )}
 
         {/* Spacer to push notes to fixed position */}
         <div style={{ width: '20px', flexShrink: 0 }} />
