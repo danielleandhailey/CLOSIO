@@ -359,8 +359,8 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                 {/* Show up to 2 TODAY appts */}
                 {allAppointments.filter(t => t.daysUntil === 0).slice(0, 2).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ color: '#fbbf24', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
-                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
+                    <span style={{ color: '#22c55e', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
+                    <span style={{ fontWeight: '700', flexShrink: 0, color: '#fbbf24' }}>{t.borrower.name?.split(',')[0]}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     {t.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
                   </div>
@@ -412,8 +412,8 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                 {/* Today's tasks */}
                 {allTasks.filter(t => t.daysUntil === 0).slice(0, 2).map((t, i) => (
                   <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ color: '#fbbf24', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
-                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
+                    <span style={{ color: '#22c55e', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
+                    <span style={{ fontWeight: '700', flexShrink: 0, color: '#fbbf24' }}>{t.borrower.name?.split(',')[0]}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     {t.assigned_to && <span style={{ fontSize: '10px', color: t.assigned_to === 'Danielle' ? '#fbbf24' : '#22c55e', fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
                   </div>
