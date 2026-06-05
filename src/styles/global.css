@@ -369,7 +369,7 @@ body[data-theme="light"] .btn-icon:hover {
 }
 
 .borrower-row:hover { background: var(--surface2); }
-.borrower-row.expanded { background: var(--surface2); border-left: 3px solid var(--accent); }
+.borrower-row.expanded { background: var(--surface2); }
 
 .borrower-checkbox {
   width: 14px;
