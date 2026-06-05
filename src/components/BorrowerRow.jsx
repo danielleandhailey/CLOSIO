@@ -783,9 +783,9 @@ const BorrowerRow = ({
             return true;
           });
 
-          // If no notes, return null - the + Note button is now on the right
+          // If no notes, return empty spacer to maintain layout
           if (!noteLines.length) {
-            return null;
+            return <div style={{ flex: 1 }} />;
           }
 
           const deleteNote = async (e, lineToDelete) => {
