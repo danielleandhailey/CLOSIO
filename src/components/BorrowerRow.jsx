@@ -73,6 +73,17 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
   );
 };
 
+// Faint background by loan type
+const getTypeBackground = (type) => {
+  if (!type) return 'transparent';
+  const t = type.toLowerCase();
+  if (t.includes('purchase')) return 'rgba(168, 85, 247, 0.08)';  // faint purple
+  if (t.includes('refi')) return 'rgba(59, 130, 246, 0.08)';      // faint blue
+  if (t.includes('heloc')) return 'rgba(20, 184, 166, 0.08)';     // faint teal
+  if (t.includes('reverse')) return 'rgba(236, 72, 153, 0.08)';   // faint pink
+  return 'transparent';
+};
+
 // Local time display component - uses timezone from Bonzo
 const LocalTime = ({ timezone }) => {
   const [time, setTime] = useState('');
@@ -666,7 +677,7 @@ const BorrowerRow = ({
   return (
     <div style={{ position: 'relative' }}>
       <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={{
-        background: dropHighlight ? '#e0f2fe' : (STAGE_COLORS[borrower.stage]?.light + '15') || 'transparent',
+        background: dropHighlight ? '#e0f2fe' : getTypeBackground(borrower.loan_type || borrower.loan_purpose),
         boxShadow: dropHighlight ? '0 0 0 2px #7dd3fc' : 'none',
       }}>
         {/* Checkbox */}
