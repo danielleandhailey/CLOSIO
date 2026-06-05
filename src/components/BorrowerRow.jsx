@@ -93,7 +93,7 @@ const LocalTime = ({ timezone }) => {
     return () => clearInterval(interval);
   }, [timezone]);
 
-  if (!timezone || !time) return null;
+  if (!timezone || !time) return <span style={{ color: '#666', fontSize: '10px', marginLeft: '50px' }}>--:--</span>;
   return (
     <span style={{ color: '#fff', fontSize: '12px', fontWeight: '700', marginLeft: '50px' }}>
       {time}
