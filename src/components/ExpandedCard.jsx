@@ -1050,6 +1050,16 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
         <Field label="Date Submitted" value={borrower.date_submitted} dbKey="date_submitted" type="date" />
         <Field label="Funded Date" value={borrower.funded_date} dbKey="funded_date" type="date" />
         <Field label="Lender" value={borrower.lender} dbKey="lender" />
+        <div className="loan-field">
+          <label>Floating</label>
+          <input
+            type="checkbox"
+            checked={borrower.floating || false}
+            onChange={e => onUpdate(borrower.id, { floating: e.target.checked })}
+            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+          />
+        </div>
+        <Field label="Lock Exp" value={borrower.lock_expiration} dbKey="lock_expiration" type="date" />
         <Field label="Loan Type" value={borrower.loan_type} dbKey="loan_type" />
         <Field label="Property Type" value={borrower.property_type} dbKey="property_type" />
         <Field label="Occupancy" value={borrower.occupancy} dbKey="occupancy" />

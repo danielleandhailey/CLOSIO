@@ -245,19 +245,17 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
     const upcomingTasks = allTasks.filter(t => t.daysUntil > 0 && t.daysUntil <= 7);
     const todaysAppts = allTasks.filter(t => t.isToday && t.type === 'appointment');
 
-    // Locks expiring
+    // Locks expiring (using lock_expiration date field)
     const locksExpiring = borrowers.filter(b => {
-      if (b.rate_status !== 'Locked' || !b.lock_expiration) return false;
+      if (!b.lock_expiration) return false;
       const lockDate = parseISO(b.lock_expiration);
       const daysUntil = differenceInDays(lockDate, today);
       return daysUntil >= 0 && daysUntil <= 7;
     }).map(b => ({ ...b, daysUntil: differenceInDays(parseISO(b.lock_expiration), today) }))
       .sort((a, b) => a.daysUntil - b.daysUntil);
 
-    // Floating
-    const floatingLoans = borrowers.filter(b =>
-      b.rate_status === 'Floating' && ['Processing', 'Funded', 'LP Ready', 'Paycom'].includes(b.stage)
-    );
+    // Floating (using floating checkbox)
+    const floatingLoans = borrowers.filter(b => b.floating === true);
 
     // Contingencies
     const contingenciesDue = [];
