@@ -354,8 +354,8 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           {/* Content */}
           <div style={{ flex: 1, padding: '4px 10px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-              <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700' }}>CALENDAR</span>
-              <span style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px' }}>{allAppointments.filter(t => t.daysUntil >= 0).length}</span>
+              <span onClick={() => setShowApptsModal(true)} style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', cursor: 'pointer' }}>CALENDAR</span>
+              <span onClick={() => setShowApptsModal(true)} style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', cursor: 'pointer' }}>{allAppointments.filter(t => t.daysUntil >= 0).length}</span>
             </div>
             {allAppointments.filter(t => t.daysUntil >= 0).length === 0 ? (
               <div style={{ fontSize: '12px', color: 'var(--text3)' }}>No appointments</div>
@@ -392,8 +392,8 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 7. TASKS - ONLY tasks (not appointments) */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', flex: '1 1 20%', minWidth: '280px', padding: '4px 10px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-            <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700' }}>TASKS</span>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px' }}>{onlyTasks.filter(t => t.daysUntil >= 0).length}</span>
+            <span onClick={() => setShowTasksModal(true)} style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', cursor: 'pointer' }}>TASKS</span>
+            <span onClick={() => setShowTasksModal(true)} style={{ background: '#3b82f6', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', cursor: 'pointer' }}>{onlyTasks.filter(t => t.daysUntil >= 0).length}</span>
           </div>
           {onlyTasks.filter(t => t.daysUntil >= 0).length === 0 ? (
             <div style={{ fontSize: '12px', color: 'var(--text3)' }}>All caught up!</div>
