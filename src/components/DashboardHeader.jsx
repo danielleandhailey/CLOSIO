@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { format, parseISO, differenceInDays, isSameDay, startOfDay } from 'date-fns';
 import { Calendar, Lock, AlertTriangle, Clock, CheckSquare, TrendingUp, DollarSign, Home, Users, X } from 'lucide-react';
 import { STAGES, STAGE_COLORS } from '../lib/constants';
@@ -248,6 +248,19 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
   const [lockDate, setLockDate] = useState('');
   const [addingAppt, setAddingAppt] = useState(null);
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
+  const [treasuryRate, setTreasuryRate] = useState('--');
+
+  // Fetch 10yr Treasury rate
+  useEffect(() => {
+    fetch('/api/treasury-rate')
+      .then(res => res.json())
+      .then(data => {
+        if (data.rate && data.rate !== '.') {
+          setTreasuryRate(parseFloat(data.rate).toFixed(2) + '%');
+        }
+      })
+      .catch(() => setTreasuryRate('--'));
+  }, []);
 
   const dashboardData = useMemo(() => {
     const today = new Date();
@@ -536,7 +549,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           onClick={() => window.open('https://www.cnbc.com/quotes/US10Y', '_blank')}
           title="Click for live 10yr Treasury">
           <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>10YR</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: '#f59e0b' }}>4.28%</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: '#f59e0b' }}>{treasuryRate}</div>
         </div>
 
         {/* 12. DONUT CHART */}
