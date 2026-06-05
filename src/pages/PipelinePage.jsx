@@ -193,7 +193,16 @@ const PipelinePage = ({ borrowers, ops }) => {
           )}
         </div>
 
-        <button type="button" className="btn btn-ghost" style={{ marginLeft: 'auto' }}>
+        <div style={{ position: 'relative', marginLeft: 'auto' }} className="nav-dropdown">
+          <button type="button" className="btn btn-ghost">
+            Value Lookup ▾
+          </button>
+          <div className="dropdown-menu">
+            <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
+            <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
+          </div>
+        </div>
+        <button type="button" className="btn btn-ghost">
           Teams
         </button>
         <button type="button" className="btn btn-ghost">

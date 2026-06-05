@@ -178,14 +178,12 @@ const AppInner = () => {
             </div>
           </div>
 
-          {/* Value Lookup Dropdown */}
+          {/* Lenders Dropdown */}
           <div style={{ position: 'relative' }} className="nav-dropdown">
             <button type="button" className="btn btn-ghost">
-              Value Lookup ▾
+              Lenders ▾
             </button>
             <div className="dropdown-menu">
-              <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
-              <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
             </div>
           </div>
 
