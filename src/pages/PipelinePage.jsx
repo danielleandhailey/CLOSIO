@@ -193,7 +193,10 @@ const PipelinePage = ({ borrowers, ops }) => {
           )}
         </div>
 
-        <button type="button" className="btn btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setShowAddModal(true)}>
+        <button type="button" className="btn btn-ghost" style={{ marginLeft: 'auto' }} onClick={() => window.location.hash = 'matrices'}>
+          🗂 Matrices
+        </button>
+        <button type="button" className="btn btn-primary" onClick={() => setShowAddModal(true)}>
           <Plus size={13} /> Add Borrower
         </button>
       </div>
