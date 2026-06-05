@@ -531,6 +531,14 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </div>
 
+        {/* 10YR TREASURY */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '70px', border: '1px solid var(--border)', cursor: 'pointer' }}
+          onClick={() => window.open('https://www.cnbc.com/quotes/US10Y', '_blank')}
+          title="Click for live 10yr Treasury">
+          <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>10YR</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: '#f59e0b' }}>4.28%</div>
+        </div>
+
         {/* 12. DONUT CHART */}
         <div style={{ background: '#1e293b', borderRadius: '8px', padding: '6px 10px', border: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <DonutChart data={donutData} size={65} />
