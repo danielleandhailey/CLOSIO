@@ -73,6 +73,49 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
   );
 };
 
+// Get timezone from state in address
+const getTimezoneFromAddress = (address) => {
+  if (!address) return null;
+  const addr = address.toUpperCase();
+  // Eastern
+  if (/\b(CT|MA|ME|NH|NJ|NY|PA|RI|VT|VA|WV|DE|DC|MD|NC|SC|GA|FL|OH|MI|IN|KY)\b/.test(addr)) return 'America/New_York';
+  // Central
+  if (/\b(IL|WI|MN|IA|MO|AR|LA|MS|AL|TN|OK|TX|KS|NE|SD|ND)\b/.test(addr)) return 'America/Chicago';
+  // Mountain
+  if (/\b(MT|WY|CO|NM|AZ|UT|ID)\b/.test(addr)) return 'America/Denver';
+  // Pacific
+  if (/\b(WA|OR|CA|NV)\b/.test(addr)) return 'America/Los_Angeles';
+  // Alaska/Hawaii
+  if (/\bAK\b/.test(addr)) return 'America/Anchorage';
+  if (/\bHI\b/.test(addr)) return 'Pacific/Honolulu';
+  return null;
+};
+
+// Local time display component
+const LocalTime = ({ address }) => {
+  const [time, setTime] = useState('');
+  const tz = getTimezoneFromAddress(address);
+
+  useEffect(() => {
+    if (!tz) return;
+    const update = () => {
+      const now = new Date();
+      const localTime = now.toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true });
+      setTime(localTime);
+    };
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [tz]);
+
+  if (!tz || !time) return null;
+  return (
+    <span style={{ color: '#fff', fontSize: '12px', fontWeight: '700', marginLeft: '50px' }}>
+      {time}
+    </span>
+  );
+};
+
 // Quick Log + Summary Panel
 const QuickSummaryPanel = ({ borrower, onMoveStage, onClose }) => {
   const [showStageSelect, setShowStageSelect] = useState(false);
@@ -895,8 +938,11 @@ const BorrowerRow = ({
           padding: '8px 16px', marginLeft: '60px',
           background: '#1a1a28', borderBottom: '1px solid #2a2a40',
         }}>
+          {/* Local time in white */}
+          <LocalTime address={borrower.property_address} />
+
           {/* Contact methods - direct tel/sms/mailto + Bonzo link */}
-          <div style={{ display: 'flex', gap: '36px', marginLeft: '50px' }}>
+          <div style={{ display: 'flex', gap: '36px', marginLeft: '40px' }}>
             <a
               href={borrower.phone ? `tel:${borrower.phone}` : '#'}
               onClick={e => e.stopPropagation()}
