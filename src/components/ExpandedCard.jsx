@@ -1043,6 +1043,7 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
           />
         </div>
         <Field label="Lock Exp" value={borrower.lock_expiration} dbKey="lock_expiration" type="date" />
+        <Field label="Rate Extended" value={borrower.rate_extended} dbKey="rate_extended" type="date" />
         <Field label="Purchase Price" value={borrower.purchase_price} dbKey="purchase_price" type="number" />
         <Field label="Loan Amount" value={borrower.loan_amount} dbKey="loan_amount" type="number" />
         <Field label="Rate (%)" value={borrower.rate} dbKey="rate" type="number" />

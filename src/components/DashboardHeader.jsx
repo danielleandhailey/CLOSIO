@@ -137,7 +137,7 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
 };
 
 // Borrower List Modal - for clickable counts
-const BorrowerListModal = ({ title, borrowers, onClose, onSelectBorrower }) => {
+const BorrowerListModal = ({ title, borrowers, onClose, onSelectBorrower, onExtendClick }) => {
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999 }} />
@@ -151,10 +151,17 @@ const BorrowerListModal = ({ title, borrowers, onClose, onSelectBorrower }) => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {borrowers.map((b, i) => (
-              <div key={i} onClick={() => { onSelectBorrower(b.id); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--surface2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <span style={{ fontWeight: '700', color: '#3b82f6', flex: 1 }}>{b.name}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--surface2)', borderRadius: '8px' }}>
+                <span onClick={() => { onSelectBorrower(b.id, 'terms'); onClose(); }} style={{ fontWeight: '700', color: '#3b82f6', flex: 1, cursor: 'pointer' }}>{b.name}</span>
                 <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{b.stage}</span>
-                {b.lock_expiration && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: '600' }}>{format(parseISO(b.lock_expiration), 'M/d/yy')}</span>}
+                {(b.effectiveLockDate || b.lock_expiration) && (
+                  <span
+                    onClick={(e) => { e.stopPropagation(); onExtendClick?.(b.id, b.effectiveLockDate || b.lock_expiration); }}
+                    style={{ fontSize: '12px', color: '#ef4444', fontWeight: '600', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    {format(parseISO(b.effectiveLockDate || b.lock_expiration), 'M/d/yy')}
+                  </span>
+                )}
                 {b.lender && <span style={{ fontSize: '12px', color: '#a855f7' }}>{b.lender}</span>}
               </div>
             ))}
@@ -235,6 +242,8 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
   const [showTasksModal, setShowTasksModal] = useState(false);
   const [showApptsModal, setShowApptsModal] = useState(false);
   const [showListModal, setShowListModal] = useState(null); // 'processing', 'funded', 'working', 'shopping', 'floating', 'lockexpiry'
+  const [extendDialog, setExtendDialog] = useState(null); // { borrowerId, currentDate }
+  const [extendDate, setExtendDate] = useState('');
   const [addingAppt, setAddingAppt] = useState(null);
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
 
@@ -275,14 +284,17 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
     const upcomingTasks = allTasks.filter(t => t.daysUntil > 0 && t.daysUntil <= 7);
     const todaysAppts = allTasks.filter(t => t.isToday && t.type === 'appointment');
 
-    // Locks expiring (using lock_expiration date field)
+    // Locks expiring (use rate_extended if set, otherwise lock_expiration)
     const locksExpiring = borrowers.filter(b => {
-      if (!b.lock_expiration) return false;
-      const lockDate = parseISO(b.lock_expiration);
-      const daysUntil = differenceInDays(lockDate, today);
+      const lockDate = b.rate_extended || b.lock_expiration;
+      if (!lockDate) return false;
+      const parsedDate = parseISO(lockDate);
+      const daysUntil = differenceInDays(parsedDate, today);
       return daysUntil >= 0 && daysUntil <= 7;
-    }).map(b => ({ ...b, daysUntil: differenceInDays(parseISO(b.lock_expiration), today) }))
-      .sort((a, b) => a.daysUntil - b.daysUntil);
+    }).map(b => {
+      const lockDate = b.rate_extended || b.lock_expiration;
+      return { ...b, effectiveLockDate: lockDate, daysUntil: differenceInDays(parseISO(lockDate), today) };
+    }).sort((a, b) => a.daysUntil - b.daysUntil);
 
     // Floating (using floating checkbox)
     const floatingLoans = borrowers.filter(b => b.floating === true);
@@ -647,7 +659,50 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           borrowers={locksExpiring}
           onClose={() => setShowListModal(null)}
           onSelectBorrower={onSelectBorrower}
+          onExtendClick={(borrowerId, currentDate) => {
+            setExtendDialog({ borrowerId, currentDate });
+            setExtendDate('');
+          }}
         />
+      )}
+
+      {/* Extend Lock Dialog */}
+      {extendDialog && (
+        <>
+          <div onClick={() => setExtendDialog(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', zIndex: 1101, minWidth: '300px' }}>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text)', marginBottom: '16px' }}>Extend Lock?</div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text3)', display: 'block', marginBottom: '4px' }}>New Lock Date</label>
+              <input
+                type="date"
+                value={extendDate}
+                onChange={e => setExtendDate(e.target.value)}
+                style={{ width: '100%', padding: '8px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={async () => {
+                  if (extendDate) {
+                    await ops.updateBorrower(extendDialog.borrowerId, { rate_extended: extendDate });
+                    setExtendDialog(null);
+                    setShowListModal(null);
+                  }
+                }}
+                style={{ flex: 1, padding: '10px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Extend
+              </button>
+              <button
+                onClick={() => setExtendDialog(null)}
+                style={{ padding: '10px 16px', background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
