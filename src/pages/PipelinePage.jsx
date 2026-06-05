@@ -131,7 +131,8 @@ const PipelinePage = ({ borrowers, ops }) => {
   };
 
 
-  const handleSelectBorrower = useCallback((id) => {
+  const handleSelectBorrower = useCallback((id, openTab = null) => {
+    if (openTab) setDefaultTab(openTab);
     setExpandedIds(new Set([id]));
     // Scroll to borrower
     setTimeout(() => {
