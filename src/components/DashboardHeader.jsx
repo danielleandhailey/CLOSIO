@@ -21,6 +21,7 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
     if (sortBy === 'borrower') sorted.sort((a, b) => (a.borrower.name || '').localeCompare(b.borrower.name || ''));
     if (sortBy === 'danielle') sorted = sorted.filter(t => t.assigned_to === 'Danielle').sort((a, b) => a.daysUntil - b.daysUntil);
     if (sortBy === 'hailey') sorted = sorted.filter(t => t.assigned_to === 'Hailey').sort((a, b) => a.daysUntil - b.daysUntil);
+    if (sortBy === 'overdue') sorted = sorted.filter(t => t.daysUntil < 0).sort((a, b) => a.daysUntil - b.daysUntil);
     return sorted;
   }, [tasks, sortBy]);
 
@@ -34,6 +35,7 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
             <span style={{ fontSize: '12px', color: 'var(--text3)' }}>Sort:</span>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
               <option value="date">Date</option>
+              <option value="overdue">Overdue</option>
               <option value="borrower">Borrower</option>
               <option value="danielle">Danielle</option>
               <option value="hailey">Hailey</option>
@@ -46,24 +48,21 @@ const TasksModal = ({ tasks, onClose, onSelectBorrower, onToggleTask, onDeleteTa
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {sortedTasks.map((t, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil <= 0 ? '3px solid #ef4444' : '3px solid var(--border)' }}>
+              <div key={i} onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil < 0 ? '3px solid #ef4444' : t.daysUntil === 0 ? '3px solid #f59e0b' : '3px solid var(--border)', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={t.completed || false}
-                  onChange={() => onToggleTask?.(t.id, !t.completed)}
+                  onChange={(e) => { e.stopPropagation(); onToggleTask?.(t.id, !t.completed); }}
                   style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                 />
-                <span style={{ color: t.daysUntil <= 0 ? '#ef4444' : '#f59e0b', fontWeight: '700', minWidth: '60px', fontSize: '14px' }}>
-                  {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '—'}
+                <span style={{ color: t.daysUntil < 0 ? '#ef4444' : t.daysUntil === 0 ? '#f59e0b' : '#a0a0b8', fontWeight: '700', minWidth: '70px', fontSize: '14px' }}>
+                  {t.date ? (t.daysUntil < 0 ? 'OVERDUE' : t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')) : '—'}
                 </span>
-                <span
-                  onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }}
-                  style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer' }}
-                >{t.borrower.name?.split(',')[0]}</span>
+                <span style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px' }}>{t.borrower.name?.split(',')[0]}</span>
                 <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
                 {t.assigned_to && <span style={{ fontSize: '12px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700' }}>{t.assigned_to}</span>}
                 <button
-                  onClick={() => onDeleteTask?.(t.id)}
+                  onClick={(e) => { e.stopPropagation(); onDeleteTask?.(t.id); }}
                   style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}
                 >×</button>
               </div>
@@ -82,7 +81,8 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
   const sortedAppts = useMemo(() => {
     let sorted = [...appointments];
     if (sortBy === 'date') sorted.sort((a, b) => a.daysUntil - b.daysUntil);
-    if (sortBy === 'all') sorted.sort((a, b) => a.daysUntil - b.daysUntil); // same as date
+    if (sortBy === 'all') sorted.sort((a, b) => a.daysUntil - b.daysUntil);
+    if (sortBy === 'overdue') sorted = sorted.filter(t => t.daysUntil < 0).sort((a, b) => a.daysUntil - b.daysUntil);
     if (sortBy === 'danielle') sorted = sorted.filter(t => t.assigned_to === 'Danielle').sort((a, b) => a.daysUntil - b.daysUntil);
     if (sortBy === 'hailey') sorted = sorted.filter(t => t.assigned_to === 'Hailey').sort((a, b) => a.daysUntil - b.daysUntil);
     return sorted;
@@ -98,7 +98,7 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
             <span style={{ fontSize: '12px', color: 'var(--text3)' }}>Sort:</span>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
               <option value="date">Date</option>
-              <option value="all">All</option>
+              <option value="overdue">Overdue</option>
               <option value="danielle">Danielle</option>
               <option value="hailey">Hailey</option>
             </select>
@@ -110,19 +110,16 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {sortedAppts.map((t, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil <= 0 ? '3px solid #3b82f6' : '3px solid var(--border)' }}>
-                <input type="checkbox" style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
-                <span style={{ color: t.daysUntil <= 0 ? '#3b82f6' : '#f59e0b', fontWeight: '700', minWidth: '60px', fontSize: '14px' }}>
-                  {t.date ? (t.daysUntil <= 0 ? 'TODAY' : format(t.date, 'M/d')) : '—'}
+              <div key={i} onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', background: 'var(--surface2)', borderRadius: '8px', borderLeft: t.daysUntil < 0 ? '3px solid #ef4444' : t.daysUntil === 0 ? '3px solid #3b82f6' : '3px solid var(--border)', cursor: 'pointer' }}>
+                <input type="checkbox" onClick={(e) => e.stopPropagation()} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                <span style={{ color: t.daysUntil < 0 ? '#ef4444' : t.daysUntil === 0 ? '#3b82f6' : '#a0a0b8', fontWeight: '700', minWidth: '70px', fontSize: '14px' }}>
+                  {t.date ? (t.daysUntil < 0 ? 'OVERDUE' : t.daysUntil === 0 ? 'TODAY' : format(t.date, 'M/d')) : '—'}
                 </span>
-                <span
-                  onClick={() => { onSelectBorrower(t.borrower.id); onClose(); }}
-                  style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px', cursor: 'pointer' }}
-                >{t.borrower.name?.split(',')[0]}</span>
+                <span style={{ fontWeight: '700', color: '#3b82f6', minWidth: '140px', fontSize: '14px' }}>{t.borrower.name?.split(',')[0]}</span>
                 <span style={{ flex: 1, color: 'var(--text)', fontSize: '14px' }}>{t.title}</span>
                 {t.assigned_to && <span style={{ fontSize: '12px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700' }}>{t.assigned_to}</span>}
                 <button
-                  onClick={() => onDeleteAppt?.(t.id)}
+                  onClick={(e) => { e.stopPropagation(); onDeleteAppt?.(t.id); }}
                   style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}
                 >×</button>
               </div>
