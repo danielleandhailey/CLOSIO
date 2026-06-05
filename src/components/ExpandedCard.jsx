@@ -91,7 +91,7 @@ const TasksSection = ({ borrower, ops }) => {
       return;
     }
     try {
-      const assignee = form.assigned_to === 'Other' ? customAssign : form.assigned_to;
+      const assignee = form.assigned_to;
       // Combine date+time into single due_date field (don't send due_time separately)
       let dueDateTime = null;
       if (form.due_date) {
@@ -215,9 +215,9 @@ const TasksSection = ({ borrower, ops }) => {
             >
               <option value="Danielle">Danielle</option>
               <option value="Hailey">Hailey</option>
-              <option value="Other">Other...</option>
+              <option value="Both">Both</option>
             </select>
-            {form.assigned_to === 'Other' && (
+            {form.assigned_to === 'Both' && (
               <input
                 type="text"
                 placeholder="Enter name..."
