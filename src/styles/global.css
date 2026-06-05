@@ -156,6 +156,42 @@ body {
 .nav-tab:hover { color: var(--text); background: var(--surface2); }
 .nav-tab.active { color: var(--accent2); background: var(--surface3); }
 
+/* Nav Dropdown */
+.nav-dropdown {
+  position: relative;
+}
+.nav-dropdown .dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 0;
+  min-width: 160px;
+  z-index: 100;
+  box-shadow: var(--shadow-lg);
+}
+.nav-dropdown:hover .dropdown-menu {
+  display: block;
+}
+.nav-dropdown .dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.nav-dropdown .dropdown-menu button:hover {
+  background: var(--surface3);
+  color: var(--accent2);
+}
+
 .nav-right {
   display: flex;
   align-items: center;

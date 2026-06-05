@@ -135,6 +135,50 @@ const AppInner = () => {
           <button type="button" className="btn btn-ghost" title="Push updates to Bonzo CRM">
             <Zap size={12} /> Bonzo Push
           </button>
+
+          {/* BrokerFlow */}
+          <button type="button" className="btn btn-ghost" title="Pull from BrokerFlow">
+            BrokerFlow Pull
+          </button>
+          <button type="button" className="btn btn-ghost" title="Push to BrokerFlow">
+            BrokerFlow Push
+          </button>
+
+          {/* External Links */}
+          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.lendingpad.com', '_blank')}>
+            Lending Pad
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
+            Bonzo
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.mortgagecalculator.org', '_blank')}>
+            Calculators
+          </button>
+
+          {/* WCL Dropdown */}
+          <div style={{ position: 'relative' }} className="nav-dropdown">
+            <button type="button" className="btn btn-ghost">
+              WCL ▾
+            </button>
+            <div className="dropdown-menu">
+              <button onClick={() => window.open('https://portal.wcl.com', '_blank')}>Portal</button>
+              <button onClick={() => window.open('https://ticket.wcl.com', '_blank')}>Ticket</button>
+              <button onClick={() => window.open('https://docguardian.wcl.com', '_blank')}>Doc Guardian</button>
+              <button onClick={() => window.open('https://homeinsurance.wcl.com', '_blank')}>Home Insurance Lookup</button>
+            </div>
+          </div>
+
+          {/* Value Lookup Dropdown */}
+          <div style={{ position: 'relative' }} className="nav-dropdown">
+            <button type="button" className="btn btn-ghost">
+              Value Lookup ▾
+            </button>
+            <div className="dropdown-menu">
+              <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
+              <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
+            </div>
+          </div>
+
           <button type="button" className="btn btn-ghost" title="Send Email">
             Email
           </button>
