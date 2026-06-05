@@ -796,7 +796,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '24px', flex: 1, overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '40px', flex: 1, overflow: 'hidden' }}
             >
               {noteLines.slice(0, 2).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
@@ -807,7 +807,7 @@ const BorrowerRow = ({
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '5px', cursor: 'pointer', flex: '1 1 auto', minWidth: '200px', maxWidth: '500px' }}
+                    style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '5px', cursor: 'pointer', flex: '1 1 45%', minWidth: '250px' }}
                     title={noteText}
                   >
                     <button
@@ -817,7 +817,7 @@ const BorrowerRow = ({
                       title="Delete this note"
                     >x</button>
                     {dateStr && <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, whiteSpace: 'nowrap' }}>{dateStr}</span>}
-                    <span style={{ fontSize: '12px', color: '#cbd5e1', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
+                    <span style={{ fontSize: '12px', color: '#cbd5e1', wordBreak: 'break-word' }}>
                       {noteText}
                     </span>
                   </div>
@@ -826,9 +826,6 @@ const BorrowerRow = ({
             </div>
           );
         })()}
-
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
 
         {/* Doc Drop Zone - right side */}
         <div>
@@ -891,22 +888,37 @@ const BorrowerRow = ({
         </div>
       </div>
 
-      {/* Lender Row - only shows when expanded */}
+      {/* Contact & Tags Row - only shows when expanded */}
       {isExpanded && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '12px',
           padding: '8px 16px', marginLeft: '60px',
           background: '#1a1a28', borderBottom: '1px solid #2a2a40',
         }}>
-          <span style={{ fontSize: '10px', color: '#6b6b8a', fontWeight: '600' }}>Lender:</span>
-          <LenderBadge borrower={borrower} onUpdate={onUpdate} />
+          {/* Contact methods on left */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            {borrower.phone && (
+              <a href={`tel:${borrower.phone}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>CALL</a>
+            )}
+            {borrower.phone && (
+              <a href={`sms:${borrower.phone}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>TEXT</a>
+            )}
+            {borrower.email && (
+              <a href={`mailto:${borrower.email}`} onClick={e => e.stopPropagation()} style={{ color: '#3b82f6', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}>EMAIL</a>
+            )}
+          </div>
 
-          {/* Tags inline */}
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
+          {/* Tags in middle (grow to fill space) */}
+          <div style={{ flex: 1, display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'flex-end' }}>
             {tags.map(t => (
               <TagPill key={t.id} tag={t.tag} tagId={t.id} onRemove={onRemoveTag} />
             ))}
+          </div>
+
+          {/* +Lender and +Tag buttons fixed on right */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+            <LenderBadge borrower={borrower} onUpdate={onUpdate} />
+            <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
           </div>
         </div>
       )}

@@ -1784,21 +1784,6 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
 
   return (
     <div className="expanded-card">
-      {/* Contact Links Row */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          {borrower.phone && (
-            <a href={`tel:${borrower.phone}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>CALL</a>
-          )}
-          {borrower.phone && (
-            <a href={`sms:${borrower.phone}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>TEXT</a>
-          )}
-          {borrower.email && (
-            <a href={`mailto:${borrower.email}`} style={{ color: '#3b82f6', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>EMAIL</a>
-          )}
-        </div>
-      </div>
-
       {/* Tabs Row */}
       <div className="expanded-tabs">
         {tabs.map(t => (
