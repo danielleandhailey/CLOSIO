@@ -4,7 +4,7 @@ import BorrowerRow from '../components/BorrowerRow';
 import ExpandedCard from '../components/ExpandedCard';
 import AddBorrowerModal from '../components/AddBorrowerModal';
 import DashboardHeader from '../components/DashboardHeader';
-import { STAGES, STAGE_COLORS, SORT_OPTIONS } from '../lib/constants';
+import { STAGES, STAGES_BY_TYPE, STAGE_COLORS, SORT_OPTIONS } from '../lib/constants';
 import { sortBorrowers } from '../lib/utils';
 
 const PipelinePage = ({ borrowers, ops }) => {
@@ -156,7 +156,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         {/* Stage filter */}
         <select className="select-input" value={filterStage} onChange={e => setFilterStage(e.target.value)}>
           <option value="All">Stages</option>
-          {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+          {(STAGES_BY_TYPE[filterType] || STAGES).map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
         {/* Sort */}
@@ -202,7 +202,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         >
           All <span style={{ marginLeft: '3px', fontWeight: '700' }}>{borrowers.length}</span>
         </button>
-        {STAGES.map(s => {
+        {(STAGES_BY_TYPE[filterType] || STAGES).map(s => {
           const c = STAGE_COLORS[s];
           const count = stageCounts[s] || 0;
           return (
