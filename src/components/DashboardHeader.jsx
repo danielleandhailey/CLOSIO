@@ -360,8 +360,17 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </div>
 
-        {/* 4. EMPTY - placeholder */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)' }}></div>
+        {/* 4. FLOATING + LOCK EXPIRY stacked */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{floatingLoans.length}</div>
+          </div>
+          <div style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{locksExpiring.length}</div>
+          </div>
+        </div>
 
         {/* 5. CALENDAR - ONLY appointments */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flex: '1 1 20%', minWidth: '280px', padding: '6px 10px', gap: '10px' }}>
@@ -451,22 +460,10 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           />
         )}
 
-        {/* 8. FLOATING + LOCK EXPIRY stacked */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{floatingLoans.length}</div>
-          </div>
-          <div style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
-            <div style={{ fontSize: '8px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{locksExpiring.length}</div>
-          </div>
-        </div>
-
-        {/* 9. EMPTY - placeholder */}
+        {/* 8. EMPTY - placeholder */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)' }}></div>
 
-        {/* 10. EMPTY - placeholder */}
+        {/* 9. EMPTY - placeholder */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)' }}></div>
 
         {/* 11. REVENUE & VOLUME */}
