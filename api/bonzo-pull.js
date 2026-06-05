@@ -94,8 +94,11 @@ export default async function handler(req, res) {
         const phone = p.phone || p.mobile || '';
         const email = p.email || '';
 
-        // Check for existing borrower by bonzo_id FIRST (before pipeline check)
+        // Check for existing borrower by bonzo_id, phone, or email
         let existingBorrower = null;
+        const cleanPhone = phone ? phone.replace(/\D/g, '').slice(-10) : '';
+
+        // Try bonzo_id first
         const { data: byBonzoId } = await supabase
           .from('borrowers')
           .select('*')
@@ -103,11 +106,35 @@ export default async function handler(req, res) {
           .limit(1);
         if (byBonzoId?.length) existingBorrower = byBonzoId[0];
 
-        // If existing borrower, update timezone regardless of pipeline
-        if (existingBorrower && p.timezone) {
+        // Try phone if no bonzo_id match
+        if (!existingBorrower && cleanPhone) {
+          const { data: byPhone } = await supabase
+            .from('borrowers')
+            .select('*')
+            .ilike('phone', `%${cleanPhone}%`)
+            .limit(1);
+          if (byPhone?.length) existingBorrower = byPhone[0];
+        }
+
+        // Try email if still no match
+        if (!existingBorrower && email) {
+          const { data: byEmail } = await supabase
+            .from('borrowers')
+            .select('*')
+            .ilike('email', email)
+            .limit(1);
+          if (byEmail?.length) existingBorrower = byEmail[0];
+        }
+
+        // If existing borrower, update timezone + bonzo_id regardless of pipeline
+        if (existingBorrower) {
           await supabase
             .from('borrowers')
-            .update({ timezone: p.timezone, bonzo_last_sync: new Date().toISOString() })
+            .update({
+              timezone: p.timezone || existingBorrower.timezone,
+              bonzo_id: String(p.id),
+              bonzo_last_sync: new Date().toISOString()
+            })
             .eq('id', existingBorrower.id);
           results.updated++;
           continue;
