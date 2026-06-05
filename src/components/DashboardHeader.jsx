@@ -82,7 +82,7 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
   const sortedAppts = useMemo(() => {
     let sorted = [...appointments];
     if (sortBy === 'date') sorted.sort((a, b) => a.daysUntil - b.daysUntil);
-    if (sortBy === 'borrower') sorted.sort((a, b) => (a.borrower.name || '').localeCompare(b.borrower.name || ''));
+    if (sortBy === 'all') sorted.sort((a, b) => a.daysUntil - b.daysUntil); // same as date
     if (sortBy === 'danielle') sorted = sorted.filter(t => t.assigned_to === 'Danielle').sort((a, b) => a.daysUntil - b.daysUntil);
     if (sortBy === 'hailey') sorted = sorted.filter(t => t.assigned_to === 'Hailey').sort((a, b) => a.daysUntil - b.daysUntil);
     return sorted;
@@ -98,7 +98,7 @@ const AppointmentsModal = ({ appointments, onClose, onSelectBorrower, onDeleteAp
             <span style={{ fontSize: '12px', color: 'var(--text3)' }}>Sort:</span>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
               <option value="date">Date</option>
-              <option value="borrower">Borrower</option>
+              <option value="all">All</option>
               <option value="danielle">Danielle</option>
               <option value="hailey">Hailey</option>
             </select>
@@ -348,40 +348,39 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <Calendar size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
-            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.filter(t => t.isToday).length}</span>
+            <span style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '8px' }}>{allAppointments.filter(t => t.daysUntil <= 0).length}</span>
           </div>
           <div style={{ marginTop: '-4px' }}>
-            {(() => {
-              const todayAppts = allAppointments.filter(t => t.isToday);
-              const upcomingAppts = allAppointments.filter(t => t.daysUntil > 0).slice(0, 2);
-              return (
-                <>
-                  {/* TODAY row */}
-                  <div style={{ fontSize: '12px', color: 'var(--text)', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {allAppointments.length === 0 ? (
+              <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>No appointments</div>
+            ) : (
+              <>
+                {/* Show up to 2 TODAY appts */}
+                {allAppointments.filter(t => t.daysUntil <= 0).slice(0, 2).map((t, i) => (
+                  <div key={i} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ color: '#ef4444', fontWeight: '700', flexShrink: 0 }}>TODAY</span>
-                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{todayAppts.length > 0 ? todayAppts[0].borrower.name?.split(',')[0] : ''}</span>
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {todayAppts.length > 0 ? todayAppts[0].title : 'No appts'}
-                    </span>
-                    {todayAppts[0]?.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(todayAppts[0].assigned_to), fontWeight: '700' }}>{todayAppts[0].assigned_to}</span>}
+                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                    {t.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
                   </div>
-                  {/* Next 2 upcoming */}
-                  {upcomingAppts.map((t, i) => (
-                    <div key={i} style={{ fontSize: '12px', color: 'var(--text)', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#f59e0b', fontWeight: '700', flexShrink: 0 }}>{format(t.date, 'M/d')}</span>
-                      <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-                      {t.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700' }}>{t.assigned_to}</span>}
-                    </div>
-                  ))}
-                  {allAppointments.filter(t => t.daysUntil > 0).length > 2 && (
-                    <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
-                      +{allAppointments.filter(t => t.daysUntil > 0).length - 2} more...
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+                ))}
+                {/* +X more for today */}
+                {allAppointments.filter(t => t.daysUntil <= 0).length > 2 && (
+                  <div onClick={() => setShowApptsModal(true)} style={{ fontSize: '11px', color: '#22c55e', cursor: 'pointer', padding: '3px 0', fontWeight: '600' }}>
+                    +{allAppointments.filter(t => t.daysUntil <= 0).length - 2} more for today...
+                  </div>
+                )}
+                {/* Show upcoming dates if space (when less than 2 today) */}
+                {allAppointments.filter(t => t.daysUntil <= 0).length < 2 && allAppointments.filter(t => t.daysUntil > 0).slice(0, 2 - allAppointments.filter(t => t.daysUntil <= 0).length).map((t, i) => (
+                  <div key={`upcoming-${i}`} onClick={() => onSelectBorrower(t.borrower.id)} style={{ fontSize: '12px', color: 'var(--text)', cursor: 'pointer', padding: '3px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{ color: '#f59e0b', fontWeight: '700', flexShrink: 0 }}>{format(t.date, 'M/d')}</span>
+                    <span style={{ fontWeight: '700', flexShrink: 0 }}>{t.borrower.name?.split(',')[0]}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                    {t.assigned_to && <span style={{ fontSize: '10px', color: getAssigneeTextColor(t.assigned_to), fontWeight: '700', flexShrink: 0 }}>{t.assigned_to}</span>}
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </MediumCard>
 
