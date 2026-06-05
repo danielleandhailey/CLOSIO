@@ -200,10 +200,10 @@ const PipelinePage = ({ borrowers, ops }) => {
           Ring
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
-          <Zap size={12} /> Bonzo
+          Bonzo
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://brokerflow.com', '_blank')}>
-          <Zap size={12} /> BrokerFlow
+          BrokerFlow
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => window.dispatchEvent(new CustomEvent('openMatrix'))}>
           🗂 Matrix
