@@ -166,6 +166,7 @@ export default async function handler(req, res) {
           // Extra Bonzo fields for borrower card
           lead_source: p.lead_source || p.source || undefined,
           birthday: p.birthday || p.date_of_birth || undefined,
+          timezone: p.timezone || undefined,
         };
 
         // Remove undefined values
