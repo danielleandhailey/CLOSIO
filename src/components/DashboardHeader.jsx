@@ -344,7 +344,11 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 5. CALENDAR - Exactly like Tasks box */}
         <MediumCard style={{ flex: 1.5, minWidth: '280px', padding: '8px 12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setShowApptsModal(true)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowApptsModal(true)}>
+              <div style={{ textAlign: 'center', lineHeight: 1, color: '#3b82f6' }}>
+                <div style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase' }}>{format(new Date(), 'EEE')}</div>
+                <div style={{ fontSize: '16px', fontWeight: '800' }}>{format(new Date(), 'd')}</div>
+              </div>
               <Calendar size={14} style={{ color: '#3b82f6' }} />
               <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase' }}>CALENDAR</span>
             </div>
