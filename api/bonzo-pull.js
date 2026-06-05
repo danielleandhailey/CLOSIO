@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     // Fetch prospects from Bonzo - get multiple pages
     let allProspects = [];
     let page = 1;
-    const maxPages = 5; // Fetch up to 500 prospects
+    const maxPages = 100; // Fetch up to 10,000 prospects - no practical cap
 
     while (page <= maxPages) {
       const response = await fetch(`${BONZO_API_URL}/prospects?per_page=100&page=${page}`, {
