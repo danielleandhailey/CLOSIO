@@ -137,6 +137,20 @@ const AppInner = () => {
             </button>
           ))}
 
+          {/* Bonzo Buttons */}
+          <BonzoPullButton />
+          <button type="button" className="btn btn-ghost" title="Push updates to Bonzo CRM">
+            <Zap size={12} /> Bonzo Push
+          </button>
+
+          {/* BrokerFlow */}
+          <button type="button" className="btn btn-ghost" title="Pull from BrokerFlow">
+            <Zap size={12} /> BrokerFlow Pull
+          </button>
+          <button type="button" className="btn btn-ghost" title="Push to BrokerFlow">
+            <Zap size={12} /> BrokerFlow Push
+          </button>
+
           {/* External Links */}
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.lendingpad.com', '_blank')}>
             Lending Pad
