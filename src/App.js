@@ -155,7 +155,7 @@ const AppInner = () => {
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://prod.lendingpad.com/web/#/dashboard', '_blank')}>
             Lending Pad
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://loanzify.com', '_blank')}>
+          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://manage.lenderhomepage.com/', '_blank')}>
             Loanzify
           </button>
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://loansifter.com', '_blank')}>
