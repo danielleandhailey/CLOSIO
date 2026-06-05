@@ -202,7 +202,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
           Bonzo
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => window.open('https://brokerflow.com', '_blank')}>
+        <button type="button" className="btn btn-ghost" onClick={() => window.open('https://westcaplending-my.sharepoint.com/personal/dregnier_westcapitallending_com/Documents/Brokerflow/Closer%20Ultra%20Template%20V6-Danielle.xlsm?web=1', '_blank')}>
           BrokerFlow
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => window.dispatchEvent(new CustomEvent('openMatrix'))}>
