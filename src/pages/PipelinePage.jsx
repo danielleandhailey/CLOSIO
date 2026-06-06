@@ -225,6 +225,16 @@ const PipelinePage = ({ borrowers, ops }) => {
 
       {/* Stage counts bar */}
       <div className="stage-bar">
+        <input
+          type="checkbox"
+          onChange={e => {
+            if (e.target.checked) setSelectedIds(new Set(displayedBorrowers.map(b => b.id)));
+            else setSelectedIds(new Set());
+          }}
+          checked={selectedIds.size > 0 && selectedIds.size === displayedBorrowers.length}
+          title="Select All"
+          style={{ width: '14px', height: '14px', cursor: 'pointer', marginRight: '8px' }}
+        />
         <button
           type="button"
           className={`stage-pill ${filterStage === 'All' ? 'active' : ''}`}
