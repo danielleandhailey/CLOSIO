@@ -206,7 +206,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://teams.microsoft.com', '_blank')}>
           Teams
         </button>
-        <button type="button" className="btn btn-ghost">
+        <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.ringcentral.com', '_blank')}>
           Ring
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://app.getbonzo.com', '_blank')}>
