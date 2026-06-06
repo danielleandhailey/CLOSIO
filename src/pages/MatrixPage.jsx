@@ -11,7 +11,17 @@ const MatrixPage = () => {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [asking, setAsking] = useState(false);
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatHistory, setChatHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('matrix_chat_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  // Save chat history to localStorage
+  useEffect(() => {
+    localStorage.setItem('matrix_chat_history', JSON.stringify(chatHistory));
+  }, [chatHistory]);
   const dropRef = useRef();
   const inputRef = useRef();
 
@@ -159,7 +169,7 @@ const MatrixPage = () => {
       {/* Middle: Q&A Chat */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', overflow: 'hidden' }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>
-          🔍 Plain-English Q&A
+          🔍 Q&A Thread
           <span style={{ fontSize: '11px', fontWeight: '400', color: '#6a6a80', marginLeft: '8px' }}>
             Ask anything about your indexed lender guidelines
           </span>
