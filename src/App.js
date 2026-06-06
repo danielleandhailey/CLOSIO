@@ -168,6 +168,7 @@ const AppInner = () => {
             </button>
             <div className="dropdown-menu">
               <button onClick={() => window.open('https://www.mortgagecalculator.org', '_blank')}>Mortgage Calculator</button>
+              <button onClick={() => window.open('https://nexarate.netlify.app/nexarate.netlify.app/page.genspark.site/page/toolu_01yzgm8vgfwqfwbevjzza7c8/modern_loan_calculator_final_pdf.html', '_blank')}>Net Effective</button>
               <button onClick={() => window.open('https://app.quantumreverse.com/fcc03f2f-2545-488d-a22a-45b3ea0ee6b2?type=htmlForm', '_blank')}>Quantum Reverse Calc</button>
               <button onClick={() => window.open('https://bretwhissel.net/amortization/', '_blank')}>Amortization</button>
               <button onClick={() => window.open('https://app.quantumreverse.com/fcc03f2f-2545-488d-a22a-45b3ea0ee6b2?type=htmlForm&age=67&state=CA&propertyValue=494000&liens=90000&NotPaidOffLiens=183000', '_blank')}>Quantum Reverse (Pre-filled)</button>
