@@ -161,9 +161,18 @@ const AppInner = () => {
           <button type="button" className="btn btn-ghost" onClick={() => window.open('https://loansifter.com', '_blank')}>
             LoanSifter
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => window.open('https://www.mortgagecalculator.org', '_blank')}>
-            Calculators
-          </button>
+          {/* Calculators Dropdown */}
+          <div style={{ position: 'relative' }} className="nav-dropdown">
+            <button type="button" className="btn btn-ghost">
+              Calculators ▾
+            </button>
+            <div className="dropdown-menu">
+              <button onClick={() => window.open('https://www.mortgagecalculator.org', '_blank')}>Mortgage Calculator</button>
+              <button onClick={() => window.open('https://app.quantumreverse.com/fcc03f2f-2545-488d-a22a-45b3ea0ee6b2?type=htmlForm', '_blank')}>Quantum Reverse Calc</button>
+              <button onClick={() => window.open('https://bretwhissel.net/amortization/', '_blank')}>Amortization</button>
+              <button onClick={() => window.open('https://app.quantumreverse.com/fcc03f2f-2545-488d-a22a-45b3ea0ee6b2?type=htmlForm&age=67&state=CA&propertyValue=494000&liens=90000&NotPaidOffLiens=183000', '_blank')}>Quantum Reverse (Pre-filled)</button>
+            </div>
+          </div>
 
           {/* WCL Dropdown */}
           <div style={{ position: 'relative' }} className="nav-dropdown">
@@ -183,7 +192,28 @@ const AppInner = () => {
             <button type="button" className="btn btn-ghost">
               Lenders ▾
             </button>
-            <div className="dropdown-menu">
+            <div className="dropdown-menu" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <button onClick={() => window.open('https://app.rocketpro.com/', '_blank')}>Rocket Pro</button>
+              <button onClick={() => window.open('https://www.figure.com/leadportal/app/dashboard', '_blank')}>Figure</button>
+              <button onClick={() => window.open('https://broker.springeq.com/portal/#/home', '_blank')}>Spring EQ</button>
+              <button onClick={() => window.open('https://leo.prmg.net/tpo/dashboard', '_blank')}>PRMG</button>
+              <button onClick={() => window.open('https://flyhomes.com/buy-before-you-sell-get-started', '_blank')}>Flyhomes</button>
+              <button onClick={() => window.open('https://app.smartfihomeloans.com/home', '_blank')}>SmartFi</button>
+              <button onClick={() => window.open('https://www.npinonqm.com/#/home', '_blank')}>NPI Non-QM</button>
+              <button onClick={() => window.open('https://www.lsmlounge.com/tpo/', '_blank')}>LoanStream</button>
+              <button onClick={() => window.open('https://emma.springeq.com/home', '_blank')}>Spring EQ EMMA</button>
+              <button onClick={() => window.open('https://www.champstpo.com/#QuickPricer', '_blank')}>Champions TPO</button>
+              <button onClick={() => window.open('https://heloc.deephavenmortgage.com/portal/login', '_blank')}>Deephaven HELOC</button>
+              <button onClick={() => window.open('https://epmexperience.com/pipeline', '_blank')}>EPM</button>
+              <button onClick={() => window.open('https://theloanstore.encompasstpoconnect.com/#/home', '_blank')}>TLS (Loan Store)</button>
+              <button onClick={() => window.open('https://buttonfinance.encompasstpoconnect.com/#/content/home_395998', '_blank')}>Button Finance</button>
+              <button onClick={() => window.open('https://auth.newrez.com/signin', '_blank')}>NewRez</button>
+              <button onClick={() => window.open('https://mam.mmachine.net/Login.aspx', '_blank')}>MAM</button>
+              <button onClick={() => window.open('https://app.quantumreverse.com/dashboard', '_blank')}>Quantum Reverse</button>
+              <button onClick={() => window.open('https://kwikie.kindlending.com/login', '_blank')}>Kind Lending</button>
+              <button onClick={() => window.open('https://deephavenmortgage.lodasoft.com/tpo/dashboard', '_blank')}>Deephaven</button>
+              <button onClick={() => window.open('https://power.pennymac.com/#/home', '_blank')}>PennyMac</button>
+              <button onClick={() => window.open('https://lo.homeequity.westcapitallending.com/all-loans?view=active', '_blank')}>NFTY</button>
             </div>
           </div>
 
