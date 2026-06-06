@@ -128,31 +128,7 @@ const MatrixPage = () => {
         )}
       </div>
 
-      {/* Middle: Drop Zone */}
-      <div style={{ width: '280px', flexShrink: 0, borderRight: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>DROP MATRIX</div>
-
-        <div
-          className="matrix-drop"
-          style={{ flex: 1, minHeight: '200px' }}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
-          onClick={() => inputRef.current?.click()}
-        >
-          {uploading ? (
-            <><Loader size={20} style={{ animation: 'spin 1s linear infinite', marginBottom: '6px' }} /><div>Indexing PDF...</div></>
-          ) : (
-            <>
-              <Upload size={32} style={{ marginBottom: '12px', opacity: 0.5 }} />
-              <div style={{ fontWeight: '600', marginBottom: '6px' }}>Drop Lender PDF</div>
-              <div style={{ fontSize: '11px', opacity: 0.7 }}>or click to browse</div>
-            </>
-          )}
-        </div>
-        <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
-      </div>
-
-      {/* Right: Q&A Chat */}
+      {/* Middle: Q&A Chat */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', overflow: 'hidden' }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>
           🔍 Plain-English Q&A
@@ -204,6 +180,30 @@ const MatrixPage = () => {
             {asking ? <Loader size={14} /> : <Send size={14} />}
           </button>
         </div>
+      </div>
+
+      {/* Right: Drop Zone (smaller) */}
+      <div style={{ width: '180px', flexShrink: 0, borderLeft: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>DROP MATRIX</div>
+
+        <div
+          className="matrix-drop"
+          style={{ flex: 1, minHeight: '150px', padding: '16px' }}
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? (
+            <><Loader size={16} style={{ animation: 'spin 1s linear infinite', marginBottom: '6px' }} /><div style={{ fontSize: '11px' }}>Indexing...</div></>
+          ) : (
+            <>
+              <Upload size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
+              <div style={{ fontWeight: '600', fontSize: '11px', marginBottom: '4px' }}>Drop PDF</div>
+              <div style={{ fontSize: '10px', opacity: 0.7 }}>or click</div>
+            </>
+          )}
+        </div>
+        <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
