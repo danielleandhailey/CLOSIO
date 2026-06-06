@@ -212,6 +212,10 @@ const AppInner = () => {
               <button onClick={() => window.open('https://portal.wcl.com', '_blank')}>Portal</button>
               <button onClick={() => window.open('https://ticket.wcl.com', '_blank')}>Ticket</button>
               <button onClick={() => window.open('https://docguardian.wcl.com', '_blank')}>Doc Guardian</button>
+              <div style={{ borderTop: '1px solid #333', margin: '4px 0', padding: '4px 8px', fontSize: '10px', color: '#6a6a80', fontWeight: '600' }}>VENDORS</div>
+              {/* Vendors - to be added */}
+              <div style={{ borderTop: '1px solid #333', margin: '4px 0', padding: '4px 8px', fontSize: '10px', color: '#6a6a80', fontWeight: '600' }}>RESOURCES</div>
+              {/* Resources - to be added */}
             </div>
           </div>
 

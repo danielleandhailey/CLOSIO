@@ -197,11 +197,19 @@ const PipelinePage = ({ borrowers, ops }) => {
           <button type="button" className="btn btn-ghost">
             Property Lookup ▾
           </button>
-          <div className="dropdown-menu">
+          <div className="dropdown-menu" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
+            <button onClick={() => window.open('https://www.redfin.com', '_blank')}>Redfin</button>
             <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
             <button onClick={() => window.open('https://v3.titlepro247.com/Account', '_blank')}>TitlePro247</button>
             <button onClick={() => window.open('https://homeinsurance.wcl.com', '_blank')}>Home Insurance Lookup</button>
+            <button onClick={() => window.open('https://www.fhfa.gov/DataTools/Downloads/Pages/Conforming-Loan-Limit.aspx', '_blank')}>FHFA Loan Limits</button>
+            <button onClick={() => window.open('https://www.huduser.gov/portal/datasets/il.html', '_blank')}>HUD AMI Lookup</button>
+            <button onClick={() => window.open('https://entp.hud.gov/idapp/html/hicostlook.cfm', '_blank')}>FHA Mortgage Limits</button>
+            <button onClick={() => window.open('https://msc.fema.gov/portal/home', '_blank')}>FEMA Flood Map</button>
+            <button onClick={() => window.open('https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/wildland-hazards-building-codes/fire-hazard-severity-zones-maps/', '_blank')}>CalFire Hazard Maps</button>
+            <button onClick={() => window.open('https://singlefamily.fanniemae.com/', '_blank')}>Fannie Mae Guidelines</button>
+            <button onClick={() => window.open('https://guide.freddiemac.com/', '_blank')}>Freddie Mac Guide</button>
           </div>
         </div>
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://teams.microsoft.com', '_blank')}>
