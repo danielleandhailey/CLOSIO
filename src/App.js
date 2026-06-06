@@ -209,6 +209,7 @@ const AppInner = () => {
               WCL ▾
             </button>
             <div className="dropdown-menu">
+              <button onClick={() => window.open('https://portal.westcaplending.com/home', '_blank')}>Lead Store</button>
               <button onClick={() => window.open('https://portal.wcl.com', '_blank')}>Portal</button>
               <button onClick={() => window.open('https://ticket.wcl.com', '_blank')}>Ticket</button>
               <button onClick={() => window.open('https://docguardian.wcl.com', '_blank')}>Doc Guardian</button>
