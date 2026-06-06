@@ -168,11 +168,19 @@ const MatrixPage = () => {
 
       {/* Middle: Q&A Chat */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', overflow: 'hidden' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>
-          🔍 Q&A Thread
-          <span style={{ fontSize: '11px', fontWeight: '400', color: '#6a6a80', marginLeft: '8px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span>🔍 Q&A Thread</span>
+          <span style={{ fontSize: '11px', fontWeight: '400', color: '#6a6a80' }}>
             Ask anything about your indexed lender guidelines
           </span>
+          {chatHistory.length > 0 && (
+            <button
+              onClick={() => { setChatHistory([]); localStorage.removeItem('matrix_chat_history'); }}
+              style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', background: '#333', border: 'none', borderRadius: '3px', color: '#888', cursor: 'pointer' }}
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
