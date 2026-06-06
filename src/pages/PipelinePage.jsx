@@ -203,7 +203,7 @@ const PipelinePage = ({ borrowers, ops }) => {
             <button onClick={() => window.open('https://v3.titlepro247.com/Account', '_blank')}>TitlePro247</button>
           </div>
         </div>
-        <button type="button" className="btn btn-ghost">
+        <button type="button" className="btn btn-ghost" onClick={() => window.open('https://teams.microsoft.com', '_blank')}>
           Teams
         </button>
         <button type="button" className="btn btn-ghost">
