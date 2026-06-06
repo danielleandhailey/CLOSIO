@@ -99,7 +99,9 @@ const MatrixPage = () => {
     setQuestion('');
     setAsking(true);
 
-    const context = matrices.map(m => `Lender: ${m.lender_name}\n${m.ai_index}`).join('\n\n---\n\n');
+    const context = matrices.map(m => `Lender: ${m.lender_name}\n${m.ai_index || ''}`).join('\n\n---\n\n');
+    console.log('Matrix context length:', context.length, 'matrices:', matrices.length);
+    console.log('First matrix ai_index:', matrices[0]?.ai_index?.substring(0, 100));
     setChatHistory(h => [...h, { role: 'user', content: q }]);
 
     try {
