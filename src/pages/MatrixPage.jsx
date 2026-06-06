@@ -166,40 +166,39 @@ const MatrixPage = () => {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input
-            type="text"
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+          <textarea
             value={question}
             onChange={e => setQuestion(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && ask()}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); } }}
             placeholder={matrices.length === 0 ? 'Upload a PDF first…' : 'Ask a guideline question…'}
             disabled={matrices.length === 0}
-            style={{ flex: 1, background: '#1a1a23', border: '1px solid #333345', color: '#e8e8f0', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', outline: 'none', opacity: matrices.length === 0 ? 0.5 : 1 }}
+            style={{ flex: 1, background: '#1a1a23', border: '1px solid #333345', color: '#e8e8f0', padding: '12px', borderRadius: '6px', fontSize: '13px', outline: 'none', opacity: matrices.length === 0 ? 0.5 : 1, minHeight: '120px', resize: 'none' }}
           />
-          <button type="button" className="btn btn-primary" onClick={ask} disabled={asking || matrices.length === 0}>
-            {asking ? <Loader size={14} /> : <Send size={14} />}
+          <button type="button" className="btn btn-primary" onClick={ask} disabled={asking || matrices.length === 0} style={{ height: '120px', width: '50px' }}>
+            {asking ? <Loader size={18} /> : <Send size={18} />}
           </button>
         </div>
       </div>
 
       {/* Right: Drop Zone */}
-      <div style={{ width: '450px', flexShrink: 0, borderLeft: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '400px', flexShrink: 0, borderLeft: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>DROP MATRIX</div>
 
         <div
           className="matrix-drop"
-          style={{ flex: 1, minHeight: '300px', padding: '24px' }}
+          style={{ width: '350px', height: '350px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
           onClick={() => inputRef.current?.click()}
         >
           {uploading ? (
-            <><Loader size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} /><div style={{ fontSize: '13px' }}>Indexing PDF...</div></>
+            <><Loader size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }} /><div style={{ fontSize: '14px' }}>Indexing PDF...</div></>
           ) : (
             <>
-              <Upload size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
-              <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '6px' }}>Drop Lender PDF</div>
-              <div style={{ fontSize: '12px', opacity: 0.7 }}>or click to browse</div>
+              <Upload size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
+              <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '8px' }}>Drop Lender PDF</div>
+              <div style={{ fontSize: '13px', opacity: 0.7 }}>or click to browse</div>
             </>
           )}
         </div>
