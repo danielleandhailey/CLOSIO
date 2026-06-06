@@ -120,35 +120,37 @@ const MatrixPage = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {matrices.map(m => (
-              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <a
-                  href={m.file_path}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    flex: 1, display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '10px 12px', background: '#1e293b', borderRadius: '6px',
-                    textDecoration: 'none', cursor: 'pointer',
-                    border: '1px solid #334155', transition: 'all 0.15s'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#334155'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#1e293b'}
-                >
-                  <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '600', color: '#3b82f6', fontSize: '12px' }}>{m.lender_name}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b' }}>{new Date(m.updated_at).toLocaleDateString()}</div>
-                  </div>
-                </a>
-                <button type="button" onClick={async () => {
-                  await supabase.from('lender_matrices').delete().eq('id', m.id);
-                  setMatrices(prev => prev.filter(x => x.id !== m.id));
-                }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
+            {matrices.map(m => {
+              // Parse lender name - first part is lender, rest is matrix type
+              const parts = m.lender_name.split(' ');
+              const lender = parts[0] || m.lender_name;
+              const matrixType = parts.slice(1).join(' ') || 'Guidelines';
+              return (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <a
+                    href={m.file_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      flex: 1, padding: '8px 10px', background: '#1e293b', borderRadius: '6px',
+                      textDecoration: 'none', cursor: 'pointer',
+                      border: '1px solid #334155', transition: 'all 0.15s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#334155'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#1e293b'}
+                  >
+                    <div style={{ fontWeight: '700', color: '#3b82f6', fontSize: '13px' }}>{lender}</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{matrixType}</div>
+                  </a>
+                  <button type="button" onClick={async () => {
+                    await supabase.from('lender_matrices').delete().eq('id', m.id);
+                    setMatrices(prev => prev.filter(x => x.id !== m.id));
+                  }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
