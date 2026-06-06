@@ -430,14 +430,20 @@ export const INITIAL_TASKS = {
 
 // ---- Stipulation Templates ----
 export const STIP_TEMPLATES = {
+  // Common
+  Common: [
+    'Application',
+  ],
   // Loan Purpose
   Purchase: [
+    'Application',
     'Copy of Purchase Agreement (if applicable)',
     'Homeowners insurance declaration page (if applicable)',
     'Current mortgage statements - other properties (if applicable)',
     'Most recent HOA statement (if applicable)',
   ],
   Refi: [
+    'Application',
     'Homeowners insurance declaration page',
     'Most recent utility bill',
     'Current mortgage statements (all properties)',

@@ -137,6 +137,34 @@ const AppInner = () => {
             </button>
           ))}
 
+          {/* LP Pull */}
+          <button
+            type="button"
+            className="btn btn-ghost"
+            title="Pull loans from LendingPad"
+            onClick={async (e) => {
+              const btn = e.currentTarget;
+              btn.disabled = true;
+              btn.innerHTML = '<span>Pulling...</span>';
+              try {
+                const res = await fetch('/api/lendingpad-pull');
+                const data = await res.json();
+                if (data.success) {
+                  alert(`LP Pull: ${data.created} created, ${data.updated} updated`);
+                  window.location.reload();
+                } else {
+                  alert('LP Pull: ' + (data.error || 'Failed'));
+                }
+              } catch (err) {
+                alert('LP Pull error: ' + err.message);
+              }
+              btn.disabled = false;
+              btn.innerHTML = '<svg width="12" height="12"><use href="#zap"/></svg> LP Pull';
+            }}
+          >
+            <Zap size={12} /> LP Pull
+          </button>
+
           {/* Bonzo Buttons */}
           <BonzoPullButton />
           <button type="button" className="btn btn-ghost" title="Push updates to Bonzo CRM">
