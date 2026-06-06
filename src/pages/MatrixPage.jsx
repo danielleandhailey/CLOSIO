@@ -182,24 +182,24 @@ const MatrixPage = () => {
         </div>
       </div>
 
-      {/* Right: Drop Zone (smaller) */}
-      <div style={{ width: '180px', flexShrink: 0, borderLeft: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>DROP MATRIX</div>
+      {/* Right: Drop Zone */}
+      <div style={{ width: '450px', flexShrink: 0, borderLeft: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>DROP MATRIX</div>
 
         <div
           className="matrix-drop"
-          style={{ flex: 1, minHeight: '150px', padding: '16px' }}
+          style={{ flex: 1, minHeight: '300px', padding: '24px' }}
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
           onClick={() => inputRef.current?.click()}
         >
           {uploading ? (
-            <><Loader size={16} style={{ animation: 'spin 1s linear infinite', marginBottom: '6px' }} /><div style={{ fontSize: '11px' }}>Indexing...</div></>
+            <><Loader size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} /><div style={{ fontSize: '13px' }}>Indexing PDF...</div></>
           ) : (
             <>
-              <Upload size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
-              <div style={{ fontWeight: '600', fontSize: '11px', marginBottom: '4px' }}>Drop PDF</div>
-              <div style={{ fontSize: '10px', opacity: 0.7 }}>or click</div>
+              <Upload size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
+              <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '6px' }}>Drop Lender PDF</div>
+              <div style={{ fontSize: '12px', opacity: 0.7 }}>or click to browse</div>
             </>
           )}
         </div>
