@@ -201,6 +201,7 @@ const PipelinePage = ({ borrowers, ops }) => {
             <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
             <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
             <button onClick={() => window.open('https://v3.titlepro247.com/Account', '_blank')}>TitlePro247</button>
+            <button onClick={() => window.open('https://homeinsurance.wcl.com', '_blank')}>Home Insurance Lookup</button>
           </div>
         </div>
         <button type="button" className="btn btn-ghost" onClick={() => window.open('https://teams.microsoft.com', '_blank')}>

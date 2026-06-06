@@ -184,7 +184,6 @@ const AppInner = () => {
               <button onClick={() => window.open('https://portal.wcl.com', '_blank')}>Portal</button>
               <button onClick={() => window.open('https://ticket.wcl.com', '_blank')}>Ticket</button>
               <button onClick={() => window.open('https://docguardian.wcl.com', '_blank')}>Doc Guardian</button>
-              <button onClick={() => window.open('https://homeinsurance.wcl.com', '_blank')}>Home Insurance Lookup</button>
             </div>
           </div>
 
