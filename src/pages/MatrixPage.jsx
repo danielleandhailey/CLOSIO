@@ -41,18 +41,37 @@ const MatrixPage = () => {
       const lenderName = file.name.replace(/\.(pdf)$/i, '').replace(/[-_]/g, ' ');
 
       // Save to lender_matrices table
-      const { error: dbErr } = await supabase.from('lender_matrices').upsert({
+      const { data: insertedData, error: dbErr } = await supabase.from('lender_matrices').upsert({
         user_id: user.id,
         lender_name: lenderName,
         file_path: fileUrl,
         storage_path: path,
         ai_index: '',
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'lender_name,user_id' });
+      }, { onConflict: 'lender_name,user_id' }).select().single();
 
       if (dbErr) {
         alert('Database error: ' + dbErr.message);
         throw dbErr;
+      }
+
+      // Parse PDF and index with AI
+      try {
+        const parseRes = await fetch('/api/parse-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl,
+            matrixId: insertedData.id,
+            lenderName
+          })
+        });
+        const parseData = await parseRes.json();
+        if (!parseData.success) {
+          console.warn('PDF indexing warning:', parseData.error);
+        }
+      } catch (parseErr) {
+        console.warn('PDF parse error:', parseErr);
       }
 
       const { data } = await supabase.from('lender_matrices').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -74,7 +93,13 @@ const MatrixPage = () => {
     setChatHistory(h => [...h, { role: 'user', content: q }]);
 
     try {
-      const reply = await claudeService.matrixQuery(q, context);
+      const res = await fetch('/api/matrix-query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, context })
+      });
+      const data = await res.json();
+      const reply = data.answer || data.error || 'No response.';
       setChatHistory(h => [...h, { role: 'ai', content: reply }]);
     } catch (e) {
       setChatHistory(h => [...h, { role: 'ai', content: `Error: ${e.message}` }]);
