@@ -195,11 +195,12 @@ const PipelinePage = ({ borrowers, ops }) => {
 
         <div style={{ position: 'relative', marginLeft: 'auto' }} className="nav-dropdown">
           <button type="button" className="btn btn-ghost">
-            Value Lookup ▾
+            Property Lookup ▾
           </button>
           <div className="dropdown-menu">
-            <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
             <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
+            <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
+            <button onClick={() => window.open('https://v3.titlepro247.com/Account', '_blank')}>TitlePro247</button>
           </div>
         </div>
         <button type="button" className="btn btn-ghost">
