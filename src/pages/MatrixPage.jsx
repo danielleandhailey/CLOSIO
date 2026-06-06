@@ -111,46 +111,47 @@ const MatrixPage = () => {
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {/* Left: Current Matrices - clickable to view PDF */}
-      <div style={{ width: '300px', flexShrink: 0, borderRight: '1px solid #333345', padding: '16px', overflow: 'auto' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '16px' }}>CURRENT MATRICES</div>
+      <div style={{ width: '220px', flexShrink: 0, borderRight: '1px solid #333345', padding: '12px', overflow: 'auto' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>LIBRARY</div>
 
         {matrices.length === 0 ? (
-          <div style={{ color: '#6a6a80', fontSize: '12px', padding: '20px', textAlign: 'center' }}>
-            No matrices uploaded yet. Drop a PDF on the right to get started.
+          <div style={{ color: '#6a6a80', fontSize: '11px', padding: '20px', textAlign: 'center' }}>
+            Drop a PDF to get started.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {matrices.map(m => {
-              // Parse lender name - first part is lender, rest is matrix type
-              const parts = m.lender_name.split(' ');
-              const lender = parts[0] || m.lender_name;
-              const matrixType = parts.slice(1).join(' ') || 'Guidelines';
-              return (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <a
-                    href={m.file_path}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      flex: 1, padding: '8px 10px', background: '#1e293b', borderRadius: '6px',
-                      textDecoration: 'none', cursor: 'pointer',
-                      border: '1px solid #334155', transition: 'all 0.15s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#334155'}
-                    onMouseLeave={e => e.currentTarget.style.background = '#1e293b'}
-                  >
-                    <div style={{ fontWeight: '700', color: '#3b82f6', fontSize: '13px' }}>{lender}</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{matrixType}</div>
-                  </a>
-                  <button type="button" onClick={async () => {
-                    await supabase.from('lender_matrices').delete().eq('id', m.id);
-                    setMatrices(prev => prev.filter(x => x.id !== m.id));
-                  }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
-                    <X size={14} />
-                  </button>
-                </div>
-              );
-            })}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {[...matrices]
+              .sort((a, b) => a.lender_name.localeCompare(b.lender_name))
+              .filter((m, i, arr) => arr.findIndex(x => x.lender_name === m.lender_name) === i)
+              .map(m => {
+                const parts = m.lender_name.split(' ');
+                const lender = parts[0] || m.lender_name;
+                const matrixType = parts.slice(1).join(' ') || '';
+                return (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <a
+                      href={m.file_path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        flex: 1, padding: '4px 6px', textDecoration: 'none', cursor: 'pointer',
+                        borderRadius: '3px', transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#1e293b'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ fontWeight: '600', color: '#3b82f6', fontSize: '11px' }}>{lender}</div>
+                      {matrixType && <div style={{ fontSize: '9px', color: '#64748b' }}>{matrixType}</div>}
+                    </a>
+                    <button type="button" onClick={async () => {
+                      await supabase.from('lender_matrices').delete().eq('id', m.id);
+                      setMatrices(prev => prev.filter(x => x.id !== m.id));
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: '2px', opacity: 0.5 }}>
+                      <X size={10} />
+                    </button>
+                  </div>
+                );
+              })}
           </div>
         )}
       </div>
@@ -208,27 +209,22 @@ const MatrixPage = () => {
         </div>
       </div>
 
-      {/* Right: Drop Zone */}
-      <div style={{ width: '400px', flexShrink: 0, borderLeft: '1px solid #333345', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>DROP MATRIX</div>
-
-        <div
-          className="matrix-drop"
-          style={{ width: '350px', height: '350px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
-          onClick={() => inputRef.current?.click()}
-        >
-          {uploading ? (
-            <><Loader size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }} /><div style={{ fontSize: '14px' }}>Indexing PDF...</div></>
-          ) : (
-            <>
-              <Upload size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
-              <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '8px' }}>Drop Lender PDF</div>
-              <div style={{ fontSize: '13px', opacity: 0.7 }}>or click to browse</div>
-            </>
-          )}
-        </div>
+      {/* Right: Drop Zone - full height */}
+      <div
+        style={{ width: '200px', flexShrink: 0, borderLeft: '1px solid #333345', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent' }}
+        onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = '#1e293b'; }}
+        onDragLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+        onDrop={e => { e.preventDefault(); e.currentTarget.style.background = 'transparent'; handleFile(e.dataTransfer.files[0]); }}
+        onClick={() => inputRef.current?.click()}
+      >
+        {uploading ? (
+          <><Loader size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px', color: '#64748b' }} /><div style={{ fontSize: '12px', color: '#64748b' }}>Indexing...</div></>
+        ) : (
+          <>
+            <Upload size={32} style={{ marginBottom: '8px', color: '#475569' }} />
+            <div style={{ fontWeight: '600', fontSize: '12px', color: '#64748b' }}>Drop here</div>
+          </>
+        )}
         <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
       </div>
 
