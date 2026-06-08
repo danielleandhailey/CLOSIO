@@ -1,4 +1,5 @@
-const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY;
+// Check both possible env var names
+const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
 
 export default async function handler(req, res) {
   if (!ANTHROPIC_API_KEY) {
