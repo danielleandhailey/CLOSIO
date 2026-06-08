@@ -299,6 +299,9 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onUpdate={ops.updateBorrower}
                 onDocDrop={(id) => handleExpand(id)} // expand card to use existing doc drop
                 onAddNote={ops.addNote}
+                onAddStip={ops.addStipulation}
+                onMarkStipReceived={ops.markStipReceived}
+                onRemoveStip={ops.removeStipulation}
               />
               {expandedIds.has(borrower.id) && (
                 <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} defaultTab={defaultTab} />

@@ -1,9 +1,247 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3 } from 'lucide-react';
-import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS } from '../lib/constants';
+import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3, X, Check } from 'lucide-react';
+import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS, STIP_TEMPLATES } from '../lib/constants';
 import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
+
+// Flatten all stip templates into a single list for autocomplete
+const ALL_STIPS = [...new Set(Object.values(STIP_TEMPLATES).flat())];
+
+// STIPS Modal - shows all stips with autocomplete add
+const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip }) => {
+  const [newStip, setNewStip] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef();
+  const modalRef = useRef();
+
+  const stips = borrower.stipulations || [];
+  const outstanding = stips.filter(s => !s.received);
+  const received = stips.filter(s => s.received);
+
+  // Filter suggestions based on input
+  const suggestions = newStip.trim()
+    ? ALL_STIPS.filter(s =>
+        s.toLowerCase().includes(newStip.toLowerCase()) &&
+        !stips.some(ex => ex.item === s)
+      ).slice(0, 8)
+    : [];
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    const handler = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  const addStip = async (item) => {
+    await onAddStip(borrower.id, item);
+    setNewStip('');
+    setShowSuggestions(false);
+  };
+
+  const markReceived = async (id, docDate) => {
+    await onMarkReceived(id, docDate);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', zIndex: 9999,
+    }}>
+      <div ref={modalRef} style={{
+        background: '#1a1a23', borderRadius: '12px', width: '500px',
+        maxHeight: '80vh', overflow: 'hidden', border: '1px solid #333',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '16px 20px', borderBottom: '1px solid #333',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>
+              STIPS - {formatBorrowerName(borrower.name, borrower.co_borrower)}
+            </div>
+            <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
+              {outstanding.length} outstanding • {received.length} received
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Add new stip with autocomplete */}
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #333', position: 'relative' }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={newStip}
+            onChange={e => { setNewStip(e.target.value); setShowSuggestions(true); }}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && newStip.trim()) addStip(newStip.trim());
+              if (e.key === 'Escape') { setNewStip(''); setShowSuggestions(false); }
+            }}
+            placeholder="Type to add stip (autocomplete available)..."
+            style={{
+              width: '100%', padding: '10px 14px', background: '#0d0d12',
+              border: '1px solid #444', borderRadius: '6px', color: '#fff',
+              fontSize: '13px', outline: 'none',
+            }}
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div style={{
+              position: 'absolute', top: '100%', left: '20px', right: '20px',
+              background: '#0d0d12', border: '1px solid #444', borderRadius: '6px',
+              maxHeight: '200px', overflow: 'auto', zIndex: 10,
+            }}>
+              {suggestions.map((s, i) => (
+                <div
+                  key={i}
+                  onClick={() => addStip(s)}
+                  style={{
+                    padding: '10px 14px', cursor: 'pointer', fontSize: '12px',
+                    color: '#ccc', borderBottom: i < suggestions.length - 1 ? '1px solid #333' : 'none',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#1e293b'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  {s}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Stips list */}
+        <div style={{ maxHeight: '400px', overflow: 'auto', padding: '8px 0' }}>
+          {/* Outstanding */}
+          {outstanding.length > 0 && (
+            <div style={{ padding: '8px 20px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Outstanding ({outstanding.length})
+              </div>
+              {outstanding.map(s => (
+                <StipItem key={s.id} stip={s} onMarkReceived={markReceived} onRemove={onRemoveStip} />
+              ))}
+            </div>
+          )}
+
+          {/* Received */}
+          {received.length > 0 && (
+            <div style={{ padding: '8px 20px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#22c55e', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Received ({received.length})
+              </div>
+              {received.map(s => (
+                <StipItem key={s.id} stip={s} onMarkReceived={markReceived} onRemove={onRemoveStip} received />
+              ))}
+            </div>
+          )}
+
+          {stips.length === 0 && (
+            <div style={{ padding: '40px 20px', textAlign: 'center', color: '#666', fontSize: '13px' }}>
+              No stips added yet. Type above to add.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Individual stip item
+const StipItem = ({ stip, onMarkReceived, onRemove, received }) => {
+  const [docDate, setDocDate] = useState(stip.doc_date || '');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
+      background: received ? '#0d1f0d' : '#1f1f0d', borderRadius: '6px', marginBottom: '4px',
+    }}>
+      {/* Check/mark received button */}
+      {!received ? (
+        <button
+          onClick={() => setShowDatePicker(true)}
+          style={{
+            width: '24px', height: '24px', borderRadius: '4px',
+            border: '2px solid #f59e0b', background: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          title="Mark as received"
+        >
+          <Check size={14} style={{ color: '#f59e0b', opacity: 0.3 }} />
+        </button>
+      ) : (
+        <div style={{
+          width: '24px', height: '24px', borderRadius: '4px',
+          background: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Check size={14} style={{ color: '#fff' }} />
+        </div>
+      )}
+
+      {/* Stip name */}
+      <div style={{ flex: 1, fontSize: '12px', color: received ? '#6ee7b7' : '#fcd34d' }}>
+        {stip.item}
+      </div>
+
+      {/* Date picker for marking received */}
+      {showDatePicker && (
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <input
+            type="date"
+            value={docDate}
+            onChange={e => setDocDate(e.target.value)}
+            style={{
+              padding: '4px 8px', background: '#0d0d12', border: '1px solid #444',
+              borderRadius: '4px', color: '#fff', fontSize: '11px',
+            }}
+          />
+          <button
+            onClick={() => { onMarkReceived(stip.id, docDate); setShowDatePicker(false); }}
+            style={{
+              padding: '4px 8px', background: '#22c55e', border: 'none',
+              borderRadius: '4px', color: '#fff', fontSize: '10px', cursor: 'pointer',
+            }}
+          >
+            ✓
+          </button>
+          <button
+            onClick={() => setShowDatePicker(false)}
+            style={{
+              padding: '4px 6px', background: 'none', border: 'none',
+              color: '#888', fontSize: '12px', cursor: 'pointer',
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Received date display */}
+      {received && stip.received_date && (
+        <span style={{ fontSize: '10px', color: '#6ee7b7' }}>
+          {format(parseISO(stip.received_date), 'M/d/yy')}
+        </span>
+      )}
+
+      {/* Delete button */}
+      <button
+        onClick={() => onRemove(stip.id)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', padding: '2px' }}
+        title="Remove"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  );
+};
 
 // Parse quick log entries from notes field
 const parseLog = (notes) => {
@@ -367,8 +605,24 @@ const AddTagInline = ({ borrower, onAdd, sc }) => {
 const LenderBadge = ({ borrower, onUpdate }) => {
   const [open, setOpen, ref] = useDropdown();
   const [custom, setCustom] = useState('');
+  const [search, setSearch] = useState('');
   const lender = borrower.lender;
   const lender2 = borrower.lender_2;
+  const searchRef = useRef();
+
+  // Filter lenders based on search
+  const allLenders = [...LENDER_OPTIONS, SECONDARY_LENDER];
+  const filteredLenders = search.trim()
+    ? allLenders.filter(l => l.toLowerCase().includes(search.toLowerCase()))
+    : allLenders;
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => searchRef.current?.focus(), 50);
+    } else {
+      setSearch('');
+    }
+  }, [open]);
 
   return (
     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -382,30 +636,52 @@ const LenderBadge = ({ borrower, onUpdate }) => {
         </button>
         {open && (
           <div style={dropStyle}>
+            {/* Search box at top */}
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              placeholder="Search lenders..."
+              style={{
+                width: '100%', padding: '6px 8px', marginBottom: '8px',
+                background: '#f0f0f0', border: '1px solid #ddd', borderRadius: '4px',
+                fontSize: '11px', color: '#333', outline: 'none',
+              }}
+            />
             <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Lender</div>
-            {[...LENDER_OPTIONS, SECONDARY_LENDER].map(l => (
-              <button key={l} type="button"
-                onClick={e => { e.stopPropagation();
-                  if (l === SECONDARY_LENDER) {
-                    onUpdate(borrower.id, { lender_2: l });
-                  } else {
-                    onUpdate(borrower.id, { lender: l });
-                  }
-                  setOpen(false); }}
-                style={{ display: 'block', width: '100%', padding: '6px 10px', border: 'none',
-                  background: (lender === l || lender2 === l) ? '#ede9fe' : 'transparent',
-                  color: l === SECONDARY_LENDER ? '#d97706' : ((lender === l || lender2 === l) ? '#6d28d9' : '#333'),
-                  cursor: 'pointer', borderRadius: '4px', fontSize: '12px',
-                  fontWeight: (lender === l || lender2 === l) ? '700' : '500', textAlign: 'left',
-                  borderTop: l === SECONDARY_LENDER ? '1px solid #eee' : 'none', marginTop: l === SECONDARY_LENDER ? '4px' : '0' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                onMouseLeave={e => e.currentTarget.style.background = (lender === l || lender2 === l) ? '#ede9fe' : 'transparent'}
-              >
-                {l === SECONDARY_LENDER ? `+ ${l} (2nd)` : l}
-              </button>
-            ))}
+            <div style={{ maxHeight: '200px', overflow: 'auto' }}>
+              {filteredLenders.map(l => (
+                <button key={l} type="button"
+                  onClick={e => { e.stopPropagation();
+                    if (l === SECONDARY_LENDER) {
+                      onUpdate(borrower.id, { lender_2: l });
+                    } else {
+                      onUpdate(borrower.id, { lender: l });
+                    }
+                    setOpen(false); }}
+                  style={{ display: 'block', width: '100%', padding: '6px 10px', border: 'none',
+                    background: (lender === l || lender2 === l) ? '#ede9fe' : 'transparent',
+                    color: l === SECONDARY_LENDER ? '#d97706' : ((lender === l || lender2 === l) ? '#6d28d9' : '#333'),
+                    cursor: 'pointer', borderRadius: '4px', fontSize: '12px',
+                    fontWeight: (lender === l || lender2 === l) ? '700' : '500', textAlign: 'left',
+                    borderTop: l === SECONDARY_LENDER ? '1px solid #eee' : 'none', marginTop: l === SECONDARY_LENDER ? '4px' : '0' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                  onMouseLeave={e => e.currentTarget.style.background = (lender === l || lender2 === l) ? '#ede9fe' : 'transparent'}
+                >
+                  {l === SECONDARY_LENDER ? `+ ${l} (2nd)` : l}
+                </button>
+              ))}
+              {filteredLenders.length === 0 && (
+                <div style={{ padding: '8px 10px', color: '#888', fontSize: '11px', textAlign: 'center' }}>
+                  No matches
+                </div>
+              )}
+            </div>
             <div style={{ borderTop: '1px solid #eee', marginTop: '6px', paddingTop: '6px' }}>
               <input value={custom} onChange={e => setCustom(e.target.value)}
+                onClick={e => e.stopPropagation()}
                 onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) { onUpdate(borrower.id, { lender: custom.trim() }); setCustom(''); setOpen(false); } }}
                 placeholder="Other lender…"
                 style={{ width: '100%', background: '#f5f5f5', border: '1px solid #ddd', color: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', outline: 'none' }} />
@@ -664,10 +940,17 @@ const BorrowerRow = ({
   onSelect, onExpand, onEdit, onDelete,
   onTouch, onMoveStage, onAddTag, onRemoveTag,
   onOpenCalendar, onUpdate, onDocDrop, onAddNote,
+  onAddStip, onMarkStipReceived, onRemoveStip,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
   const [dropHighlight, setDropHighlight] = useState(false);
+  const [showStipsModal, setShowStipsModal] = useState(false);
   const tags = borrower.borrower_tags || [];
+
+  // Calculate stips count
+  const stips = borrower.stipulations || [];
+  const outstandingCount = stips.filter(s => !s.received).length;
+  const totalCount = stips.length;
   const touched = touchedRecently(borrower.last_touched);
 
   const touchLabel = borrower.last_touched
@@ -751,10 +1034,21 @@ const BorrowerRow = ({
           <span style={{
             marginLeft: '6px', padding: '1px 6px', background: '#fbbf24', color: '#000',
             fontSize: '9px', fontWeight: '700', borderRadius: '3px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '4px',
           }}
-          title="Click to clear"
-          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { substage: null }); }}
-          >STIPS NEEDED</span>
+          title="Click to manage stips"
+          onClick={(e) => { e.stopPropagation(); setShowStipsModal(true); }}
+          >
+            STIPS NEEDED
+            {totalCount > 0 && (
+              <span style={{
+                background: outstandingCount > 0 ? '#dc2626' : '#22c55e',
+                color: '#fff', padding: '0 4px', borderRadius: '8px', fontSize: '8px',
+              }}>
+                {outstandingCount}/{totalCount}
+              </span>
+            )}
+          </span>
         )}
 
         {/* Spacer to push notes to fixed position */}
@@ -952,6 +1246,17 @@ const BorrowerRow = ({
             <AddTagInline borrower={borrower} onAdd={(tag) => onAddTag(borrower.id, tag)} sc={STAGE_COLORS[borrower.stage]} />
           </div>
         </div>
+      )}
+
+      {/* STIPS Modal */}
+      {showStipsModal && (
+        <StipsModal
+          borrower={borrower}
+          onClose={() => setShowStipsModal(false)}
+          onAddStip={onAddStip}
+          onMarkReceived={onMarkStipReceived}
+          onRemoveStip={onRemoveStip}
+        />
       )}
     </div>
   );
