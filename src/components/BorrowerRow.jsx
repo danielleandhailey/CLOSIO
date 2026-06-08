@@ -253,8 +253,26 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
           {/* Outstanding */}
           {outstanding.length > 0 && (
             <div style={{ padding: '8px 20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', marginBottom: '8px', textTransform: 'uppercase' }}>
-                Outstanding ({outstanding.length})
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase' }}>
+                  Outstanding ({outstanding.length})
+                </div>
+                {/* Select All button */}
+                <button
+                  onClick={async () => {
+                    const today = new Date().toISOString().split('T')[0];
+                    for (const s of outstanding) {
+                      await onMarkReceived(s.id, today);
+                    }
+                  }}
+                  style={{
+                    padding: '3px 8px', fontSize: '9px', fontWeight: '600',
+                    background: '#166534', color: '#a7f3d0', border: 'none',
+                    borderRadius: '4px', cursor: 'pointer',
+                  }}
+                >
+                  ✓ Select All
+                </button>
               </div>
               {outstanding.map(s => (
                 <div key={s.id} style={{
@@ -283,35 +301,35 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
             </div>
           )}
 
-          {/* Received - strikethrough, muted greens */}
+          {/* Received - strikethrough, softer muted greens */}
           {received.length > 0 && (
             <div style={{ padding: '8px 20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: '#4ade80', marginBottom: '8px', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#6b9b6b', marginBottom: '8px', textTransform: 'uppercase' }}>
                 Received ({received.length})
               </div>
               {received.map(s => (
                 <div key={s.id} style={{
                   display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
-                  background: '#1a2a1a', borderRadius: '6px', marginBottom: '4px',
+                  background: '#1a231a', borderRadius: '6px', marginBottom: '4px',
                 }}>
                   <div style={{
                     width: '22px', height: '22px', borderRadius: '4px',
-                    background: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    background: '#2d4a2d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    <Check size={14} style={{ color: '#86efac' }} />
+                    <Check size={14} style={{ color: '#7cb87c' }} />
                   </div>
                   <div style={{
-                    flex: 1, fontSize: '12px', color: '#86efac',
+                    flex: 1, fontSize: '12px', color: '#7cb87c',
                     textDecoration: 'line-through', opacity: 0.6,
                   }}>
                     {s.item}
                   </div>
-                  <span style={{ fontSize: '10px', color: '#4ade80' }}>
+                  <span style={{ fontSize: '10px', color: '#6b9b6b' }}>
                     {s.received_date ? format(parseISO(s.received_date), 'M/d') : ''}
                   </span>
                   <button
                     onClick={() => onRemoveStip(s.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', padding: '2px' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', padding: '2px' }}
                   >
                     <X size={14} />
                   </button>
