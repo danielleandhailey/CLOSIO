@@ -1,9 +1,8 @@
-const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY;
+const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY || process.env.REACT_APP_CLAUDE_API_KEY;
 
 export default async function handler(req, res) {
-  // Debug: check if key exists
   if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'Missing API key - check CLAUDE_API_KEY in Vercel env vars' });
+    return res.status(500).json({ error: 'Missing CLAUDE_API_KEY in Vercel env vars' });
   }
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
