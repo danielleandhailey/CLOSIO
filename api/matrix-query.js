@@ -1,4 +1,4 @@
-const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY || process.env.REACT_APP_CLAUDE_API_KEY;
+const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY;
 
 export default async function handler(req, res) {
   if (!ANTHROPIC_API_KEY) {
