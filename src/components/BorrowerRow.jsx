@@ -5,10 +5,12 @@ import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBo
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
-// STIPS Modal - dropdown with category headers, click checkbox to mark received
+// STIPS Modal - dropdown with category headers + search, click checkbox to mark received
 const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [search, setSearch] = useState('');
   const modalRef = useRef();
+  const searchRef = useRef();
 
   const stips = borrower.stipulations || [];
   const outstanding = stips.filter(s => !s.received);
@@ -62,10 +64,10 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
           </button>
         </div>
 
-        {/* Add stip dropdown button */}
+        {/* Add stip dropdown button with search */}
         <div style={{ padding: '12px 20px', borderBottom: '1px solid #333', position: 'relative' }}>
           <button
-            onClick={() => setShowDropdown(!showDropdown)}
+            onClick={() => { setShowDropdown(!showDropdown); setTimeout(() => searchRef.current?.focus(), 50); }}
             style={{
               width: '100%', padding: '10px 14px', background: '#0d0d12',
               border: '1px solid #444', borderRadius: '6px', color: '#fff',
@@ -77,40 +79,67 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
             <ChevronDown size={16} style={{ transform: showDropdown ? 'rotate(180deg)' : 'none' }} />
           </button>
 
-          {/* Dropdown with category headers */}
+          {/* Dropdown with search + category headers */}
           {showDropdown && (
             <div style={{
               position: 'absolute', top: '100%', left: '20px', right: '20px',
               background: '#0d0d12', border: '1px solid #444', borderRadius: '6px',
-              maxHeight: '300px', overflow: 'auto', zIndex: 10, marginTop: '4px',
+              maxHeight: '350px', overflow: 'hidden', zIndex: 10, marginTop: '4px',
+              display: 'flex', flexDirection: 'column',
             }}>
-              {Object.entries(STIP_CATEGORIES).map(([category, items]) => (
-                <div key={category}>
-                  {/* Category header */}
-                  <div style={{
-                    padding: '8px 14px', background: '#1e293b', color: '#94a3b8',
-                    fontSize: '10px', fontWeight: '700', textTransform: 'uppercase',
-                    letterSpacing: '0.05em', position: 'sticky', top: 0,
-                  }}>
-                    {category}
-                  </div>
-                  {/* Items in category */}
-                  {items.filter(item => !existingItems.includes(item)).map((item, i) => (
-                    <div
-                      key={i}
-                      onClick={() => addStip(item)}
-                      style={{
-                        padding: '8px 14px 8px 24px', cursor: 'pointer', fontSize: '12px',
-                        color: '#ccc', borderBottom: '1px solid #222',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {item}
+              {/* Search box */}
+              <div style={{ padding: '10px', borderBottom: '1px solid #333' }}>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Type to search stips..."
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#1a1a23',
+                    border: '1px solid #555', borderRadius: '4px', color: '#fff',
+                    fontSize: '12px', outline: 'none',
+                  }}
+                />
+              </div>
+              {/* Scrollable list */}
+              <div style={{ overflow: 'auto', flex: 1 }}>
+                {Object.entries(STIP_CATEGORIES).map(([category, items]) => {
+                  // Filter items by search
+                  const filtered = items.filter(item =>
+                    !existingItems.includes(item) &&
+                    (!search || item.toLowerCase().includes(search.toLowerCase()))
+                  );
+                  if (filtered.length === 0) return null;
+                  return (
+                    <div key={category}>
+                      {/* Category header */}
+                      <div style={{
+                        padding: '8px 14px', background: '#1e293b', color: '#94a3b8',
+                        fontSize: '10px', fontWeight: '700', textTransform: 'uppercase',
+                        letterSpacing: '0.05em', position: 'sticky', top: 0,
+                      }}>
+                        {category}
+                      </div>
+                      {/* Items in category */}
+                      {filtered.map((item, i) => (
+                        <div
+                          key={i}
+                          onClick={() => { addStip(item); setSearch(''); }}
+                          style={{
+                            padding: '8px 14px 8px 24px', cursor: 'pointer', fontSize: '12px',
+                            color: '#ccc', borderBottom: '1px solid #222',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          {item}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -150,26 +179,26 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
             </div>
           )}
 
-          {/* Received - strikethrough */}
+          {/* Received - strikethrough, muted greens */}
           {received.length > 0 && (
             <div style={{ padding: '8px 20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: '#22c55e', marginBottom: '8px', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#4ade80', marginBottom: '8px', textTransform: 'uppercase' }}>
                 Received ({received.length})
               </div>
               {received.map(s => (
                 <div key={s.id} style={{
                   display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
-                  background: '#0d1f0d', borderRadius: '6px', marginBottom: '4px',
+                  background: '#1a2a1a', borderRadius: '6px', marginBottom: '4px',
                 }}>
                   <div style={{
                     width: '22px', height: '22px', borderRadius: '4px',
-                    background: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    background: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    <Check size={14} style={{ color: '#fff' }} />
+                    <Check size={14} style={{ color: '#86efac' }} />
                   </div>
                   <div style={{
-                    flex: 1, fontSize: '12px', color: '#6ee7b7',
-                    textDecoration: 'line-through', opacity: 0.7,
+                    flex: 1, fontSize: '12px', color: '#86efac',
+                    textDecoration: 'line-through', opacity: 0.6,
                   }}>
                     {s.item}
                   </div>
@@ -939,7 +968,11 @@ const BorrowerRow = ({
         <span
           onClick={(e) => {
             e.stopPropagation();
-            onUpdate(borrower.id, { substage: borrower.substage === 'Stips Needed' ? null : 'Stips Needed' });
+            if (borrower.substage === 'Stips Needed') {
+              onUpdate(borrower.id, { substage: null, substage_date: null });
+            } else {
+              onUpdate(borrower.id, { substage: 'Stips Needed', substage_date: new Date().toISOString().split('T')[0] });
+            }
           }}
           style={{
             cursor: 'pointer',
@@ -997,10 +1030,18 @@ const BorrowerRow = ({
             STIPS NEEDED
             {totalCount > 0 && (
               <span style={{
-                background: outstandingCount > 0 ? '#dc2626' : '#22c55e',
+                background: outstandingCount > 0 ? '#dc2626' : '#166534',
                 color: '#fff', padding: '0 4px', borderRadius: '8px', fontSize: '8px',
               }}>
                 {outstandingCount}/{totalCount}
+              </span>
+            )}
+            {borrower.substage_date && (
+              <span style={{
+                background: '#dc2626', color: '#fff', padding: '0 4px',
+                borderRadius: '8px', fontSize: '8px', marginLeft: '2px',
+              }}>
+                {format(parseISO(borrower.substage_date), 'M/d')}
               </span>
             )}
           </span>
