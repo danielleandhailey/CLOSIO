@@ -1,14 +1,9 @@
-// Check both possible env var names
-const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
-
 export default async function handler(req, res) {
+  // Read env vars inside handler (required for Vercel)
+  const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+
   if (!ANTHROPIC_API_KEY) {
-    // Debug: show what env vars exist
-    const envKeys = Object.keys(process.env).filter(k => k.includes('CLAUDE') || k.includes('ANTHROPIC') || k.includes('API'));
-    return res.status(500).json({
-      error: 'Missing API key',
-      debug: `Found env vars: ${envKeys.join(', ') || 'none with CLAUDE/ANTHROPIC/API'}`
-    });
+    return res.status(500).json({ error: 'Missing API key' });
   }
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
