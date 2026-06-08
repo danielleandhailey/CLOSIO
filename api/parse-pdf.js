@@ -39,9 +39,10 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'pdfs-2024-09-25',
       },
       body: JSON.stringify({
-        model: 'claude-3-opus-20240229',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
         messages: [{
           role: 'user',
