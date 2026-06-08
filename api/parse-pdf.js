@@ -75,10 +75,16 @@ Format as clear, searchable bullet points. Be thorough - this will be used to an
     });
 
     const claudeData = await claudeResponse.json();
+
+    // Debug: check what Claude returned
+    if (claudeData.error) {
+      return res.status(500).json({ error: 'Claude API error', details: claudeData.error });
+    }
+
     const extractedText = claudeData.content?.[0]?.text || '';
 
     if (!extractedText) {
-      return res.status(500).json({ error: 'Failed to extract PDF content' });
+      return res.status(500).json({ error: 'Failed to extract PDF content', claudeResponse: JSON.stringify(claudeData).substring(0, 500) });
     }
 
     // Update the matrix record with the extracted/indexed content
