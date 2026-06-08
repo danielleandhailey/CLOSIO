@@ -1111,6 +1111,165 @@ We look forward to working with you and helping you get into your new home smoot
   );
 };
 
+// ---- Needs Section with Email/Text Templates ----
+const NeedsSection = ({ borrower, ops }) => {
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [notifyStatus, setNotifyStatus] = useState(null);
+  const stips = borrower.stipulations || [];
+  const outstanding = stips.filter(s => !s.received);
+  const received = stips.filter(s => s.received);
+
+  // Get borrower's first name(s) for templates
+  const firstName = borrower.name?.split(',')[1]?.trim()?.split(' ')[0] || borrower.name?.split(' ')[0] || 'there';
+  const coBorrowerFirst = borrower.co_borrower?.split(' ')[0];
+  const greeting = coBorrowerFirst ? `${firstName} and ${coBorrowerFirst}` : firstName;
+  const needsList = outstanding.map(s => `• ${s.item}`).join('\n');
+
+  // Email template
+  const emailSubject = `Documents Needed - ${borrower.name}`;
+  const emailBody = `Hi ${greeting},
+
+Thank you for choosing West Capital Lending! To continue processing your loan, we need the following documents:
+
+${needsList}
+
+Please scan, upload, email, or fax these at your earliest convenience.
+
+If you have any questions, I'm happy to help!
+
+Best,
+West Capital Lending Team`;
+
+  // Text template (shorter)
+  const textBody = `Hi ${greeting}! We need the following docs for your loan:\n\n${needsList}\n\nPlease send when you can. Questions? Just reply here!`;
+
+  // Notify Hailey - creates a task due immediately
+  const notifyHailey = async () => {
+    if (outstanding.length === 0) {
+      setNotifyStatus('No outstanding stips to send');
+      setTimeout(() => setNotifyStatus(null), 2000);
+      return;
+    }
+
+    try {
+      // Create a task for Hailey due immediately
+      const taskTitle = `📧 Send stips list to ${borrower.name} (${outstanding.length} items)`;
+      await ops.addTask(borrower.id, taskTitle, new Date().toISOString().split('T')[0]);
+      setNotifyStatus('✓ Task created for Hailey!');
+      setTimeout(() => setNotifyStatus(null), 3000);
+    } catch (e) {
+      setNotifyStatus('Error: ' + e.message);
+    }
+  };
+
+  const copyEmail = () => {
+    navigator.clipboard.writeText(emailBody);
+    alert('Email copied! Paste into Outlook.');
+  };
+
+  const copyText = () => {
+    navigator.clipboard.writeText(textBody);
+    alert('Text copied!');
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto' }}>
+      {/* Quick actions */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <button onClick={copyEmail} style={{
+          padding: '8px 12px', background: '#166534', color: '#fff', border: 'none',
+          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+        }}>
+          📧 Copy Email
+        </button>
+        <button onClick={copyText} style={{
+          padding: '8px 12px', background: '#1d4ed8', color: '#fff', border: 'none',
+          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+        }}>
+          💬 Copy Text
+        </button>
+        <button onClick={notifyHailey} style={{
+          padding: '8px 12px', background: '#9333ea', color: '#fff', border: 'none',
+          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+        }}>
+          🔔 Notify Hailey
+        </button>
+        {notifyStatus && (
+          <span style={{ fontSize: '11px', color: notifyStatus.includes('✓') ? '#22c55e' : '#ef4444', alignSelf: 'center' }}>
+            {notifyStatus}
+          </span>
+        )}
+      </div>
+
+      {/* Outstanding stips */}
+      <div>
+        <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', marginBottom: '6px', textTransform: 'uppercase' }}>
+          Outstanding ({outstanding.length})
+        </div>
+        {outstanding.length === 0 ? (
+          <div style={{ fontSize: '11px', color: '#888', padding: '8px' }}>No outstanding items</div>
+        ) : (
+          <div style={{ background: '#fff', borderRadius: '6px', border: '1px solid #e5e7eb', maxHeight: '150px', overflow: 'auto' }}>
+            {outstanding.map(s => (
+              <div key={s.id} style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px',
+                borderBottom: '1px solid #f3f4f6', fontSize: '12px',
+              }}>
+                <button
+                  onClick={() => ops.markStipReceived(s.id, new Date().toISOString().split('T')[0])}
+                  style={{
+                    width: '18px', height: '18px', borderRadius: '3px',
+                    border: '2px solid #f59e0b', background: 'none', cursor: 'pointer', flexShrink: 0,
+                  }}
+                  title="Mark received"
+                />
+                <span style={{ flex: 1, color: '#1e293b' }}>{s.item}</span>
+                <button onClick={() => ops.removeStipulation(s.id)} style={{
+                  background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '14px',
+                }}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Received stips */}
+      {received.length > 0 && (
+        <div>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#22c55e', marginBottom: '6px', textTransform: 'uppercase' }}>
+            Received ({received.length})
+          </div>
+          <div style={{ background: '#f0fdf4', borderRadius: '6px', border: '1px solid #bbf7d0', maxHeight: '100px', overflow: 'auto' }}>
+            {received.map(s => (
+              <div key={s.id} style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px',
+                borderBottom: '1px solid #dcfce7', fontSize: '11px', color: '#166534',
+                textDecoration: 'line-through', opacity: 0.7,
+              }}>
+                <Check size={14} style={{ color: '#22c55e' }} />
+                <span style={{ flex: 1 }}>{s.item}</span>
+                <span style={{ fontSize: '10px' }}>{s.received_date ? format(parseISO(s.received_date), 'M/d') : ''}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Email preview */}
+      <div style={{ marginTop: 'auto' }}>
+        <div style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', marginBottom: '4px' }}>EMAIL PREVIEW</div>
+        <pre style={{
+          background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px',
+          padding: '10px', fontSize: '10px', color: '#475569', whiteSpace: 'pre-wrap',
+          maxHeight: '120px', overflow: 'auto', margin: 0, lineHeight: 1.4,
+        }}>
+          {emailBody}
+        </pre>
+      </div>
+    </div>
+  );
+};
+
 // ---- Loan Terms Grid ----
 const LoanTermsGrid = ({ borrower, onUpdate }) => {
   const pi = calcPI(borrower.loan_amount, borrower.rate);
@@ -1899,6 +2058,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
   const tabs = [
     { id: 'notes',    label: 'Notes & Tasks' },
     { id: 'docs',     label: 'Documents' },
+    { id: 'needs',    label: 'Needs' },
     { id: 'borrowers', label: 'Borrowers' },
     { id: 'terms',    label: 'Loan Terms' },
     { id: 'income',   label: 'Income' },
@@ -1955,6 +2115,14 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Upload Documents</div>
             <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} ops={ops} />
             {closeBtn('docs')}
+          </div>
+        )}
+
+        {openTabs.has('needs') && (
+          <div style={{ ...boxStyle, width: '500px' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📋 Needs List</div>
+            <NeedsSection borrower={borrower} ops={ops} />
+            {closeBtn('needs')}
           </div>
         )}
 
