@@ -6,16 +6,24 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // Try CNBC quote API first (real-time)
+    // Try Yahoo Finance API (real-time, reliable)
+    const yahooRes = await fetch(
+      'https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1m&range=1d'
+    );
+    const yahooData = await yahooRes.json();
+    const yahooRate = yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (yahooRate) {
+      return res.status(200).json({ rate: yahooRate.toFixed(3), success: true, source: 'yahoo' });
+    }
+
+    // Fallback: CNBC quote API
     const cnbcRes = await fetch(
-      'https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=US10Y&requestMethod=itv&no498s=1&partnerId=2&fund=1&exthrs=1&output=json&events=1'
+      'https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=US10Y&requestMethod=itv&noCache=' + Date.now()
     );
     const cnbcData = await cnbcRes.json();
     const cnbcRate = cnbcData?.FormattedQuoteResult?.FormattedQuote?.[0]?.last;
     if (cnbcRate) {
-      // Return full precision (4 digits)
-      const rate = parseFloat(cnbcRate).toFixed(4);
-      return res.status(200).json({ rate, success: true, source: 'cnbc' });
+      return res.status(200).json({ rate: parseFloat(cnbcRate).toFixed(3), success: true, source: 'cnbc' });
     }
 
     // Fallback: Twelve Data API
@@ -26,8 +34,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (data.price) {
-      const rate = parseFloat(data.price).toFixed(4);
-      return res.status(200).json({ rate, success: true, source: 'twelvedata' });
+      return res.status(200).json({ rate: parseFloat(data.price).toFixed(3), success: true, source: 'twelvedata' });
     }
 
     // Fallback: FRED (prior day close)
@@ -37,12 +44,11 @@ export default async function handler(req, res) {
     );
     const fredData = await fredRes.json();
     if (fredData.observations && fredData.observations.length > 0) {
-      const rate = parseFloat(fredData.observations[0].value).toFixed(4);
-      return res.status(200).json({ rate, success: true, source: 'fred' });
+      return res.status(200).json({ rate: parseFloat(fredData.observations[0].value).toFixed(3), success: true, source: 'fred' });
     }
 
-    return res.status(200).json({ rate: '4.5000', success: false });
+    return res.status(200).json({ rate: '4.500', success: false });
   } catch (e) {
-    return res.status(500).json({ error: e.message, rate: '4.5000' });
+    return res.status(500).json({ error: e.message, rate: '4.500' });
   }
 }

@@ -250,21 +250,21 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
   const [treasuryRate, setTreasuryRate] = useState('--');
 
-  // Fetch 10yr Treasury rate (refreshes every 5 min for more accuracy)
+  // Fetch 10yr Treasury rate (refreshes every 2 min for accuracy)
   useEffect(() => {
     const fetchRate = () => {
       fetch('/api/treasury-rate')
         .then(res => res.json())
         .then(data => {
           if (data.rate && data.rate !== '.') {
-            // Show 4 digits - no rounding
-            setTreasuryRate(parseFloat(data.rate).toFixed(4) + '%');
+            // Show 3 decimals
+            setTreasuryRate(parseFloat(data.rate).toFixed(3) + '%');
           }
         })
         .catch(() => setTreasuryRate('--'));
     };
     fetchRate();
-    const interval = setInterval(fetchRate, 5 * 60 * 1000); // 5 minutes
+    const interval = setInterval(fetchRate, 2 * 60 * 1000); // 2 minutes
     return () => clearInterval(interval);
   }, []);
 
