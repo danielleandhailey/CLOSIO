@@ -2,8 +2,17 @@ export default async function handler(req, res) {
   // Read env vars inside handler (required for Vercel)
   const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
 
+  // Debug: log what we find
+  console.log('CLAUDE_API_KEY exists:', !!process.env.CLAUDE_API_KEY);
+  console.log('ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY);
+
   if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'Missing API key' });
+    return res.status(500).json({
+      error: 'Missing API key',
+      hasClaudeKey: !!process.env.CLAUDE_API_KEY,
+      hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('KEY') || k.includes('API')).join(', ')
+    });
   }
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
