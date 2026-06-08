@@ -250,20 +250,21 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
   const [apptForm, setApptForm] = useState({ title: '', time: '', borrower_id: '' });
   const [treasuryRate, setTreasuryRate] = useState('--');
 
-  // Fetch 10yr Treasury rate (refreshes every 10 min)
+  // Fetch 10yr Treasury rate (refreshes every 5 min for more accuracy)
   useEffect(() => {
     const fetchRate = () => {
       fetch('/api/treasury-rate')
         .then(res => res.json())
         .then(data => {
           if (data.rate && data.rate !== '.') {
-            setTreasuryRate(parseFloat(data.rate).toFixed(2) + '%');
+            // Show 4 digits - no rounding
+            setTreasuryRate(parseFloat(data.rate).toFixed(4) + '%');
           }
         })
         .catch(() => setTreasuryRate('--'));
     };
     fetchRate();
-    const interval = setInterval(fetchRate, 10 * 60 * 1000); // 10 minutes
+    const interval = setInterval(fetchRate, 5 * 60 * 1000); // 5 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -550,11 +551,11 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         </div>
 
         {/* 10YR TREASURY */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '70px', border: '1px solid var(--border)', cursor: 'pointer' }}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '85px', border: '1px solid var(--border)', cursor: 'pointer' }}
           onClick={() => window.open('https://www.cnbc.com/quotes/US10Y', '_blank')}
-          title="Click for live 10yr Treasury (FRED - prior day close)">
+          title="Click for live 10yr Treasury (CNBC real-time)">
           <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>10YR</div>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: '#f59e0b' }}>{treasuryRate}</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: '#f59e0b' }}>{treasuryRate}</div>
         </div>
 
         {/* 12. DONUT CHART */}
