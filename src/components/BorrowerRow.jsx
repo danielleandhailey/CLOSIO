@@ -5,10 +5,29 @@ import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBo
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
+// Custom stips stored in localStorage
+const getCustomStips = () => {
+  try {
+    return JSON.parse(localStorage.getItem('custom_stips') || '[]');
+  } catch { return []; }
+};
+const saveCustomStip = (item) => {
+  const custom = getCustomStips();
+  if (!custom.includes(item)) {
+    custom.push(item);
+    localStorage.setItem('custom_stips', JSON.stringify(custom));
+  }
+};
+const removeCustomStip = (item) => {
+  const custom = getCustomStips().filter(s => s !== item);
+  localStorage.setItem('custom_stips', JSON.stringify(custom));
+};
+
 // STIPS Modal - dropdown with category headers + search, click checkbox to mark received
 const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [search, setSearch] = useState('');
+  const [customStips, setCustomStips] = useState(getCustomStips());
   const modalRef = useRef();
   const searchRef = useRef();
 
@@ -16,6 +35,11 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
   const outstanding = stips.filter(s => !s.received);
   const received = stips.filter(s => s.received);
   const existingItems = stips.map(s => s.item);
+
+  // Refresh custom stips when dropdown opens
+  useEffect(() => {
+    if (showDropdown) setCustomStips(getCustomStips());
+  }, [showDropdown]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -104,6 +128,65 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
               </div>
               {/* Scrollable list */}
               <div style={{ overflow: 'auto', flex: 1 }}>
+                {/* Add custom option when search has no matches */}
+                {search.trim() && !Object.values(STIP_CATEGORIES).flat().some(item =>
+                  item.toLowerCase().includes(search.toLowerCase())
+                ) && !customStips.some(item => item.toLowerCase().includes(search.toLowerCase())) && (
+                  <div
+                    onClick={() => {
+                      saveCustomStip(search.trim());
+                      addStip(search.trim());
+                      setCustomStips(getCustomStips());
+                      setSearch('');
+                    }}
+                    style={{
+                      padding: '10px 14px', cursor: 'pointer', fontSize: '12px',
+                      color: '#22c55e', background: '#0f2f1f', borderBottom: '1px solid #333',
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                    }}
+                  >
+                    <span style={{ fontSize: '16px' }}>+</span> Add "{search.trim()}" as custom stip
+                  </div>
+                )}
+
+                {/* Custom stips section */}
+                {customStips.filter(item =>
+                  !existingItems.includes(item) &&
+                  (!search || item.toLowerCase().includes(search.toLowerCase()))
+                ).length > 0 && (
+                  <div>
+                    <div style={{
+                      padding: '8px 14px', background: '#3f1f5f', color: '#c4b5fd',
+                      fontSize: '10px', fontWeight: '700', textTransform: 'uppercase',
+                      letterSpacing: '0.05em', position: 'sticky', top: 0,
+                    }}>
+                      Custom (Your List)
+                    </div>
+                    {customStips.filter(item =>
+                      !existingItems.includes(item) &&
+                      (!search || item.toLowerCase().includes(search.toLowerCase()))
+                    ).map((item, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          padding: '8px 14px 8px 24px', cursor: 'pointer', fontSize: '12px',
+                          color: '#ccc', borderBottom: '1px solid #222', display: 'flex',
+                          alignItems: 'center', justifyContent: 'space-between',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span onClick={() => { addStip(item); setSearch(''); }}>{item}</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); removeCustomStip(item); setCustomStips(getCustomStips()); }}
+                          style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}
+                          title="Remove from custom list"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {Object.entries(STIP_CATEGORIES).map(([category, items]) => {
                   // Filter items by search
                   const filtered = items.filter(item =>
@@ -139,6 +222,27 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
                     </div>
                   );
                 })}
+
+                {/* Show add custom even when there are matches */}
+                {search.trim() && (
+                  <div
+                    onClick={() => {
+                      saveCustomStip(search.trim());
+                      addStip(search.trim());
+                      setCustomStips(getCustomStips());
+                      setSearch('');
+                    }}
+                    style={{
+                      padding: '10px 14px', cursor: 'pointer', fontSize: '12px',
+                      color: '#a78bfa', background: '#1a1a23', borderTop: '1px solid #333',
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#2f1f4f'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#1a1a23'}
+                  >
+                    <span style={{ fontSize: '14px' }}>+</span> Add "{search.trim()}" as custom
+                  </div>
+                )}
               </div>
             </div>
           )}
