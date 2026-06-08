@@ -14,8 +14,8 @@ export default async function handler(req, res) {
 
   const { fileUrl, matrixId, lenderName } = req.body;
 
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'Missing CLAUDE_API_KEY' });
+  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY.length === 0) {
+    return res.status(500).json({ error: 'Server misconfiguration: CLAUDE_API_KEY is missing or empty.' });
   }
 
   if (!supabase) {

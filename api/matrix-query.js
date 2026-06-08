@@ -6,8 +6,8 @@ export default async function handler(req, res) {
   console.log('CLAUDE_API_KEY exists:', !!process.env.CLAUDE_API_KEY);
   console.log('ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY);
 
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'Missing API key' });
+  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY.length === 0) {
+    return res.status(500).json({ error: 'Server misconfiguration: CLAUDE_API_KEY is missing or empty.' });
   }
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
