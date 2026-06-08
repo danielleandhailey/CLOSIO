@@ -108,7 +108,7 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
             <div style={{
               position: 'absolute', top: '100%', left: '20px', right: '20px',
               background: '#0d0d12', border: '1px solid #444', borderRadius: '6px',
-              maxHeight: '350px', overflow: 'hidden', zIndex: 10, marginTop: '4px',
+              maxHeight: '450px', overflow: 'hidden', zIndex: 10, marginTop: '4px',
               display: 'flex', flexDirection: 'column',
             }}>
               {/* Search box */}
