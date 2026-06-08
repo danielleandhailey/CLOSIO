@@ -124,7 +124,20 @@ const MatrixPage = () => {
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {/* Left: Current Matrices - clickable to view PDF */}
       <div style={{ width: '220px', flexShrink: 0, borderRight: '1px solid #333345', padding: '12px', overflow: 'auto' }}>
-        <div style={{ fontSize: '12px', fontWeight: '700', color: '#e8e8f0', marginBottom: '12px' }}>LIBRARY</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#e8e8f0' }}>LIBRARY</div>
+          <input
+            type="text"
+            placeholder="Search..."
+            style={{ flex: 1, background: '#1a1a23', border: '1px solid #333345', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', color: '#e8e8f0', outline: 'none' }}
+            onChange={e => {
+              const search = e.target.value.toLowerCase();
+              document.querySelectorAll('[data-matrix-item]').forEach(el => {
+                el.style.display = el.dataset.matrixItem.toLowerCase().includes(search) ? 'flex' : 'none';
+              });
+            }}
+          />
+        </div>
 
         {matrices.length === 0 ? (
           <div style={{ color: '#6a6a80', fontSize: '11px', padding: '20px', textAlign: 'center' }}>
@@ -140,7 +153,7 @@ const MatrixPage = () => {
                 const lender = parts[0] || m.lender_name;
                 const matrixType = parts.slice(1).join(' ') || '';
                 return (
-                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div key={m.id} data-matrix-item={m.lender_name} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <a
                       href={m.file_path}
                       target="_blank"
@@ -231,7 +244,7 @@ const MatrixPage = () => {
 
       {/* Right: Drop Zone - full height */}
       <div
-        style={{ width: '200px', flexShrink: 0, borderLeft: '1px solid #333345', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent' }}
+        style={{ width: '400px', flexShrink: 0, borderLeft: '1px solid #333345', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent' }}
         onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = '#1e293b'; }}
         onDragLeave={e => { e.currentTarget.style.background = 'transparent'; }}
         onDrop={e => { e.preventDefault(); e.currentTarget.style.background = 'transparent'; handleFile(e.dataTransfer.files[0]); }}
@@ -241,8 +254,9 @@ const MatrixPage = () => {
           <><Loader size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px', color: '#64748b' }} /><div style={{ fontSize: '12px', color: '#64748b' }}>Indexing...</div></>
         ) : (
           <>
-            <Upload size={32} style={{ marginBottom: '8px', color: '#475569' }} />
-            <div style={{ fontWeight: '600', fontSize: '12px', color: '#64748b' }}>Drop here</div>
+            <Upload size={48} style={{ marginBottom: '12px', color: '#475569' }} />
+            <div style={{ fontWeight: '600', fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>Drop PDF here</div>
+            <div style={{ fontSize: '11px', color: '#4b5563' }}>or click to browse</div>
           </>
         )}
         <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
