@@ -6,24 +6,32 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // Try Yahoo Finance API (real-time, reliable)
-    const yahooRes = await fetch(
-      'https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1m&range=1d'
+    // MarketWatch widget API - matches CNBC closely
+    const mwRes = await fetch(
+      'https://api.wsj.net/api/dylan/quotes/v2/comp/quote?id=BX:TMUBMUSD10Y&accept=application/json'
     );
-    const yahooData = await yahooRes.json();
-    const yahooRate = yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (yahooRate) {
-      return res.status(200).json({ rate: yahooRate.toFixed(3), success: true, source: 'yahoo' });
+    const mwData = await mwRes.json();
+    const mwRate = mwData?.data?.[0]?.last;
+    if (mwRate) {
+      return res.status(200).json({ rate: parseFloat(mwRate).toFixed(3), success: true, source: 'wsj' });
     }
 
-    // Fallback: CNBC quote API
-    const cnbcRes = await fetch(
-      'https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=US10Y&requestMethod=itv&noCache=' + Date.now()
+    // Fallback: Tradingview-style endpoint
+    const tvRes = await fetch(
+      'https://scanner.tradingview.com/bond/scan',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbols: { tickers: ['TVC:US10Y'] },
+          columns: ['close']
+        })
+      }
     );
-    const cnbcData = await cnbcRes.json();
-    const cnbcRate = cnbcData?.FormattedQuoteResult?.FormattedQuote?.[0]?.last;
-    if (cnbcRate) {
-      return res.status(200).json({ rate: parseFloat(cnbcRate).toFixed(3), success: true, source: 'cnbc' });
+    const tvData = await tvRes.json();
+    const tvRate = tvData?.data?.[0]?.d?.[0];
+    if (tvRate) {
+      return res.status(200).json({ rate: parseFloat(tvRate).toFixed(3), success: true, source: 'tradingview' });
     }
 
     // Fallback: Twelve Data API
@@ -37,7 +45,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ rate: parseFloat(data.price).toFixed(3), success: true, source: 'twelvedata' });
     }
 
-    // Fallback: FRED (prior day close)
+    // Final fallback: FRED (prior day close)
     const fredKey = '0e8dd4ee7d6651eaff6e8a9817d768fb';
     const fredRes = await fetch(
       `https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`
