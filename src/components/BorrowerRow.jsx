@@ -1,34 +1,21 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3, X, Check } from 'lucide-react';
-import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS, STIP_TEMPLATES } from '../lib/constants';
+import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS, STIP_CATEGORIES } from '../lib/constants';
 import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
-// Flatten all stip templates into a single list for autocomplete
-const ALL_STIPS = [...new Set(Object.values(STIP_TEMPLATES).flat())];
-
-// STIPS Modal - shows all stips with autocomplete add
+// STIPS Modal - dropdown with category headers, click checkbox to mark received
 const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip }) => {
-  const [newStip, setNewStip] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const inputRef = useRef();
+  const [showDropdown, setShowDropdown] = useState(false);
   const modalRef = useRef();
 
   const stips = borrower.stipulations || [];
   const outstanding = stips.filter(s => !s.received);
   const received = stips.filter(s => s.received);
-
-  // Filter suggestions based on input
-  const suggestions = newStip.trim()
-    ? ALL_STIPS.filter(s =>
-        s.toLowerCase().includes(newStip.toLowerCase()) &&
-        !stips.some(ex => ex.item === s)
-      ).slice(0, 8)
-    : [];
+  const existingItems = stips.map(s => s.item);
 
   useEffect(() => {
-    inputRef.current?.focus();
     const handler = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) onClose();
     };
@@ -38,12 +25,13 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
 
   const addStip = async (item) => {
     await onAddStip(borrower.id, item);
-    setNewStip('');
-    setShowSuggestions(false);
+    setShowDropdown(false);
   };
 
-  const markReceived = async (id, docDate) => {
-    await onMarkReceived(id, docDate);
+  // Click checkbox = mark received with today's date, strikethrough, move to bottom
+  const handleCheckbox = async (stip) => {
+    const today = new Date().toISOString().split('T')[0];
+    await onMarkReceived(stip.id, today);
   };
 
   return (
@@ -51,7 +39,7 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center',
       justifyContent: 'center', zIndex: 9999,
-    }}>
+    }} onClick={e => e.target === e.currentTarget && onClose()}>
       <div ref={modalRef} style={{
         background: '#1a1a23', borderRadius: '12px', width: '500px',
         maxHeight: '80vh', overflow: 'hidden', border: '1px solid #333',
@@ -74,43 +62,53 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
           </button>
         </div>
 
-        {/* Add new stip with autocomplete */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #333', position: 'relative' }}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={newStip}
-            onChange={e => { setNewStip(e.target.value); setShowSuggestions(true); }}
-            onFocus={() => setShowSuggestions(true)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && newStip.trim()) addStip(newStip.trim());
-              if (e.key === 'Escape') { setNewStip(''); setShowSuggestions(false); }
-            }}
-            placeholder="Type to add stip (autocomplete available)..."
+        {/* Add stip dropdown button */}
+        <div style={{ padding: '12px 20px', borderBottom: '1px solid #333', position: 'relative' }}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
             style={{
               width: '100%', padding: '10px 14px', background: '#0d0d12',
               border: '1px solid #444', borderRadius: '6px', color: '#fff',
-              fontSize: '13px', outline: 'none',
+              fontSize: '13px', cursor: 'pointer', textAlign: 'left',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}
-          />
-          {showSuggestions && suggestions.length > 0 && (
+          >
+            <span>+ Add stip from list</span>
+            <ChevronDown size={16} style={{ transform: showDropdown ? 'rotate(180deg)' : 'none' }} />
+          </button>
+
+          {/* Dropdown with category headers */}
+          {showDropdown && (
             <div style={{
               position: 'absolute', top: '100%', left: '20px', right: '20px',
               background: '#0d0d12', border: '1px solid #444', borderRadius: '6px',
-              maxHeight: '200px', overflow: 'auto', zIndex: 10,
+              maxHeight: '300px', overflow: 'auto', zIndex: 10, marginTop: '4px',
             }}>
-              {suggestions.map((s, i) => (
-                <div
-                  key={i}
-                  onClick={() => addStip(s)}
-                  style={{
-                    padding: '10px 14px', cursor: 'pointer', fontSize: '12px',
-                    color: '#ccc', borderBottom: i < suggestions.length - 1 ? '1px solid #333' : 'none',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#1e293b'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  {s}
+              {Object.entries(STIP_CATEGORIES).map(([category, items]) => (
+                <div key={category}>
+                  {/* Category header */}
+                  <div style={{
+                    padding: '8px 14px', background: '#1e293b', color: '#94a3b8',
+                    fontSize: '10px', fontWeight: '700', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', position: 'sticky', top: 0,
+                  }}>
+                    {category}
+                  </div>
+                  {/* Items in category */}
+                  {items.filter(item => !existingItems.includes(item)).map((item, i) => (
+                    <div
+                      key={i}
+                      onClick={() => addStip(item)}
+                      style={{
+                        padding: '8px 14px 8px 24px', cursor: 'pointer', fontSize: '12px',
+                        color: '#ccc', borderBottom: '1px solid #222',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {item}
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
@@ -126,119 +124,76 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
                 Outstanding ({outstanding.length})
               </div>
               {outstanding.map(s => (
-                <StipItem key={s.id} stip={s} onMarkReceived={markReceived} onRemove={onRemoveStip} />
+                <div key={s.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
+                  background: '#1f1f0d', borderRadius: '6px', marginBottom: '4px',
+                }}>
+                  {/* Checkbox - click to mark received */}
+                  <button
+                    onClick={() => handleCheckbox(s)}
+                    style={{
+                      width: '22px', height: '22px', borderRadius: '4px',
+                      border: '2px solid #f59e0b', background: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    }}
+                    title="Click to mark as received"
+                  />
+                  <div style={{ flex: 1, fontSize: '12px', color: '#fcd34d' }}>{s.item}</div>
+                  <button
+                    onClick={() => onRemoveStip(s.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', padding: '2px' }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           )}
 
-          {/* Received */}
+          {/* Received - strikethrough */}
           {received.length > 0 && (
             <div style={{ padding: '8px 20px' }}>
               <div style={{ fontSize: '10px', fontWeight: '700', color: '#22c55e', marginBottom: '8px', textTransform: 'uppercase' }}>
                 Received ({received.length})
               </div>
               {received.map(s => (
-                <StipItem key={s.id} stip={s} onMarkReceived={markReceived} onRemove={onRemoveStip} received />
+                <div key={s.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
+                  background: '#0d1f0d', borderRadius: '6px', marginBottom: '4px',
+                }}>
+                  <div style={{
+                    width: '22px', height: '22px', borderRadius: '4px',
+                    background: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <Check size={14} style={{ color: '#fff' }} />
+                  </div>
+                  <div style={{
+                    flex: 1, fontSize: '12px', color: '#6ee7b7',
+                    textDecoration: 'line-through', opacity: 0.7,
+                  }}>
+                    {s.item}
+                  </div>
+                  <span style={{ fontSize: '10px', color: '#4ade80' }}>
+                    {s.received_date ? format(parseISO(s.received_date), 'M/d') : ''}
+                  </span>
+                  <button
+                    onClick={() => onRemoveStip(s.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', padding: '2px' }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           )}
 
           {stips.length === 0 && (
             <div style={{ padding: '40px 20px', textAlign: 'center', color: '#666', fontSize: '13px' }}>
-              No stips added yet. Type above to add.
+              No stips added yet. Click above to add.
             </div>
           )}
         </div>
       </div>
-    </div>
-  );
-};
-
-// Individual stip item
-const StipItem = ({ stip, onMarkReceived, onRemove, received }) => {
-  const [docDate, setDocDate] = useState(stip.doc_date || '');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
-      background: received ? '#0d1f0d' : '#1f1f0d', borderRadius: '6px', marginBottom: '4px',
-    }}>
-      {/* Check/mark received button */}
-      {!received ? (
-        <button
-          onClick={() => setShowDatePicker(true)}
-          style={{
-            width: '24px', height: '24px', borderRadius: '4px',
-            border: '2px solid #f59e0b', background: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-          title="Mark as received"
-        >
-          <Check size={14} style={{ color: '#f59e0b', opacity: 0.3 }} />
-        </button>
-      ) : (
-        <div style={{
-          width: '24px', height: '24px', borderRadius: '4px',
-          background: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Check size={14} style={{ color: '#fff' }} />
-        </div>
-      )}
-
-      {/* Stip name */}
-      <div style={{ flex: 1, fontSize: '12px', color: received ? '#6ee7b7' : '#fcd34d' }}>
-        {stip.item}
-      </div>
-
-      {/* Date picker for marking received */}
-      {showDatePicker && (
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-          <input
-            type="date"
-            value={docDate}
-            onChange={e => setDocDate(e.target.value)}
-            style={{
-              padding: '4px 8px', background: '#0d0d12', border: '1px solid #444',
-              borderRadius: '4px', color: '#fff', fontSize: '11px',
-            }}
-          />
-          <button
-            onClick={() => { onMarkReceived(stip.id, docDate); setShowDatePicker(false); }}
-            style={{
-              padding: '4px 8px', background: '#22c55e', border: 'none',
-              borderRadius: '4px', color: '#fff', fontSize: '10px', cursor: 'pointer',
-            }}
-          >
-            ✓
-          </button>
-          <button
-            onClick={() => setShowDatePicker(false)}
-            style={{
-              padding: '4px 6px', background: 'none', border: 'none',
-              color: '#888', fontSize: '12px', cursor: 'pointer',
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* Received date display */}
-      {received && stip.received_date && (
-        <span style={{ fontSize: '10px', color: '#6ee7b7' }}>
-          {format(parseISO(stip.received_date), 'M/d/yy')}
-        </span>
-      )}
-
-      {/* Delete button */}
-      <button
-        onClick={() => onRemove(stip.id)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', padding: '2px' }}
-        title="Remove"
-      >
-        <X size={14} />
-      </button>
     </div>
   );
 };

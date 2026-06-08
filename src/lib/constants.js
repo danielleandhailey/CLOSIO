@@ -429,65 +429,72 @@ export const INITIAL_TASKS = {
 };
 
 // ---- Stipulation Templates ----
-export const STIP_TEMPLATES = {
-  // Common
-  Common: [
-    'Application',
-  ],
-  // Loan Purpose
-  Purchase: [
-    'Application',
-    'Copy of Purchase Agreement (if applicable)',
-    'Homeowners insurance declaration page (if applicable)',
-    'Current mortgage statements - other properties (if applicable)',
-    'Most recent HOA statement (if applicable)',
-  ],
-  Refi: [
-    'Application',
-    'Homeowners insurance declaration page',
-    'Most recent utility bill',
-    'Current mortgage statements (all properties)',
-    'Most recent HOA statement (if applicable)',
-  ],
-  // Income Types
-  W2: [
+// Organized stip categories for dropdown with headers
+export const STIP_CATEGORIES = {
+  Income: [
     '2024 & 2025 W-2 forms',
     'Most recent pay stubs (last 30 days)',
-    'Bank statements 12-24 months (all pages)',
-    'Investment/asset statements (if applicable)',
-    'Copy of driver\'s license or photo ID',
-  ],
-  SelfEmployed: [
     '2023 & 2024 personal tax returns (all schedules)',
     '2023 & 2024 business tax returns (if applicable)',
     'K-1s for LLCs on Schedule E (if applicable)',
-    'Business verification - CPA letter, website, or license (if applicable)',
-    'Bank statements 12-24 months (all pages)',
-    'Investment/asset statements (if applicable)',
-    'Copy of driver\'s license or photo ID',
-  ],
-  VA: [
-    'Certificate of Eligibility (COE)',
-    'DD-214 (if discharged)',
+    'Business verification - CPA letter, website, or license',
+    'Social Security Award Letter',
+    'Retirement/pension statements',
     'VA Disability Award Letter (if applicable)',
     'Proof of VA income receipt (if applicable)',
-  ],
-  SSI: [
-    'Social Security Award Letter',
-    'Bank statement (most recent, all pages)',
-  ],
-  Retirement: [
-    'Retirement/pension statements',
-    'Bank statement (most recent, all pages)',
-  ],
-  Rental: [
-    'Lease agreements for rental properties (if applicable)',
+    'Lease agreements for rental properties',
     'Schedule E from tax returns',
   ],
   Assets: [
-    'Bank Statement(s) (most recent, all pages)',
-    '401k, Pension(s), IRA, Stock/Bond, Retirement, Investment statements - most recent quarterly (all that are applicable)',
+    'Bank Statement(s) - most recent 2 months (all pages)',
+    'Bank statements 12-24 months (all pages)',
+    '401k statements - most recent quarterly',
+    'IRA statements - most recent quarterly',
+    'Pension statements - most recent quarterly',
+    'Stock/Bond statements - most recent quarterly',
+    'Investment statements - most recent quarterly',
+    'Gift letter and gift funds documentation',
   ],
+  Property: [
+    'Copy of Purchase Agreement',
+    'Homeowners insurance declaration page',
+    'Most recent HOA statement',
+    'Current mortgage statements (all properties)',
+    'Most recent utility bill',
+    'Property tax bill',
+    'Title commitment',
+    'Appraisal',
+  ],
+  Identification: [
+    'Copy of driver\'s license or photo ID',
+    'Social Security card',
+    'Green card / work authorization',
+    'Certificate of Eligibility (COE) - VA',
+    'DD-214 (if discharged) - VA',
+  ],
+  Additional: [
+    'Application',
+    'Signed disclosures',
+    'Explanation letter',
+    'Divorce decree',
+    'Child support documentation',
+    'Bankruptcy discharge papers',
+    'Other - see notes',
+  ],
+};
+
+// Legacy format for backward compatibility
+export const STIP_TEMPLATES = {
+  Common: ['Application'],
+  Purchase: ['Application', 'Copy of Purchase Agreement', 'Homeowners insurance declaration page'],
+  Refi: ['Application', 'Homeowners insurance declaration page', 'Most recent utility bill'],
+  W2: ['2024 & 2025 W-2 forms', 'Most recent pay stubs (last 30 days)'],
+  SelfEmployed: ['2023 & 2024 personal tax returns (all schedules)', '2023 & 2024 business tax returns (if applicable)'],
+  VA: ['Certificate of Eligibility (COE)', 'DD-214 (if discharged)'],
+  SSI: ['Social Security Award Letter'],
+  Retirement: ['Retirement/pension statements'],
+  Rental: ['Lease agreements for rental properties', 'Schedule E from tax returns'],
+  Assets: ['Bank Statement(s) - most recent 2 months (all pages)'],
 };
 
 export const INCOME_TYPE_OPTIONS = ['W2', 'Self-Employed', 'VA', 'SSI', 'Retirement', 'Rental', 'Mixed'];
