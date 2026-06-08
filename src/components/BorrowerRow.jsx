@@ -721,25 +721,15 @@ const BorrowerRow = ({
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
-        {/* Name */}
-        <span className="borrower-name">
+        {/* Name - click to expand */}
+        <span
+          className="borrower-name"
+          onClick={() => onExpand(borrower.id)}
+          style={{ cursor: 'pointer' }}
+          title="Click to open file"
+        >
           {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
         </span>
-
-        {/* Expand toggle — right after name, before badges */}
-        <button
-          type="button"
-          onClick={() => onExpand(borrower.id)}
-          title="Expand / Collapse"
-          style={{
-            width: '26px', height: '26px', borderRadius: '5px', border: `1px solid ${STAGE_COLORS[borrower.stage]?.bg || '#50507a'}`,
-            background: isExpanded ? STAGE_COLORS[borrower.stage]?.bg : 'var(--surface2)', color: 'var(--text)',
-            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, fontSize: '13px', fontWeight: '900', transition: 'all 0.15s', marginLeft: '8px',
-          }}
-        >
-          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-        </button>
 
         {/* Badges after expand button */}
         {borrower.is_new && (
@@ -764,7 +754,7 @@ const BorrowerRow = ({
           }}
           title="Click to clear"
           onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { substage: null }); }}
-          >STIPS</span>
+          >STIPS NEEDED</span>
         )}
 
         {/* Spacer to push notes to fixed position */}
