@@ -966,12 +966,16 @@ const BorrowerRow = ({
 
         {/* Need button - adds STIPS pill */}
         <span
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            if (borrower.substage === 'Stips Needed') {
-              onUpdate(borrower.id, { substage: null, substage_date: null });
-            } else {
-              onUpdate(borrower.id, { substage: 'Stips Needed', substage_date: new Date().toISOString().split('T')[0] });
+            try {
+              if (borrower.substage === 'Stips Needed') {
+                await onUpdate(borrower.id, { substage: null });
+              } else {
+                await onUpdate(borrower.id, { substage: 'Stips Needed' });
+              }
+            } catch (err) {
+              console.error('Need button error:', err);
             }
           }}
           style={{
