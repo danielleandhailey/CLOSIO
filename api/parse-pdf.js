@@ -18,6 +18,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Server misconfiguration: CLAUDE_API_KEY is missing or empty.' });
   }
 
+  // Debug: show key info
+  const keyStart = ANTHROPIC_API_KEY.substring(0, 15);
+  const keyEnd = ANTHROPIC_API_KEY.substring(ANTHROPIC_API_KEY.length - 6);
+  console.log(`Key: ${keyStart}...${keyEnd}, length: ${ANTHROPIC_API_KEY.length}`);
+
   if (!supabase) {
     return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_KEY' });
   }
@@ -38,8 +43,7 @@ export default async function handler(req, res) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'pdfs-2024-09-25',
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20241022',
