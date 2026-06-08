@@ -1,8 +1,13 @@
-export default async function handler(req, res) {
+export const config = {
+  runtime: 'edge',
+  regions: ['iad1'],
+};
+
+export default async function handler(req) {
   const ANTHROPIC_API_KEY = process.env.CLAUDE_API_KEY;
 
   if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'No API key' });
+    return new Response(JSON.stringify({ error: 'No API key' }), { status: 500 });
   }
 
   try {
@@ -21,13 +26,13 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       status: response.status,
       keyPrefix: ANTHROPIC_API_KEY.substring(0, 20),
       keyLength: ANTHROPIC_API_KEY.length,
       response: data
-    });
+    }), { status: 200 });
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
