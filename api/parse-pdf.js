@@ -42,7 +42,7 @@ export default async function handler(req, res) {
         'anthropic-beta': 'pdfs-2024-09-25',
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 4000,
         messages: [{
           role: 'user',
