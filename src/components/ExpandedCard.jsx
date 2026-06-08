@@ -782,7 +782,104 @@ const ContactAccordion = ({ borrower, role, ops }) => {
   );
 };
 
-// ---- Needs List ----
+// ---- PA Section (Purchase Agreement) ----
+const PASection = ({ borrower, ops }) => {
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef();
+  const pa = borrower.purchase_agreement || {};
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) await uploadPA(file);
+  };
+
+  const uploadPA = async (file) => {
+    try {
+      const path = `${borrower.user_id}/${borrower.id}/pa_${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage.from('Documents').upload(path, file);
+      if (upErr) throw upErr;
+      const { data: signedData } = await supabase.storage.from('Documents').createSignedUrl(path, 60 * 60 * 24 * 365);
+
+      await ops.onUpdate(borrower.id, {
+        purchase_agreement: {
+          file_path: signedData?.signedUrl || '',
+          file_name: file.name,
+          uploaded_at: new Date().toISOString(),
+          purchase_price: pa.purchase_price || '',
+          close_of_escrow: pa.close_of_escrow || '',
+          earnest_money: pa.earnest_money || '',
+        }
+      });
+    } catch (e) {
+      console.error('PA upload error:', e);
+    }
+  };
+
+  return (
+    <div>
+      {/* Drop zone */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current?.click()}
+        style={{
+          padding: '20px', borderRadius: '8px', textAlign: 'center', cursor: 'pointer',
+          background: dragging ? '#3b82f620' : '#fff',
+          border: `2px dashed ${dragging ? '#3b82f6' : '#cbd5e1'}`,
+          marginBottom: '12px',
+        }}
+      >
+        {pa.file_path ? (
+          <div>
+            <div style={{ fontSize: '12px', color: '#22c55e', fontWeight: '600' }}>✓ PA Uploaded</div>
+            <a href={pa.file_path} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#3b82f6' }}>
+              {pa.file_name || 'View PA'}
+            </a>
+          </div>
+        ) : (
+          <div style={{ fontSize: '12px', color: '#64748b' }}>Drop PA here or click to browse</div>
+        )}
+      </div>
+      <input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadPA(e.target.files[0])} />
+
+      {/* PA Fields */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ fontSize: '11px', color: '#64748b', width: '100px' }}>Purchase Price</label>
+          <input
+            type="text"
+            value={pa.purchase_price || ''}
+            onChange={e => ops.onUpdate(borrower.id, { purchase_agreement: { ...pa, purchase_price: e.target.value } })}
+            style={{ flex: 1, background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', color: '#1e293b' }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ fontSize: '11px', color: '#64748b', width: '100px' }}>Close of Escrow</label>
+          <input
+            type="date"
+            value={pa.close_of_escrow || ''}
+            onChange={e => ops.onUpdate(borrower.id, { purchase_agreement: { ...pa, close_of_escrow: e.target.value } })}
+            style={{ flex: 1, background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', color: '#1e293b' }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ fontSize: '11px', color: '#64748b', width: '100px' }}>Earnest Money</label>
+          <input
+            type="text"
+            value={pa.earnest_money || ''}
+            onChange={e => ops.onUpdate(borrower.id, { purchase_agreement: { ...pa, earnest_money: e.target.value } })}
+            style={{ flex: 1, background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', color: '#1e293b' }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ---- Needs List (kept for reference but tab removed) ----
 const StipulationsSection = ({ borrower, ops }) => {
   const [newItem, setNewItem] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
@@ -1806,7 +1903,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     { id: 'terms',    label: 'Loan Terms' },
     { id: 'income',   label: 'Income' },
     { id: 'contacts', label: 'Contacts' },
-    { id: 'stips',    label: 'Needs List' },
+    { id: 'pa',       label: 'PA' },
     { id: 'contingencies', label: 'Contingencies' },
     { id: 'credit',   label: 'Credit Report' },
     { id: 'appraisal', label: 'Appraisal' },
@@ -1828,7 +1925,14 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     <div className="expanded-card">
       {/* Tabs Row */}
       <div className="expanded-tabs">
-        {tabs.map(t => (
+        {tabs.filter(t => {
+          // PA tab only for Purchase types
+          if (t.id === 'pa') {
+            const purpose = (borrower.loan_purpose || borrower.loan_type || '').toLowerCase();
+            return purpose.includes('purchase');
+          }
+          return true;
+        }).map(t => (
           <button key={t.id} type="button" className={`expanded-tab ${openTabs.has(t.id) ? 'active' : ''}`} onClick={() => toggleTab(t.id)}>
             {t.label}
           </button>
@@ -1898,10 +2002,11 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
           </div>
         )}
 
-        {openTabs.has('stips') && (
+        {openTabs.has('pa') && (
           <div style={boxStyle}>
-            <StipulationsSection borrower={borrower} ops={ops} />
-            {closeBtn('stips')}
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📋 Purchase Agreement</div>
+            <PASection borrower={borrower} ops={ops} />
+            {closeBtn('pa')}
           </div>
         )}
 
