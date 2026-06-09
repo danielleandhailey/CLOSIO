@@ -1601,6 +1601,12 @@ const CalcSection = ({ borrower }) => {
   const [extraTerm, setExtraTerm] = useState(30);
   const [extraPayment, setExtraPayment] = useState(200);
 
+  // Blended Rate state (1st mortgage + HELOC/2nd)
+  const [firstBalance, setFirstBalance] = useState(loanAmt);
+  const [firstRate, setFirstRate] = useState(rate);
+  const [secondBalance, setSecondBalance] = useState(50000);
+  const [secondRate, setSecondRate] = useState(9.0);
+
   // VA Funding Fee calc
   const getVAFee = () => {
     if (vaDisability) return 0;
@@ -1661,6 +1667,12 @@ const CalcSection = ({ borrower }) => {
   const monthsSaved = normalMonths - extraResult.months;
   const interestSaved = normalInterest - extraResult.interest;
 
+  // Blended Rate calc
+  const totalBalance = firstBalance + secondBalance;
+  const blendedRate = totalBalance > 0
+    ? ((firstBalance * firstRate) + (secondBalance * secondRate)) / totalBalance
+    : 0;
+
   const addDebt = () => setDebts([...debts, { name: '', balance: 0, payment: 0, rate: 0 }]);
   const updateDebt = (i, field, val) => {
     const updated = [...debts];
@@ -1680,6 +1692,7 @@ const CalcSection = ({ borrower }) => {
         <option value="debt">Debt Consolidation</option>
         <option value="se">Self-Employed Income</option>
         <option value="extra">Extra Payment</option>
+        <option value="blended">Blended Rate</option>
         <option value="va">VA Funding Fee</option>
         <option value="fha">FHA Streamline Seasoning</option>
       </select>
@@ -1832,6 +1845,34 @@ const CalcSection = ({ borrower }) => {
             <div style={{ textAlign: 'center', marginTop: '8px', fontWeight: '700', color: '#047857', fontSize: '13px' }}>
               Save {monthsSaved} months & ${Math.round(interestSaved).toLocaleString()} in interest!
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Blended Rate */}
+      {selectedCalc === 'blended' && (
+        <div style={{ background: '#fef9c3', padding: '12px', borderRadius: '6px', border: '1px solid #fde047' }}>
+          <div style={{ fontWeight: '700', color: '#a16207', marginBottom: '8px' }}>Blended Rate Calculator</div>
+          <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>Combine 1st mortgage + HELOC/2nd to see effective rate</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <label style={labelStyle}>1st Mortgage Balance:
+              <input type="number" value={firstBalance} onChange={e => setFirstBalance(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>1st Mortgage Rate %:
+              <input type="number" step="0.125" value={firstRate} onChange={e => setFirstRate(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>2nd/HELOC Balance:
+              <input type="number" value={secondBalance} onChange={e => setSecondBalance(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>2nd/HELOC Rate %:
+              <input type="number" step="0.125" value={secondRate} onChange={e => setSecondRate(+e.target.value)} style={inputStyle} />
+            </label>
+          </div>
+          <div style={{ marginTop: '10px', padding: '10px', background: '#fef08a', borderRadius: '4px', textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', color: '#64748b' }}>Combined Balance</div>
+            <div style={{ fontSize: '14px', fontWeight: '600' }}>${totalBalance.toLocaleString()}</div>
+            <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>Blended Rate</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#a16207' }}>{blendedRate.toFixed(3)}%</div>
           </div>
         </div>
       )}
