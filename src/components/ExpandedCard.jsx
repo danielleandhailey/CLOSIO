@@ -1645,16 +1645,16 @@ const CalcSection = ({ borrower }) => {
       <select value={selectedCalc} onChange={e => setSelectedCalc(e.target.value)}
         style={{ padding: '8px', borderRadius: '6px', border: '1px solid #3b82f6', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
         <option value="">Select Calculator...</option>
-        <option value="va">🎖️ VA Funding Fee</option>
-        <option value="fha">🏠 FHA Streamline Seasoning</option>
-        <option value="debt">💳 Debt Consolidation</option>
-        <option value="se">📊 Self-Employed Income</option>
+        <option value="debt">Debt Consolidation</option>
+        <option value="se">Self-Employed Income</option>
+        <option value="va">VA Funding Fee</option>
+        <option value="fha">FHA Streamline Seasoning</option>
       </select>
 
       {/* VA Funding Fee */}
       {selectedCalc === 'va' && (
         <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
-          <div style={{ fontWeight: '700', color: '#166534', marginBottom: '8px' }}>🎖️ VA Funding Fee Calculator</div>
+          <div style={{ fontWeight: '700', color: '#166534', marginBottom: '8px' }}>VA Funding Fee Calculator</div>
           <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>Auto-filled from borrower: ${loanAmt.toLocaleString()}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <label style={labelStyle}>Loan Amount:
@@ -1680,7 +1680,7 @@ const CalcSection = ({ borrower }) => {
       {/* FHA Seasoning */}
       {selectedCalc === 'fha' && (
         <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '6px', border: '1px solid #fde68a' }}>
-          <div style={{ fontWeight: '700', color: '#92400e', marginBottom: '8px' }}>🏠 FHA Streamline Seasoning</div>
+          <div style={{ fontWeight: '700', color: '#92400e', marginBottom: '8px' }}>FHA Streamline Seasoning</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <label style={labelStyle}>Original Close Date:
               <input type="date" value={fhaCloseDate} onChange={e => setFhaCloseDate(e.target.value)} style={inputStyle} />
@@ -1707,7 +1707,7 @@ const CalcSection = ({ borrower }) => {
       {/* Debt Consolidation */}
       {selectedCalc === 'debt' && (
         <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '6px', border: '1px solid #c4b5fd' }}>
-          <div style={{ fontWeight: '700', color: '#5b21b6', marginBottom: '8px' }}>💳 Debt Consolidation Calculator</div>
+          <div style={{ fontWeight: '700', color: '#5b21b6', marginBottom: '8px' }}>Debt Consolidation Calculator</div>
           <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>Add debts to consolidate:</div>
           {debts.map((d, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '4px', marginBottom: '4px' }}>
@@ -1741,7 +1741,7 @@ const CalcSection = ({ borrower }) => {
       {/* Self-Employed Income */}
       {selectedCalc === 'se' && (
         <div style={{ background: '#fce7f3', padding: '12px', borderRadius: '6px', border: '1px solid #f9a8d4' }}>
-          <div style={{ fontWeight: '700', color: '#9d174d', marginBottom: '8px' }}>📊 Self-Employed Income Calculator</div>
+          <div style={{ fontWeight: '700', color: '#9d174d', marginBottom: '8px' }}>Self-Employed Income Calculator</div>
           <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>24-month average method:</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <label style={labelStyle}>Year 1 Net Income:
