@@ -256,27 +256,30 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
               <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
                 Outstanding ({outstanding.length})
               </div>
-              {/* Select All box - outline only, above yellow boxes */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                <button
-                  onClick={async () => {
-                    const today = new Date().toISOString().split('T')[0];
-                    for (const s of outstanding) {
-                      await onMarkReceived(s.id, today);
-                    }
-                  }}
-                  style={{
-                    width: '22px', height: '22px', borderRadius: '4px',
-                    background: 'none', border: '2px solid #166534', cursor: 'pointer',
-                  }}
-                  title="Select All"
-                />
-              </div>
-              {outstanding.map(s => (
+              {outstanding.map((s, idx) => (
                 <div key={s.id} style={{
                   display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
                   background: '#1f1f0d', borderRadius: '6px', marginBottom: '4px',
                 }}>
+                  {/* Select All box on first row only */}
+                  {idx === 0 ? (
+                    <button
+                      onClick={async () => {
+                        const today = new Date().toISOString().split('T')[0];
+                        for (const stip of outstanding) {
+                          await onMarkReceived(stip.id, today);
+                        }
+                      }}
+                      style={{
+                        width: '22px', height: '22px', borderRadius: '4px',
+                        background: 'none', border: '2px solid #166534', cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                      title="Select All"
+                    />
+                  ) : (
+                    <div style={{ width: '22px', flexShrink: 0 }} />
+                  )}
                   {/* Checkbox - click to mark received */}
                   <button
                     onClick={() => handleCheckbox(s)}
