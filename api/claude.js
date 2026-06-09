@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        model: req.body.model || 'claude-sonnet-4-20250514',
+        model: req.body.model || 'claude-3-haiku-20240307',
         max_tokens: req.body.max_tokens || 2000,
         system: req.body.system,
         messages: req.body.messages,
