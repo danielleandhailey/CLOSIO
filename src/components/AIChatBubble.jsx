@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Loader } from 'lucide-react';
 import { claudeService } from '../lib/claude';
 import { formatCurrency, formatDate, formatRate } from '../lib/utils';
+import { supabase } from '../lib/supabase';
 
 const buildPipelineContext = (borrowers) => {
   if (!borrowers || borrowers.length === 0) return 'No borrowers in pipeline.';
@@ -22,8 +23,23 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [matrixContext, setMatrixContext] = useState('');
   const bottomRef = useRef();
   const inputRef = useRef();
+
+  // Load matrix data on mount
+  useEffect(() => {
+    const loadMatrix = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('lender_matrices').select('lender_name, ai_index').eq('user_id', user.id);
+      if (data && data.length > 0) {
+        const ctx = data.map(m => `=== ${m.lender_name} ===\n${m.ai_index || ''}`).join('\n\n');
+        setMatrixContext(ctx);
+      }
+    };
+    loadMatrix();
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,9 +55,10 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
     setLoading(true);
 
     try {
-      const context = buildPipelineContext(borrowers);
+      const pipelineCtx = buildPipelineContext(borrowers);
+      const fullContext = `PIPELINE:\n${pipelineCtx}\n\nLENDER GUIDELINES:\n${matrixContext || 'No lender matrices uploaded yet.'}`;
       const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }));
-      const reply = await claudeService.chat(history, context);
+      const reply = await claudeService.chat(history, fullContext);
 
       // Check for navigation commands
       if (reply.includes('NAVIGATE:')) {
