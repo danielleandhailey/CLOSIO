@@ -1220,49 +1220,58 @@ West Capital Lending Team`;
               />
             </div>
             <div style={{ overflow: 'auto', flex: 1 }}>
-              {Object.entries(STIP_CATEGORIES).map(([category, items]) => {
-                const filtered = items.filter(item =>
-                  !existingItems.includes(item) &&
-                  (!search || item.toLowerCase().includes(search.toLowerCase()))
-                );
-                if (filtered.length === 0) return null;
-                return (
-                  <div key={category}>
-                    <div style={{
-                      padding: '6px 10px', background: '#1e293b', color: '#94a3b8',
-                      fontSize: '9px', fontWeight: '700', textTransform: 'uppercase',
-                      position: 'sticky', top: 0,
-                    }}>
-                      {category}
-                    </div>
-                    {filtered.map((item, i) => (
-                      <div
-                        key={i}
-                        onClick={() => addStip(item)}
-                        style={{
-                          padding: '6px 10px 6px 20px', cursor: 'pointer', fontSize: '11px',
-                          color: '#ccc', borderBottom: '1px solid #222',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        {item}
+              {(() => {
+                let hasMatches = false;
+                const elements = Object.entries(STIP_CATEGORIES).map(([category, items]) => {
+                  const filtered = items.filter(item =>
+                    !existingItems.includes(item) &&
+                    (!search || item.toLowerCase().includes(search.toLowerCase()))
+                  );
+                  if (filtered.length === 0) return null;
+                  hasMatches = true;
+                  return (
+                    <div key={category}>
+                      <div style={{
+                        padding: '6px 10px', background: '#1e293b', color: '#94a3b8',
+                        fontSize: '9px', fontWeight: '700', textTransform: 'uppercase',
+                        position: 'sticky', top: 0,
+                      }}>
+                        {category}
                       </div>
-                    ))}
-                  </div>
+                      {filtered.map((item, i) => (
+                        <div
+                          key={i}
+                          onClick={() => addStip(item)}
+                          style={{
+                            padding: '6px 10px 6px 20px', cursor: 'pointer', fontSize: '11px',
+                            color: '#ccc', borderBottom: '1px solid #222',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                });
+                return (
+                  <>
+                    {elements}
+                    {search.trim() && !hasMatches && (
+                      <div
+                        onClick={() => addStip(search.trim())}
+                        style={{
+                          padding: '8px 10px', cursor: 'pointer', fontSize: '11px',
+                          color: '#a78bfa', background: '#1a1a23', borderTop: '1px solid #333',
+                        }}
+                      >
+                        + Add "{search.trim()}" as custom
+                      </div>
+                    )}
+                  </>
                 );
-              })}
-              {search.trim() && (
-                <div
-                  onClick={() => addStip(search.trim())}
-                  style={{
-                    padding: '8px 10px', cursor: 'pointer', fontSize: '11px',
-                    color: '#a78bfa', background: '#1a1a23', borderTop: '1px solid #333',
-                  }}
-                >
-                  + Add "{search.trim()}" as custom
-                </div>
-              )}
+              })()}
             </div>
           </div>
         )}

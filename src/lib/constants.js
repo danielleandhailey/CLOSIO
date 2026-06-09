@@ -27,10 +27,10 @@ export const STAGES_BY_TYPE = {
 };
 
 export const STAGE_COLORS = {
-  'Working':       { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
+  'Working':       { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
   'Stips Needed':  { bg: '#fbbf24', text: '#000', light: '#fef3c7' },
   'Credit Upgrade':{ bg: '#ec4899', text: '#fff', light: '#fce7f3' },
-  'Shopping':      { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
+  'Shopping':      { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
   'Processing':    { bg: '#f59e0b', text: '#fff', light: '#fef3c7' },
   'Funded':        { bg: '#10b981', text: '#fff', light: '#d1fae5' },
   'Closed/Paid':   { bg: '#059669', text: '#fff', light: '#d1fae5' },
@@ -433,7 +433,7 @@ export const INITIAL_TASKS = {
 export const STIP_CATEGORIES = {
   Income: [
     '2024 & 2025 W-2 forms',
-    'Most recent pay stubs (last 30 days)',
+    'Most recent paystubs (last 30 days)',
     '2023 & 2024 personal tax returns (all schedules)',
     '2023 & 2024 business tax returns (if applicable)',
     'K-1s for LLCs on Schedule E (if applicable)',
