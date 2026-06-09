@@ -170,7 +170,7 @@ body {
   border-radius: var(--radius);
   padding: 4px 0;
   min-width: 160px;
-  z-index: 100;
+  z-index: 9999;
   box-shadow: var(--shadow-lg);
 }
 .nav-dropdown:hover .dropdown-menu {

@@ -550,20 +550,16 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </div>
 
-        {/* 10YR TREASURY */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '85px', border: '1px solid var(--border)', cursor: 'pointer' }}
-          onClick={() => window.open('https://www.cnbc.com/quotes/US10Y', '_blank')}
-          title="Click for live 10yr Treasury (CNBC real-time)">
-          <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>10YR</div>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: '#f59e0b' }}>{treasuryRate}</div>
-        </div>
-
-        {/* TUNES - Pandora */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '65px', border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'center' }}
-          onClick={() => window.open('https://www.pandora.com/station', '_blank')}
-          title="Open Pandora">
-          <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>TUNES</div>
-          <div style={{ fontSize: '15px' }}>🎵</div>
+        {/* 10YR TREASURY + TUNES combined */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '85px', border: '1px solid var(--border)' }}>
+          <div style={{ cursor: 'pointer', marginBottom: '6px' }} onClick={() => window.open('https://www.cnbc.com/quotes/US10Y', '_blank')} title="Click for live 10yr Treasury">
+            <div style={{ fontSize: '8px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase' }}>10YR</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: '#f59e0b' }}>{treasuryRate}</div>
+          </div>
+          <div style={{ cursor: 'pointer', borderTop: '1px solid var(--border)', paddingTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => window.open('https://www.pandora.com/station', '_blank')} title="Open Pandora">
+            <span style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>TUNES</span>
+            <span style={{ fontSize: '13px' }}>🎵</span>
+          </div>
         </div>
 
         {/* 12. DONUT CHART */}
