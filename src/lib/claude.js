@@ -1,4 +1,4 @@
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const CLAUDE_MODEL = 'claude-opus-4-5';
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
