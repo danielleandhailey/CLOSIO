@@ -106,9 +106,9 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
           {/* Dropdown with search + category headers */}
           {showDropdown && (
             <div style={{
-              position: 'absolute', top: '100%', left: '20px', right: '20px',
-              background: '#0d0d12', border: '1px solid #444', borderRadius: '6px',
-              maxHeight: '450px', overflow: 'hidden', zIndex: 10, marginTop: '4px',
+              position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)',
+              width: '450px', background: '#0d0d12', border: '1px solid #444', borderRadius: '6px',
+              maxHeight: '60vh', overflow: 'hidden', zIndex: 9999,
               display: 'flex', flexDirection: 'column',
             }}>
               {/* Search box */}
