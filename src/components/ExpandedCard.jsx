@@ -3010,23 +3010,23 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
   };
 
   const tabs = [
-    { id: 'notes',    label: 'Notes & Tasks' },
-    { id: 'docs',     label: 'Documents' },
-    { id: 'borrowers', label: 'Borrowers' },
-    { id: 'terms',    label: 'Loan Terms' },
+    { id: 'notes',    label: 'NOTES & TASKS' },
+    { id: 'docs',     label: 'DOCUMENTS' },
+    { id: 'borrowers', label: 'BORROWERS' },
+    { id: 'terms',    label: 'LOAN TERMS' },
     { id: 'needs',    label: 'NEEDS' },
-    { id: 'income',   label: 'Income' },
-    { id: 'contacts', label: 'Contacts' },
+    { id: 'income',   label: 'INCOME' },
+    { id: 'contacts', label: 'CONTACTS' },
     { id: 'pa',       label: 'PA' },
-    { id: 'contingencies', label: 'Contingencies' },
-    { id: 'credit',   label: 'Credit Report' },
-    { id: 'appraisal', label: 'Appraisal' },
-    { id: 'preapproval', label: 'Preapproval' },
-    { id: 'calc',     label: 'Calc' },
+    { id: 'contingencies', label: 'CONTINGENCIES' },
+    { id: 'credit',   label: 'CREDIT REPORT' },
+    { id: 'appraisal', label: 'APPRAISAL' },
+    { id: 'preapproval', label: 'PREAPPROVAL' },
+    { id: 'calc',     label: 'CALC' },
     { id: 'subhub',   label: 'SUB HUB' },
     { id: 'getpaid',  label: 'GET PAID' },
-    { id: 'history',  label: 'History' },
-    { id: 'notifyloa', label: 'Notify LOA' },
+    { id: 'history',  label: 'HISTORY' },
+    { id: 'notifyloa', label: 'NOTIFY LOA' },
   ];
 
   const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '400px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '200px' };

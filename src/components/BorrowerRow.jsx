@@ -1327,8 +1327,8 @@ const BorrowerRow = ({
             <LocalTime timezone={borrower.timezone} />
           </div>
 
-          {/* Contact methods - pushed right to Income area */}
-          <div style={{ display: 'flex', gap: '36px', marginLeft: '300px' }}>
+          {/* Contact methods - pushed right */}
+          <div style={{ display: 'flex', gap: '36px', marginLeft: 'auto', marginRight: '20px' }}>
             <a
               href={borrower.phone ? `tel:${borrower.phone}` : '#'}
               onClick={e => e.stopPropagation()}
