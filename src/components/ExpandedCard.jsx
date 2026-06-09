@@ -1595,6 +1595,12 @@ const CalcSection = ({ borrower }) => {
   const [year2Income, setYear2Income] = useState(0);
   const [addBacks, setAddBacks] = useState(0);
 
+  // Extra Payment state
+  const [extraLoanAmt, setExtraLoanAmt] = useState(loanAmt);
+  const [extraRate, setExtraRate] = useState(rate);
+  const [extraTerm, setExtraTerm] = useState(30);
+  const [extraPayment, setExtraPayment] = useState(200);
+
   // VA Funding Fee calc
   const getVAFee = () => {
     if (vaDisability) return 0;
@@ -1629,6 +1635,32 @@ const CalcSection = ({ borrower }) => {
   const qualifyingIncome = avgIncome + (addBacks || 0);
   const monthlyIncome = qualifyingIncome / 12;
 
+  // Extra Payment calc
+  const monthlyRate = extraRate / 100 / 12;
+  const normalPayment = extraLoanAmt > 0 ? (extraLoanAmt * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -extraTerm * 12)) : 0;
+  const normalMonths = extraTerm * 12;
+  const normalInterest = (normalPayment * normalMonths) - extraLoanAmt;
+
+  // Calculate payoff with extra payment
+  const calcExtraPayoff = () => {
+    if (extraLoanAmt <= 0 || extraRate <= 0) return { months: 0, interest: 0 };
+    let balance = extraLoanAmt;
+    let months = 0;
+    let totalInterest = 0;
+    const totalPayment = normalPayment + extraPayment;
+    while (balance > 0 && months < 360) {
+      const interestThisMonth = balance * monthlyRate;
+      totalInterest += interestThisMonth;
+      const principalThisMonth = Math.min(totalPayment - interestThisMonth, balance);
+      balance -= principalThisMonth;
+      months++;
+    }
+    return { months, interest: totalInterest };
+  };
+  const extraResult = calcExtraPayoff();
+  const monthsSaved = normalMonths - extraResult.months;
+  const interestSaved = normalInterest - extraResult.interest;
+
   const addDebt = () => setDebts([...debts, { name: '', balance: 0, payment: 0, rate: 0 }]);
   const updateDebt = (i, field, val) => {
     const updated = [...debts];
@@ -1647,6 +1679,7 @@ const CalcSection = ({ borrower }) => {
         <option value="">Select Calculator...</option>
         <option value="debt">Debt Consolidation</option>
         <option value="se">Self-Employed Income</option>
+        <option value="extra">Extra Payment</option>
         <option value="va">VA Funding Fee</option>
         <option value="fha">FHA Streamline Seasoning</option>
       </select>
@@ -1759,6 +1792,45 @@ const CalcSection = ({ borrower }) => {
             <div>+ Add-backs: <strong>${(addBacks || 0).toLocaleString()}</strong></div>
             <div style={{ fontWeight: '700', color: '#9d174d', fontSize: '13px', marginTop: '4px' }}>
               Monthly Qualifying: ${Math.round(monthlyIncome).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extra Payment */}
+      {selectedCalc === 'extra' && (
+        <div style={{ background: '#ecfdf5', padding: '12px', borderRadius: '6px', border: '1px solid #6ee7b7' }}>
+          <div style={{ fontWeight: '700', color: '#047857', marginBottom: '8px' }}>Extra Payment Calculator</div>
+          <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>Auto-filled from borrower: ${loanAmt.toLocaleString()} @ {rate}%</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <label style={labelStyle}>Loan Amount:
+              <input type="number" value={extraLoanAmt} onChange={e => setExtraLoanAmt(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>Interest Rate %:
+              <input type="number" step="0.125" value={extraRate} onChange={e => setExtraRate(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>Loan Term (years):
+              <input type="number" value={extraTerm} onChange={e => setExtraTerm(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>Extra Monthly Payment:
+              <input type="number" value={extraPayment} onChange={e => setExtraPayment(+e.target.value)} style={inputStyle} />
+            </label>
+          </div>
+          <div style={{ marginTop: '10px', padding: '8px', background: '#d1fae5', borderRadius: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', textAlign: 'center' }}>
+              <div>
+                <div style={{ fontSize: '10px', color: '#64748b' }}>Normal Payoff</div>
+                <div><strong>{normalMonths} months</strong></div>
+                <div style={{ fontSize: '10px' }}>${Math.round(normalInterest).toLocaleString()} interest</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '10px', color: '#64748b' }}>With Extra ${extraPayment}/mo</div>
+                <div><strong>{extraResult.months} months</strong></div>
+                <div style={{ fontSize: '10px' }}>${Math.round(extraResult.interest).toLocaleString()} interest</div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '8px', fontWeight: '700', color: '#047857', fontSize: '13px' }}>
+              Save {monthsSaved} months & ${Math.round(interestSaved).toLocaleString()} in interest!
             </div>
           </div>
         </div>
