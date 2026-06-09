@@ -1246,8 +1246,9 @@ West Capital Lending Team`;
         completed: false,
       }]);
       if (error) throw error;
-      setNotifyStatus('✓ Task created for Hailey!');
-      setTimeout(() => setNotifyStatus(null), 3000);
+      const now = new Date();
+      const stamp = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+      setNotifyStatus(`✓ Task created for Hailey! (${stamp})`);
     } catch (e) {
       setNotifyStatus('Error: ' + e.message);
     }
@@ -1672,8 +1673,9 @@ const NotifyLOASection = ({ borrower }) => {
     const subject = `File Update: ${borrower.name}`;
     const body = message || `Please review the file for ${borrower.name}.`;
     window.open(`mailto:${LOA_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-    setStatus('✓ Email opened!');
-    setTimeout(() => setStatus(null), 3000);
+    const now = new Date();
+    const stamp = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    setStatus(`✓ Email opened! (${stamp})`);
   };
 
   const createTask = async () => {
@@ -1689,8 +1691,9 @@ const NotifyLOASection = ({ borrower }) => {
         completed: false,
       }]);
       if (error) throw error;
-      setStatus('✓ Task created for LOA!');
-      setTimeout(() => setStatus(null), 3000);
+      const now = new Date();
+      const stamp = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+      setStatus(`✓ Task created for LOA! (${stamp})`);
     } catch (e) {
       setStatus('Error: ' + e.message);
     }
@@ -1698,9 +1701,10 @@ const NotifyLOASection = ({ borrower }) => {
 
   const bothActions = async () => {
     await createTask();
+    const now = new Date();
+    const stamp = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
     sendEmail();
-    setStatus('✓ Task created + Email opened!');
-    setTimeout(() => setStatus(null), 3000);
+    setStatus(`✓ Task + Email done! (${stamp})`);
   };
 
   return (
