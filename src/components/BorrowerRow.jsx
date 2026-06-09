@@ -253,11 +253,8 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
           {/* Outstanding */}
           {outstanding.length > 0 && (
             <div style={{ padding: '8px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase' }}>
-                  Outstanding ({outstanding.length})
-                </div>
-                {/* Select All button */}
+              {/* Select All box */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
                 <button
                   onClick={async () => {
                     const today = new Date().toISOString().split('T')[0];
@@ -266,13 +263,17 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
                     }
                   }}
                   style={{
-                    padding: '3px 8px', fontSize: '9px', fontWeight: '600',
-                    background: '#166534', color: '#a7f3d0', border: 'none',
-                    borderRadius: '4px', cursor: 'pointer',
+                    width: '22px', height: '22px', borderRadius: '4px',
+                    background: '#166534', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
+                  title="Select All"
                 >
-                  ✓ Select All
+                  <Check size={14} style={{ color: '#86efac' }} />
                 </button>
+              </div>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                Outstanding ({outstanding.length})
               </div>
               {outstanding.map(s => (
                 <div key={s.id} style={{
@@ -304,7 +305,7 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
           {/* Received - strikethrough, softer muted greens */}
           {received.length > 0 && (
             <div style={{ padding: '8px 20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: '#6b9b6b', marginBottom: '8px', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#6b9b6b', marginBottom: '8px', textTransform: 'uppercase', textAlign: 'center' }}>
                 Received ({received.length})
               </div>
               {received.map(s => (
