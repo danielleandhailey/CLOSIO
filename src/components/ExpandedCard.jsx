@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Plus, X, Check, ChevronDown, ChevronRight, FileText, Upload } from 'lucide-react';
-import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES, STIP_TEMPLATES, EMPLOYMENT_TYPES, INCOME_TYPES } from '../lib/constants';
+import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES, STIP_TEMPLATES, STIP_CATEGORIES, EMPLOYMENT_TYPES, INCOME_TYPES } from '../lib/constants';
 import { formatDate, formatCurrency, formatRate, calcPI, calcLTV, taskUrgency, urgencyColor } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { claudeService } from '../lib/claude';
@@ -1268,33 +1268,6 @@ West Capital Lending Team`;
         )}
       </div>
 
-      {/* Quick actions */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        <button onClick={copyEmail} style={{
-          padding: '8px 12px', background: '#166534', color: '#fff', border: 'none',
-          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
-        }}>
-          📧 Copy Email
-        </button>
-        <button onClick={copyText} style={{
-          padding: '8px 12px', background: '#1d4ed8', color: '#fff', border: 'none',
-          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
-        }}>
-          💬 Copy Text
-        </button>
-        <button onClick={notifyHailey} style={{
-          padding: '8px 12px', background: '#9333ea', color: '#fff', border: 'none',
-          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
-        }}>
-          🔔 Notify Hailey
-        </button>
-        {notifyStatus && (
-          <span style={{ fontSize: '11px', color: notifyStatus.includes('✓') ? '#22c55e' : '#ef4444', alignSelf: 'center' }}>
-            {notifyStatus}
-          </span>
-        )}
-      </div>
-
       {/* Outstanding stips */}
       <div>
         <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', marginBottom: '6px', textTransform: 'uppercase', textAlign: 'center' }}>
@@ -1364,6 +1337,33 @@ West Capital Lending Team`;
           </div>
         </div>
       )}
+
+      {/* Quick actions - below received */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <button onClick={copyEmail} style={{
+          padding: '8px 12px', background: '#166534', color: '#fff', border: 'none',
+          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+        }}>
+          📧 Copy Email
+        </button>
+        <button onClick={copyText} style={{
+          padding: '8px 12px', background: '#1d4ed8', color: '#fff', border: 'none',
+          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+        }}>
+          💬 Copy Text
+        </button>
+        <button onClick={notifyHailey} style={{
+          padding: '8px 12px', background: '#9333ea', color: '#fff', border: 'none',
+          borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+        }}>
+          🔔 Notify Hailey
+        </button>
+        {notifyStatus && (
+          <span style={{ fontSize: '11px', color: notifyStatus.includes('✓') ? '#22c55e' : '#ef4444', alignSelf: 'center' }}>
+            {notifyStatus}
+          </span>
+        )}
+      </div>
 
       {/* Email preview */}
       <div style={{ marginTop: 'auto' }}>
@@ -2168,9 +2168,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
   const tabs = [
     { id: 'notes',    label: 'Notes & Tasks' },
     { id: 'docs',     label: 'Documents' },
-    { id: 'needs',    label: 'Needs' },
     { id: 'borrowers', label: 'Borrowers' },
     { id: 'terms',    label: 'Loan Terms' },
+    { id: 'needs',    label: 'NEEDS' },
     { id: 'income',   label: 'Income' },
     { id: 'contacts', label: 'Contacts' },
     { id: 'pa',       label: 'PA' },
