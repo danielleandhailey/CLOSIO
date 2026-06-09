@@ -85,6 +85,11 @@ export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
         if (a.is_duplicate && !b.is_duplicate) return -1;
         if (!a.is_duplicate && b.is_duplicate) return 1;
         return stageIdx(a.stage) - stageIdx(b.stage);
+      case 'favorites':
+        // Favorites first (is_favorite = true)
+        if (a.is_favorite && !b.is_favorite) return -1;
+        if (!a.is_favorite && b.is_favorite) return 1;
+        return stageIdx(a.stage) - stageIdx(b.stage);
       case 'coe_date':
         if (!a.coe_date && !b.coe_date) return 0;
         if (!a.coe_date) return 1;

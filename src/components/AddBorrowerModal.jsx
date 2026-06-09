@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { STAGES, LENDER_OPTIONS, LOAN_TYPE_OPTIONS } from '../lib/constants';
+import { supabase } from '../lib/supabase';
 
 const AddBorrowerModal = ({ onClose, onSave }) => {
   const [form, setForm] = useState({
@@ -13,6 +14,8 @@ const AddBorrowerModal = ({ onClose, onSave }) => {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
+  const [forceAdd, setForceAdd] = useState(false);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -20,6 +23,24 @@ const AddBorrowerModal = ({ onClose, onSave }) => {
     if (!form.name.trim()) { setError('Borrower name is required'); return; }
     setSaving(true);
     try {
+      // Check for duplicates by name, phone, or email (unless user confirmed)
+      if (!forceAdd) {
+        const checks = [];
+        if (form.name) checks.push(`name.ilike.%${form.name.trim()}%`);
+        if (form.phone) checks.push(`phone.eq.${form.phone.trim()}`);
+        if (form.email) checks.push(`email.ilike.${form.email.trim()}`);
+
+        const { data: existing } = await supabase
+          .from('borrowers')
+          .select('id, name, phone, email, stage')
+          .or(checks.join(','));
+
+        if (existing && existing.length > 0) {
+          setDuplicateWarning(existing);
+          setSaving(false);
+          return;
+        }
+      }
       // Build payload with only valid DB columns
       const payload = {
         name: form.name,
@@ -62,6 +83,27 @@ const AddBorrowerModal = ({ onClose, onSave }) => {
         {error && (
           <div style={{ background: '#fee2e2', color: '#991b1b', padding: '8px 12px', borderRadius: '5px', marginBottom: '12px', fontSize: '12px' }}>
             {error}
+          </div>
+        )}
+
+        {duplicateWarning && (
+          <div style={{ background: '#fef3c7', border: '2px solid #f59e0b', color: '#92400e', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontSize: '12px' }}>
+            <div style={{ fontWeight: '700', marginBottom: '8px' }}>⚠️ Possible Duplicate Found!</div>
+            {duplicateWarning.map(d => (
+              <div key={d.id} style={{ marginBottom: '4px' }}>
+                <strong>{d.name}</strong> - {d.stage} {d.phone && `| ${d.phone}`} {d.email && `| ${d.email}`}
+              </div>
+            ))}
+            <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+              <button onClick={() => { setForceAdd(true); setDuplicateWarning(null); }}
+                style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>
+                Add Anyway
+              </button>
+              <button onClick={() => { setDuplicateWarning(null); }}
+                style={{ background: '#6b7280', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 

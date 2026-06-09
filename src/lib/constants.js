@@ -65,6 +65,7 @@ export const PRESET_TAGS = [
 
 export const SORT_OPTIONS = [
   { value: 'stage',         label: 'Stage' },
+  { value: 'favorites',     label: 'Favorites' },
   { value: 'first_name',    label: 'First Name' },
   { value: 'last_name',     label: 'Last Name' },
   { value: 'new',           label: 'New' },
