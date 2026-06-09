@@ -27,10 +27,10 @@ export const STAGES_BY_TYPE = {
 };
 
 export const STAGE_COLORS = {
-  'Working':       { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
+  'Working':       { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
   'Stips Needed':  { bg: '#fbbf24', text: '#000', light: '#fef3c7' },
   'Credit Upgrade':{ bg: '#ec4899', text: '#fff', light: '#fce7f3' },
-  'Shopping':      { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
+  'Shopping':      { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
   'Processing':    { bg: '#f59e0b', text: '#fff', light: '#fef3c7' },
   'Funded':        { bg: '#10b981', text: '#fff', light: '#d1fae5' },
   'Closed/Paid':   { bg: '#059669', text: '#fff', light: '#d1fae5' },
