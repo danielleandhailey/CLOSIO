@@ -200,7 +200,7 @@ const PipelinePage = ({ borrowers, ops }) => {
           <div className="dropdown-menu" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>
             <button onClick={() => window.open('https://www.redfin.com', '_blank')}>Redfin</button>
-            <button onClick={() => window.open('https://marketinghub.com', '_blank')}>Marketing Hub</button>
+            <button onClick={() => window.open('https://app.rocketpro.com/property-hub', '_blank')}>Property Hub</button>
             <button onClick={() => window.open('https://v3.titlepro247.com/Account', '_blank')}>TitlePro247</button>
             <button onClick={() => window.open('https://homeinsurance.wcl.com', '_blank')}>Home Insurance Lookup</button>
             <button onClick={() => window.open('https://www.fhfa.gov/DataTools/Downloads/Pages/Conforming-Loan-Limit.aspx', '_blank')}>FHFA Loan Limits</button>
