@@ -195,7 +195,7 @@ const PipelinePage = ({ borrowers, ops }) => {
 
         <div style={{ position: 'relative', marginLeft: 'auto' }} className="nav-dropdown">
           <button type="button" className="btn btn-ghost">
-            Property Lookup ▾
+            Property Hub ▾
           </button>
           <div className="dropdown-menu" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             <button onClick={() => window.open('https://zillow.com', '_blank')}>Zillow</button>

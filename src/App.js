@@ -256,6 +256,9 @@ const AppInner = () => {
               Resources ▾
             </button>
             <div className="dropdown-menu">
+              <button onClick={() => window.open('https://www.nmlsconsumeraccess.org/', '_blank')}>NMLS</button>
+              <button onClick={() => window.open('https://oncoursehome.com/', '_blank')}>OnCourse</button>
+              <button onClick={() => window.open('https://leadmailbox.com/', '_blank')}>Lead Mailbox</button>
             </div>
           </div>
         </div>

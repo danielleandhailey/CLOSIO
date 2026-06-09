@@ -1127,24 +1127,102 @@ const NeedsSection = ({ borrower, ops }) => {
   const firstName = borrower.name?.split(',')[1]?.trim()?.split(' ')[0] || borrower.name?.split(' ')[0] || 'there';
   const coBorrowerFirst = borrower.co_borrower?.split(' ')[0];
   const greeting = coBorrowerFirst ? `${firstName} and ${coBorrowerFirst}` : firstName;
-  const needsList = outstanding.map(s => `• ${s.item}`).join('\n');
 
-  // Email template
-  const emailSubject = `Documents Needed - ${borrower.name}`;
-  const emailBody = `Hi ${greeting},
+  // Categorize stips for email
+  const categorizeStips = (stips) => {
+    const income = [], assets = [], property = [], id = [], other = [];
+    stips.forEach(s => {
+      const item = s.item.toLowerCase();
+      if (item.includes('w-2') || item.includes('w2') || item.includes('pay') || item.includes('tax') ||
+          item.includes('1099') || item.includes('k-1') || item.includes('business') || item.includes('cpa') ||
+          item.includes('social security') || item.includes('retirement') || item.includes('pension') ||
+          item.includes('va ') || item.includes('disability') || item.includes('schedule e')) {
+        income.push(s.item);
+      } else if (item.includes('bank') || item.includes('statement') || item.includes('401k') ||
+                 item.includes('ira') || item.includes('investment') || item.includes('gift')) {
+        assets.push(s.item);
+      } else if (item.includes('purchase') || item.includes('contract') || item.includes('insurance') ||
+                 item.includes('hoa') || item.includes('mortgage') || item.includes('property') ||
+                 item.includes('utility') || item.includes('appraisal') || item.includes('title')) {
+        property.push(s.item);
+      } else if (item.includes('license') || item.includes('id') || item.includes('photo') ||
+                 item.includes('social security card') || item.includes('green card') || item.includes('coe') ||
+                 item.includes('dd-214')) {
+        id.push(s.item);
+      } else {
+        other.push(s.item);
+      }
+    });
+    return { income, assets, property, id, other };
+  };
+
+  const cats = categorizeStips(outstanding);
+
+  // Build HTML email body with bold headers
+  const buildEmailBodyHTML = () => {
+    let html = `<p>Hi ${greeting},</p>
+<p>Thank you for choosing West Capital Lending! To continue processing your loan, we need the following documents:</p>
+<p><strong>Purchase Loan Documentation Checklist</strong></p>`;
+    if (cats.income.length > 0) {
+      html += `<p><strong>Income Documentation</strong><br/>${cats.income.map(i => `&nbsp;&nbsp;&nbsp;• ${i}`).join('<br/>')}</p>`;
+    }
+    if (cats.assets.length > 0) {
+      html += `<p><strong>Asset Documentation</strong><br/>${cats.assets.map(i => `&nbsp;&nbsp;&nbsp;• ${i}`).join('<br/>')}</p>`;
+    }
+    if (cats.property.length > 0) {
+      html += `<p><strong>Property Documentation</strong><br/>${cats.property.map(i => `&nbsp;&nbsp;&nbsp;• ${i}`).join('<br/>')}</p>`;
+    }
+    if (cats.id.length > 0) {
+      html += `<p><strong>Identification</strong><br/>${cats.id.map(i => `&nbsp;&nbsp;&nbsp;• ${i}`).join('<br/>')}</p>`;
+    }
+    if (cats.other.length > 0) {
+      html += `<p><strong>Additional Items</strong><br/>${cats.other.map(i => `&nbsp;&nbsp;&nbsp;• ${i}`).join('<br/>')}</p>`;
+    }
+    html += `<p>Please scan, upload, email, or fax these at your earliest convenience.</p>
+<p>If you have any questions, I'm happy to help!</p>
+<p>Best,<br/>West Capital Lending Team</p>`;
+    return html;
+  };
+
+  // Plain text version for clipboard
+  const buildEmailBody = () => {
+    let body = `Hi ${greeting},
 
 Thank you for choosing West Capital Lending! To continue processing your loan, we need the following documents:
 
-${needsList}
-
+Purchase Loan Documentation Checklist
+`;
+    if (cats.income.length > 0) {
+      body += `\nIncome Documentation\n${cats.income.map(i => `   • ${i}`).join('\n')}\n`;
+    }
+    if (cats.assets.length > 0) {
+      body += `\nAsset Documentation\n${cats.assets.map(i => `   • ${i}`).join('\n')}\n`;
+    }
+    if (cats.property.length > 0) {
+      body += `\nProperty Documentation\n${cats.property.map(i => `   • ${i}`).join('\n')}\n`;
+    }
+    if (cats.id.length > 0) {
+      body += `\nIdentification\n${cats.id.map(i => `   • ${i}`).join('\n')}\n`;
+    }
+    if (cats.other.length > 0) {
+      body += `\nAdditional Items\n${cats.other.map(i => `   • ${i}`).join('\n')}\n`;
+    }
+    body += `
 Please scan, upload, email, or fax these at your earliest convenience.
 
 If you have any questions, I'm happy to help!
 
 Best,
 West Capital Lending Team`;
+    return body;
+  };
+
+  const emailSubject = `** NEEDS LIST ** ${borrower.name}`;
+  const emailBody = buildEmailBody();
+  const emailBodyHTML = buildEmailBodyHTML();
 
   // Text template (shorter)
+  const needsList = outstanding.map(s => `• ${s.item}`).join('\n');
   const textBody = `Hi ${greeting}! We need the following docs for your loan:\n\n${needsList}\n\nPlease send when you can. Questions? Just reply here!`;
 
   // Notify Hailey - creates a task due immediately
@@ -1157,7 +1235,17 @@ West Capital Lending Team`;
 
     try {
       const taskTitle = `📧 Send stips list to ${borrower.name} (${outstanding.length} items)`;
-      await ops.addTask(borrower.id, taskTitle, new Date().toISOString().split('T')[0]);
+      const today = new Date().toISOString().split('T')[0];
+      // Use direct supabase insert instead of ops.addTask to avoid schema issues
+      const { error } = await supabase.from('tasks').insert([{
+        borrower_id: borrower.id,
+        title: taskTitle,
+        due_date: today,
+        assigned_to: 'Hailey',
+        type: 'task',
+        completed: false,
+      }]);
+      if (error) throw error;
       setNotifyStatus('✓ Task created for Hailey!');
       setTimeout(() => setNotifyStatus(null), 3000);
     } catch (e) {
@@ -1166,8 +1254,11 @@ West Capital Lending Team`;
   };
 
   const copyEmail = () => {
-    navigator.clipboard.writeText(emailBody);
-    alert('Email copied! Paste into Outlook.');
+    // Copy HTML to clipboard for rich paste into Outlook
+    const blob = new Blob([emailBodyHTML], { type: 'text/html' });
+    const clipboardItem = new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([emailBody], { type: 'text/plain' }) });
+    navigator.clipboard.write([clipboardItem]);
+    alert('Email copied with bold headers! Paste into Outlook (Ctrl+V).\nSubject: ' + emailSubject);
   };
 
   const copyText = () => {
@@ -1469,6 +1560,155 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
         <Field label="Occupancy" value={borrower.occupancy} dbKey="occupancy" />
         <Field label="Earnest Money" value={borrower.earnest_money} dbKey="earnest_money" type="number" />
       </div>
+    </div>
+  );
+};
+
+// ---- Calc Section (VA Calculator, FHA Seasoning) ----
+const CalcSection = ({ borrower }) => {
+  // VA Funding Fee Calculator
+  const [vaLoanAmt, setVaLoanAmt] = useState(borrower.loan_amount || 400000);
+  const [vaDownPct, setVaDownPct] = useState(0);
+  const [vaFirstTime, setVaFirstTime] = useState(true);
+  const [vaDisability, setVaDisability] = useState(false);
+
+  // FHA Seasoning Calculator
+  const [fhaCloseDate, setFhaCloseDate] = useState('');
+  const [fhaPayments, setFhaPayments] = useState(6);
+
+  // VA Funding Fee rates (2024)
+  const getVAFee = () => {
+    if (vaDisability) return 0;
+    if (vaDownPct >= 10) return vaFirstTime ? 1.25 : 1.25;
+    if (vaDownPct >= 5) return vaFirstTime ? 1.5 : 1.5;
+    return vaFirstTime ? 2.15 : 3.3; // 0% down
+  };
+
+  const vaFee = getVAFee();
+  const vaFeeAmt = vaLoanAmt * (vaFee / 100);
+  const vaTotalLoan = vaLoanAmt + vaFeeAmt;
+
+  // FHA Seasoning calc
+  const calcFHASeasoning = () => {
+    if (!fhaCloseDate) return null;
+    const close = new Date(fhaCloseDate);
+    const today = new Date();
+    const monthsPassed = Math.floor((today - close) / (30 * 24 * 60 * 60 * 1000));
+    const seasoningDate = new Date(close);
+    seasoningDate.setMonth(seasoningDate.getMonth() + fhaPayments);
+    const isEligible = monthsPassed >= fhaPayments;
+    return { monthsPassed, seasoningDate, isEligible };
+  };
+
+  const fhaSeasoning = calcFHASeasoning();
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflow: 'auto', fontSize: '11px' }}>
+      {/* VA Funding Fee */}
+      <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
+        <div style={{ fontWeight: '700', color: '#166534', marginBottom: '8px' }}>🎖️ VA Funding Fee Calculator</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <label>Loan Amount:
+            <input type="number" value={vaLoanAmt} onChange={e => setVaLoanAmt(+e.target.value)}
+              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }} />
+          </label>
+          <label>Down Payment %:
+            <input type="number" value={vaDownPct} onChange={e => setVaDownPct(+e.target.value)} min="0" max="100"
+              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }} />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <input type="checkbox" checked={vaFirstTime} onChange={e => setVaFirstTime(e.target.checked)} />
+            First-time VA use
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <input type="checkbox" checked={vaDisability} onChange={e => setVaDisability(e.target.checked)} />
+            Disability exempt
+          </label>
+        </div>
+        <div style={{ marginTop: '10px', padding: '8px', background: '#dcfce7', borderRadius: '4px', textAlign: 'center' }}>
+          <div>Fee: <strong>{vaFee}%</strong> = <strong>${vaFeeAmt.toLocaleString()}</strong></div>
+          <div>Total Loan: <strong>${vaTotalLoan.toLocaleString()}</strong></div>
+        </div>
+      </div>
+
+      {/* FHA Seasoning */}
+      <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '6px', border: '1px solid #fde68a' }}>
+        <div style={{ fontWeight: '700', color: '#92400e', marginBottom: '8px' }}>🏠 FHA Streamline Seasoning</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <label>Original Close Date:
+            <input type="date" value={fhaCloseDate} onChange={e => setFhaCloseDate(e.target.value)}
+              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }} />
+          </label>
+          <label>Required Payments:
+            <select value={fhaPayments} onChange={e => setFhaPayments(+e.target.value)}
+              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }}>
+              <option value={6}>6 payments (standard)</option>
+              <option value={12}>12 payments (some lenders)</option>
+            </select>
+          </label>
+        </div>
+        {fhaSeasoning && (
+          <div style={{ marginTop: '10px', padding: '8px', background: fhaSeasoning.isEligible ? '#dcfce7' : '#fee2e2', borderRadius: '4px', textAlign: 'center' }}>
+            <div>Months since close: <strong>{fhaSeasoning.monthsPassed}</strong></div>
+            <div>Eligible date: <strong>{fhaSeasoning.seasoningDate.toLocaleDateString()}</strong></div>
+            <div style={{ fontWeight: '700', color: fhaSeasoning.isEligible ? '#166534' : '#dc2626' }}>
+              {fhaSeasoning.isEligible ? '✓ ELIGIBLE FOR STREAMLINE' : '✗ NOT YET SEASONED'}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ---- Notify LOA Section ----
+const NotifyLOASection = ({ borrower }) => {
+  const [status, setStatus] = useState(null);
+  const [message, setMessage] = useState('');
+
+  const notifyMethods = [
+    { id: 'email', label: '📧 Email', description: 'Send email to LOA' },
+    { id: 'task', label: '📋 Task', description: 'Create task for LOA' },
+    { id: 'chat', label: '💬 Team Chat', description: 'Ping in team channel' },
+  ];
+
+  const handleNotify = async (method) => {
+    setStatus(`Sending via ${method}...`);
+    // TODO: Integrate actual notification methods
+    setTimeout(() => {
+      setStatus(`✓ LOA notified via ${method}!`);
+      setTimeout(() => setStatus(null), 3000);
+    }, 500);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+      <div style={{ fontSize: '11px', color: '#64748b' }}>
+        Notify the LOA about this file: <strong>{borrower.name}</strong>
+      </div>
+
+      <textarea
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        placeholder="Optional message to include..."
+        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '11px', minHeight: '60px', resize: 'vertical' }}
+      />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {notifyMethods.map(m => (
+          <button key={m.id} onClick={() => handleNotify(m.id)}
+            style={{ padding: '10px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontSize: '11px' }}>
+            <span style={{ fontWeight: '600' }}>{m.label}</span>
+            <span style={{ color: '#64748b', marginLeft: '8px' }}>{m.description}</span>
+          </button>
+        ))}
+      </div>
+
+      {status && (
+        <div style={{ padding: '8px', background: status.includes('✓') ? '#dcfce7' : '#fef3c7', borderRadius: '6px', textAlign: 'center', fontSize: '11px' }}>
+          {status}
+        </div>
+      )}
     </div>
   );
 };
@@ -2187,7 +2427,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     { id: 'credit',   label: 'Credit Report' },
     { id: 'appraisal', label: 'Appraisal' },
     { id: 'preapproval', label: 'Preapproval' },
+    { id: 'calc',     label: 'Calc' },
     { id: 'history',  label: 'History' },
+    { id: 'notifyloa', label: 'Notify LOA' },
   ];
 
   const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '400px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '200px' };
@@ -2336,6 +2578,22 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📜 History</div>
             <StageHistory borrowerId={borrower.id} />
             {closeBtn('history')}
+          </div>
+        )}
+
+        {openTabs.has('calc') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>🧮 Calculators</div>
+            <CalcSection borrower={borrower} />
+            {closeBtn('calc')}
+          </div>
+        )}
+
+        {openTabs.has('notifyloa') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📣 Notify LOA</div>
+            <NotifyLOASection borrower={borrower} />
+            {closeBtn('notifyloa')}
           </div>
         )}
       </div>

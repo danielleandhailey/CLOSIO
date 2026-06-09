@@ -219,7 +219,7 @@ const SmallCard = ({ icon: Icon, label, value, color = '#3b82f6', onClick }) => 
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px' }}>
       <Icon size={10} style={{ color }} />
-      <span style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
+      <span style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>{label}</span>
     </div>
     <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)', lineHeight: 1 }}>{value}</div>
   </div>
@@ -404,7 +404,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{processingCount}</div>
           </div>
           <div onClick={() => onFilterStage('Funded')} style={{ cursor: 'pointer', textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Funded</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Funded</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{fundedCount}</div>
           </div>
         </div>
@@ -412,11 +412,11 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 3. WORKING + SHOPPING stacked */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
           <div onClick={() => onFilterStage('Working')} style={{ cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Working</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Working</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{stageCounts['Working'] || 0}</div>
           </div>
           <div onClick={() => onFilterStage('Shopping')} style={{ cursor: 'pointer', textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Shopping</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Shopping</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{stageCounts['Shopping'] || 0}</div>
           </div>
         </div>
@@ -424,11 +424,11 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 4. FLOATING + LOCK EXPIRY stacked */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
           <div onClick={() => setShowListModal('floating')} style={{ textAlign: 'center', cursor: 'pointer' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Floating</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{floatingLoans.length}</div>
           </div>
           <div onClick={() => setShowListModal('lockexpiry')} style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px', cursor: 'pointer' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Lock Expiry</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{locksExpiring.length}</div>
           </div>
         </div>
@@ -524,28 +524,28 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         {/* 8. ACCOUNT BAL + MONTHLY SPEND stacked */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Account Bal.</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Account Bal.</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>$0</div>
           </div>
           <div style={{ textAlign: 'center', borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Monthly Spend</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Monthly Spend</div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>$0</div>
           </div>
         </div>
 
         {/* 9. LEAD STORE */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Lead Store</div>
+          <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Lead Store</div>
         </div>
 
         {/* 11. REVENUE & VOLUME */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '90px', border: '1px solid var(--border)' }}>
           <div style={{ marginBottom: '6px' }}>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Revenue</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Revenue</div>
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#10b981' }}>{formatCurrency(totalRevenue)}</div>
           </div>
           <div>
-            <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Volume</div>
+            <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Volume</div>
             <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text)' }}>{formatCurrency(totalVolume)}</div>
           </div>
         </div>
@@ -554,8 +554,16 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '85px', border: '1px solid var(--border)', cursor: 'pointer' }}
           onClick={() => window.open('https://www.cnbc.com/quotes/US10Y', '_blank')}
           title="Click for live 10yr Treasury (CNBC real-time)">
-          <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>10YR</div>
+          <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>10YR</div>
           <div style={{ fontSize: '15px', fontWeight: '700', color: '#f59e0b' }}>{treasuryRate}</div>
+        </div>
+
+        {/* TUNES - Pandora */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '65px', border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'center' }}
+          onClick={() => window.open('https://www.pandora.com/station', '_blank')}
+          title="Open Pandora">
+          <div style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>TUNES</div>
+          <div style={{ fontSize: '15px' }}>🎵</div>
         </div>
 
         {/* 12. DONUT CHART */}
