@@ -31,7 +31,10 @@ IMPORTANT:
 - Only answer based on the information provided above
 - If the answer is not found in the guidelines above, say "I couldn't find this information in your uploaded lender guidelines. Would you like me to search general knowledge?"
 - Be specific and cite which lender the information comes from
-- Give clear, actionable answers`
+- Give clear, actionable answers
+- Use bullet points for lists
+- Put each lender on its own line
+- Keep it short and scannable`
       : `You are a mortgage lending expert. The user has not uploaded any lender guidelines yet. Let them know they should upload PDF guidelines to get specific answers, but you can provide general mortgage knowledge if they'd like.`;
 
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
