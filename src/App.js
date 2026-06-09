@@ -217,7 +217,8 @@ const AppInner = () => {
               WCL ▾
             </button>
             <div className="dropdown-menu">
-              <button onClick={() => window.open('https://portal.westcaplending.com/home', '_blank')}>Lead Store</button>
+              <button onClick={() => window.open('https://portal.westcaplending.com/lead_store/lead_flow', '_blank')}>Lead Store</button>
+              <button onClick={() => window.open('https://portal.westcaplending.com/payrolls', '_blank')}>Payroll</button>
               <button onClick={() => window.open('https://portal.wcl.com', '_blank')}>Portal</button>
               <button onClick={() => window.open('https://ticket.wcl.com', '_blank')}>Ticket</button>
               <button onClick={() => window.open('https://docguardian.wcl.com', '_blank')}>Doc Guardian</button>
@@ -234,6 +235,8 @@ const AppInner = () => {
               Lenders ▾
             </button>
             <div className="dropdown-menu" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <button onClick={() => window.open('https://portal.westcaplending.com/wclcorelenders', '_blank')} style={{ fontWeight: '600', color: '#3b82f6' }}>Lender Search</button>
+              <div style={{ borderTop: '1px solid #333', margin: '4px 0' }}></div>
               <button onClick={() => window.open('https://app.rocketpro.com/', '_blank')}>Rocket Pro</button>
               <button onClick={() => window.open('https://www.figure.com/leadportal/app/dashboard', '_blank')}>Figure</button>
               <button onClick={() => window.open('https://broker.springeq.com/portal/#/home', '_blank')}>Spring EQ</button>
