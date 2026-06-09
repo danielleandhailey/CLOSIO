@@ -97,7 +97,7 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
 
           <div className="chat-messages">
             {messages.map((m, i) => (
-              <div key={i} className={`chat-msg ${m.role === 'user' ? 'user' : 'ai'}`} style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+              <div key={i} className={`chat-msg ${m.role === 'user' ? 'user' : 'ai'}`} style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '18px' }}>
                 {m.content}
               </div>
             ))}
