@@ -210,7 +210,7 @@ const MatrixPage = () => {
             <div key={i} style={{
               padding: '14px 16px',
               borderRadius: '6px',
-              fontSize: '16px',
+              fontSize: '18px',
               lineHeight: 1.7,
               whiteSpace: 'pre-wrap',
               maxWidth: m.role === 'user' ? '70%' : '100%',

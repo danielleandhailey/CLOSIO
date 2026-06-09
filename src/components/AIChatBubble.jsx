@@ -89,7 +89,7 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
   return (
     <div className="chat-bubble" style={{ right: '80px' }}>
       {open && (
-        <div className="chat-window" style={{ width: '500px', height: '600px', fontSize: '18px' }}>
+        <div className="chat-window" style={{ width: '550px', height: '650px', fontSize: '20px' }}>
           <div className="chat-header">
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ background: '#d97706', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>C</span> Claude AI</span>
             <button type="button" className="btn-icon" onClick={() => setOpen(false)}><X size={14} /></button>
