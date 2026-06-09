@@ -1886,6 +1886,343 @@ const CalcSection = ({ borrower }) => {
   );
 };
 
+// ---- Sub Hub Section (Submit to Processing) ----
+const SubHubSection = ({ borrower, onUpdate }) => {
+  const [dragOver, setDragOver] = useState(false);
+  const [parseResult, setParseResult] = useState(null);
+
+  const loanType = (borrower.loan_type || '').toLowerCase();
+  const loanPurpose = (borrower.loan_purpose || '').toLowerCase();
+  const isPurchase = loanPurpose.includes('purchase');
+  const isHELOC = loanType.includes('heloc');
+  const isFigure = (borrower.lender || '').toLowerCase().includes('figure');
+
+  // Checklist items based on loan type
+  const getChecklist = () => {
+    const base = [
+      { key: 'property_address', label: 'Subject Property', value: borrower.property_address },
+      { key: 'name', label: 'Borrower Name', value: borrower.name },
+      { key: 'loan_amount', label: 'Loan Amount', value: borrower.loan_amount },
+      { key: 'rate', label: 'Interest Rate', value: borrower.rate },
+      { key: 'loan_type', label: 'Loan Type', value: borrower.loan_type },
+      { key: 'credit_auth_date', label: 'Credit Auth Date', value: borrower.credit_auth_date },
+      { key: 'credit_score_mid', label: 'Mid Credit Score', value: borrower.credit_score_mid },
+      { key: 'lender', label: 'Wholesale Lender', value: borrower.lender },
+      { key: 'wholesale_loan_number', label: 'Lender Loan #', value: borrower.wholesale_loan_number },
+    ];
+
+    if (isPurchase) {
+      base.push(
+        { key: 'purchase_price', label: 'Purchase Price', value: borrower.purchase_price },
+        { key: 'coe_date', label: 'COE Date', value: borrower.coe_date },
+        { key: 'buyers_agent', label: 'Buyers Agent', value: borrower.contacts?.find(c => c.role === 'buyers_agent')?.name },
+        { key: 'listing_agent', label: 'Listing Agent', value: borrower.contacts?.find(c => c.role === 'listing_agent')?.name },
+        { key: 'title_escrow', label: 'Title/Escrow', value: borrower.contacts?.find(c => c.role === 'title_escrow')?.name },
+      );
+    }
+
+    if (!isFigure) {
+      base.push({ key: 'processor_assigned', label: 'Processor Assigned (Siena)', value: borrower.processor_assigned });
+    }
+
+    base.push(
+      { key: 'disclosures_signed', label: 'Disclosures Signed', value: borrower.disclosures_signed },
+      { key: 'liabilities_entered', label: 'Liabilities Entered', value: borrower.liabilities_entered },
+    );
+
+    return base;
+  };
+
+  const checklist = getChecklist();
+  const completedCount = checklist.filter(c => c.value).length;
+  const totalCount = checklist.length;
+  const pctComplete = Math.round((completedCount / totalCount) * 100);
+
+  // Handle doc drop
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const { parseDocument } = await import('../lib/docParser');
+    const result = parseDocument(text, file.name);
+    setParseResult(result);
+
+    // Auto-update borrower with extracted data
+    if (Object.keys(result.extracted).length > 0) {
+      onUpdate(borrower.id, result.extracted);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto', fontSize: '11px' }}>
+      {/* Progress bar */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span style={{ fontWeight: '600' }}>LP Setup Progress</span>
+          <span style={{ fontWeight: '700', color: pctComplete === 100 ? '#16a34a' : '#f59e0b' }}>{pctComplete}%</span>
+        </div>
+        <div style={{ background: '#e2e8f0', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+          <div style={{ background: pctComplete === 100 ? '#16a34a' : '#3b82f6', height: '100%', width: `${pctComplete}%`, transition: 'width 0.3s' }} />
+        </div>
+      </div>
+
+      {/* Loan type badge */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {isPurchase && <span style={{ background: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>PURCHASE</span>}
+        {isHELOC && <span style={{ background: '#fce7f3', color: '#be185d', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>HELOC</span>}
+        {isFigure && <span style={{ background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>FIGURE (No Siena)</span>}
+      </div>
+
+      {/* Drop zone */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        style={{
+          border: `2px dashed ${dragOver ? '#3b82f6' : '#cbd5e1'}`,
+          borderRadius: '8px', padding: '16px', textAlign: 'center',
+          background: dragOver ? '#eff6ff' : '#f8fafc', cursor: 'pointer',
+        }}
+      >
+        <div style={{ fontSize: '12px', fontWeight: '600', color: dragOver ? '#3b82f6' : '#64748b' }}>
+          Drop MISMO, Credit Report, or CD here
+        </div>
+        <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>Auto-fills fields from document</div>
+      </div>
+
+      {parseResult && (
+        <div style={{ background: '#dcfce7', padding: '8px', borderRadius: '6px' }}>
+          <div style={{ fontWeight: '600', color: '#166534' }}>Extracted from {parseResult.docType || 'document'}:</div>
+          <div style={{ fontSize: '10px', color: '#166534' }}>{Object.keys(parseResult.extracted).length} fields updated</div>
+        </div>
+      )}
+
+      {/* Checklist */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {checklist.map(item => (
+          <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: item.value ? '#f0fdf4' : '#fef2f2', borderRadius: '4px' }}>
+            <span style={{ color: item.value ? '#16a34a' : '#dc2626', fontWeight: '700' }}>{item.value ? '✓' : '○'}</span>
+            <span style={{ flex: 1, color: item.value ? '#166534' : '#991b1b' }}>{item.label}</span>
+            <span style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {item.value || 'Missing'}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+        <button
+          onClick={() => window.open('https://prod.lendingpad.com', '_blank')}
+          style={{ flex: 1, padding: '10px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+        >
+          Open LendingPad
+        </button>
+        <button
+          onClick={() => {
+            const text = checklist.map(c => `${c.label}: ${c.value || 'TBD'}`).join('\n');
+            navigator.clipboard.writeText(text);
+            alert('Checklist copied!');
+          }}
+          style={{ padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+        >
+          Copy All
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ---- Get Paid Section (Funded Stage) ----
+const GetPaidSection = ({ borrower, onUpdate }) => {
+  const [dragOver, setDragOver] = useState(false);
+  const [parseResult, setParseResult] = useState(null);
+
+  // Commission deadline logic - flash yellow if approaching
+  const fundedDate = borrower.funded_date ? new Date(borrower.funded_date) : null;
+  const daysSinceFunded = fundedDate ? Math.floor((new Date() - fundedDate) / (1000 * 60 * 60 * 24)) : null;
+  const isUrgent = daysSinceFunded !== null && daysSinceFunded >= 5 && daysSinceFunded <= 7;
+  const isOverdue = daysSinceFunded !== null && daysSinceFunded > 7;
+
+  const isHELOC = (borrower.loan_type || '').toLowerCase().includes('heloc');
+
+  const getChecklist = () => {
+    const items = [
+      { key: 'funded_date', label: 'Funded Date', value: borrower.funded_date },
+      { key: 'loan_amount', label: 'Final Loan Amount', value: borrower.loan_amount },
+      { key: 'rate', label: 'Final Rate', value: borrower.rate },
+      { key: 'broker_comp', label: 'Broker Comp', value: borrower.broker_comp },
+      { key: 'lead_id', label: 'Lead ID', value: borrower.lead_id },
+      { key: 'lead_cost', label: 'Lead Cost', value: borrower.lead_cost },
+    ];
+
+    // LP fields
+    items.push(
+      { key: 'lp_funded_entered', label: 'LP Funded Status Updated', value: borrower.lp_funded_entered },
+    );
+
+    // Paycom fields
+    items.push(
+      { key: 'paycom_entered', label: 'Paycom Submitted', value: borrower.paycom_entered },
+    );
+
+    if (isHELOC) {
+      items.push(
+        { key: 'heloc_docs_uploaded', label: 'HELOC Docs to Sharefolder', value: borrower.heloc_docs_uploaded },
+      );
+    }
+
+    return items;
+  };
+
+  const checklist = getChecklist();
+  const completedCount = checklist.filter(c => c.value).length;
+  const totalCount = checklist.length;
+  const pctComplete = Math.round((completedCount / totalCount) * 100);
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const { parseDocument } = await import('../lib/docParser');
+    const result = parseDocument(text, file.name);
+    setParseResult(result);
+
+    if (Object.keys(result.extracted).length > 0) {
+      onUpdate(borrower.id, result.extracted);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto', fontSize: '11px' }}>
+      {/* Urgency alert */}
+      {(isUrgent || isOverdue) && (
+        <div style={{
+          background: isOverdue ? '#fee2e2' : '#fef3c7',
+          border: `2px solid ${isOverdue ? '#dc2626' : '#f59e0b'}`,
+          padding: '10px', borderRadius: '8px', textAlign: 'center',
+          animation: 'pulse 1s infinite',
+        }}>
+          <div style={{ fontWeight: '700', color: isOverdue ? '#dc2626' : '#92400e', fontSize: '13px' }}>
+            {isOverdue ? 'COMMISSION AT RISK!' : 'SUBMIT SOON - Commission deadline approaching'}
+          </div>
+          <div style={{ fontSize: '10px', color: isOverdue ? '#991b1b' : '#78350f' }}>
+            Funded {daysSinceFunded} days ago
+          </div>
+        </div>
+      )}
+
+      {/* Progress */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span style={{ fontWeight: '600' }}>Get Paid Progress</span>
+          <span style={{ fontWeight: '700', color: pctComplete === 100 ? '#16a34a' : '#f59e0b' }}>{pctComplete}%</span>
+        </div>
+        <div style={{ background: '#e2e8f0', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+          <div style={{ background: pctComplete === 100 ? '#16a34a' : '#10b981', height: '100%', width: `${pctComplete}%`, transition: 'width 0.3s' }} />
+        </div>
+      </div>
+
+      {isHELOC && (
+        <span style={{ background: '#fce7f3', color: '#be185d', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', alignSelf: 'flex-start' }}>HELOC - Different Process</span>
+      )}
+
+      {/* Drop zone for CD */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        style={{
+          border: `2px dashed ${dragOver ? '#10b981' : '#cbd5e1'}`,
+          borderRadius: '8px', padding: '16px', textAlign: 'center',
+          background: dragOver ? '#ecfdf5' : '#f8fafc', cursor: 'pointer',
+        }}
+      >
+        <div style={{ fontSize: '12px', fontWeight: '600', color: dragOver ? '#10b981' : '#64748b' }}>
+          Drop Closing Disclosure here
+        </div>
+        <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>Auto-extracts final numbers</div>
+      </div>
+
+      {parseResult && (
+        <div style={{ background: '#dcfce7', padding: '8px', borderRadius: '6px' }}>
+          <div style={{ fontWeight: '600', color: '#166534' }}>Extracted from CD:</div>
+          <div style={{ fontSize: '10px', color: '#166534' }}>{Object.keys(parseResult.extracted).length} fields updated</div>
+        </div>
+      )}
+
+      {/* Manual input for Lead ID/Cost */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <label style={{ fontSize: '10px', color: '#475569' }}>
+          Lead ID:
+          <input
+            type="text"
+            value={borrower.lead_id || ''}
+            onChange={e => onUpdate(borrower.id, { lead_id: e.target.value })}
+            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', marginTop: '2px' }}
+            placeholder="From Lead Mailbox"
+          />
+        </label>
+        <label style={{ fontSize: '10px', color: '#475569' }}>
+          Lead Cost:
+          <input
+            type="number"
+            value={borrower.lead_cost || ''}
+            onChange={e => onUpdate(borrower.id, { lead_cost: parseFloat(e.target.value) || null })}
+            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', marginTop: '2px' }}
+            placeholder="$"
+          />
+        </label>
+      </div>
+
+      {/* Checklist */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {checklist.map(item => (
+          <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: item.value ? '#f0fdf4' : '#fef2f2', borderRadius: '4px' }}>
+            <input
+              type="checkbox"
+              checked={!!item.value}
+              onChange={e => onUpdate(borrower.id, { [item.key]: e.target.checked ? new Date().toISOString().split('T')[0] : null })}
+            />
+            <span style={{ flex: 1, color: item.value ? '#166534' : '#991b1b' }}>{item.label}</span>
+            <span style={{ fontSize: '10px', color: '#64748b' }}>
+              {typeof item.value === 'boolean' ? (item.value ? 'Done' : '') : (item.value || '')}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+        <button
+          onClick={() => window.open('https://prod.lendingpad.com', '_blank')}
+          style={{ flex: 1, padding: '10px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+        >
+          Open LP
+        </button>
+        <button
+          onClick={() => window.open('https://paycomonline.net', '_blank')}
+          style={{ flex: 1, padding: '10px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+        >
+          Open Paycom
+        </button>
+        <button
+          onClick={() => window.open('https://leadmailbox.com', '_blank')}
+          style={{ padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+        >
+          Lead Mailbox
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ---- Notify LOA Section ----
 const NotifyLOASection = ({ borrower }) => {
   const [status, setStatus] = useState(null);
@@ -2686,6 +3023,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     { id: 'appraisal', label: 'Appraisal' },
     { id: 'preapproval', label: 'Preapproval' },
     { id: 'calc',     label: 'Calc' },
+    { id: 'subhub',   label: 'SUB HUB' },
+    { id: 'getpaid',  label: 'GET PAID' },
     { id: 'history',  label: 'History' },
     { id: 'notifyloa', label: 'Notify LOA' },
   ];
@@ -2841,9 +3180,25 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
 
         {openTabs.has('calc') && (
           <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>🧮 Calculators</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>Calculators</div>
             <CalcSection borrower={borrower} />
             {closeBtn('calc')}
+          </div>
+        )}
+
+        {openTabs.has('subhub') && (
+          <div style={{ ...boxStyle, border: '2px solid #3b82f6' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>SUB HUB - Submit to Processing</div>
+            <SubHubSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('subhub')}
+          </div>
+        )}
+
+        {openTabs.has('getpaid') && (
+          <div style={{ ...boxStyle, border: borrower.funded_date ? '2px solid #10b981' : '2px solid #f59e0b' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>GET PAID - Funded Stage</div>
+            <GetPaidSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('getpaid')}
           </div>
         )}
 
