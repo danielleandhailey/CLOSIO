@@ -208,10 +208,11 @@ const MatrixPage = () => {
           )}
           {chatHistory.map((m, i) => (
             <div key={i} style={{
-              padding: '10px 12px',
+              padding: '14px 16px',
               borderRadius: '6px',
-              fontSize: '12px',
-              lineHeight: 1.6,
+              fontSize: '16px',
+              lineHeight: 1.7,
+              whiteSpace: 'pre-wrap',
               maxWidth: m.role === 'user' ? '70%' : '100%',
               alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
               background: m.role === 'user' ? '#7c3aed' : '#22222e',
