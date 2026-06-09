@@ -80,6 +80,61 @@ const BonzoPullButton = () => {
   );
 };
 
+const LENDERS = [
+  { name: 'Rocket Pro', url: 'https://app.rocketpro.com/' },
+  { name: 'Figure', url: 'https://www.figure.com/leadportal/app/dashboard' },
+  { name: 'Spring EQ', url: 'https://broker.springeq.com/portal/#/home' },
+  { name: 'PRMG', url: 'https://leo.prmg.net/tpo/dashboard' },
+  { name: 'Flyhomes', url: 'https://flyhomes.com/buy-before-you-sell-get-started' },
+  { name: 'SmartFi', url: 'https://app.smartfihomeloans.com/home' },
+  { name: 'NPI Non-QM', url: 'https://www.npinonqm.com/#/home' },
+  { name: 'LoanStream', url: 'https://www.lsmlounge.com/tpo/' },
+  { name: 'Spring EQ EMMA', url: 'https://emma.springeq.com/home' },
+  { name: 'Champions TPO', url: 'https://www.champstpo.com/#QuickPricer' },
+  { name: 'Deephaven HELOC', url: 'https://heloc.deephavenmortgage.com/portal/login' },
+  { name: 'EPM', url: 'https://epmexperience.com/pipeline' },
+  { name: 'TLS (Loan Store)', url: 'https://theloanstore.encompasstpoconnect.com/#/home' },
+  { name: 'Button Finance', url: 'https://buttonfinance.encompasstpoconnect.com/#/content/home_395998' },
+  { name: 'NewRez', url: 'https://auth.newrez.com/signin' },
+  { name: 'MAM', url: 'https://mam.mmachine.net/Login.aspx' },
+  { name: 'Quantum Reverse', url: 'https://app.quantumreverse.com/dashboard' },
+  { name: 'Kind Lending', url: 'https://kwikie.kindlending.com/login' },
+  { name: 'Deephaven', url: 'https://deephavenmortgage.lodasoft.com/tpo/dashboard' },
+  { name: 'PennyMac', url: 'https://power.pennymac.com/#/home' },
+  { name: 'NFTY', url: 'https://lo.homeequity.westcapitallending.com/all-loans?view=active' },
+];
+
+const LendersDropdown = () => {
+  const [search, setSearch] = useState('');
+  const filtered = search
+    ? LENDERS.filter(l => l.name.toLowerCase().includes(search.toLowerCase()))
+    : LENDERS;
+
+  return (
+    <div style={{ position: 'relative' }} className="nav-dropdown">
+      <button type="button" className="btn btn-ghost">Lenders ▾</button>
+      <div className="dropdown-menu" style={{ maxHeight: '400px', overflowY: 'auto', minWidth: '200px' }}>
+        <button onClick={() => window.open('https://portal.westcaplending.com/wclcorelenders', '_blank')} style={{ fontWeight: '600', color: '#3b82f6' }}>Lender Search (WCL)</button>
+        <div style={{ padding: '4px 8px' }}>
+          <input
+            type="text"
+            placeholder="Type to filter..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #444', background: '#1a1a23', color: '#fff', fontSize: '11px' }}
+          />
+        </div>
+        <div style={{ borderTop: '1px solid #333', margin: '4px 0' }}></div>
+        {filtered.map(l => (
+          <button key={l.name} onClick={() => window.open(l.url, '_blank')}>{l.name}</button>
+        ))}
+        {filtered.length === 0 && <div style={{ padding: '8px 14px', color: '#6a6a80', fontSize: '11px' }}>No matches</div>}
+      </div>
+    </div>
+  );
+};
+
 const AppInner = () => {
   const { user, profile, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('Pipeline');
@@ -230,36 +285,7 @@ const AppInner = () => {
           </div>
 
           {/* Lenders Dropdown */}
-          <div style={{ position: 'relative' }} className="nav-dropdown">
-            <button type="button" className="btn btn-ghost">
-              Lenders ▾
-            </button>
-            <div className="dropdown-menu" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              <button onClick={() => window.open('https://portal.westcaplending.com/wclcorelenders', '_blank')} style={{ fontWeight: '600', color: '#3b82f6' }}>Lender Search</button>
-              <div style={{ borderTop: '1px solid #333', margin: '4px 0' }}></div>
-              <button onClick={() => window.open('https://app.rocketpro.com/', '_blank')}>Rocket Pro</button>
-              <button onClick={() => window.open('https://www.figure.com/leadportal/app/dashboard', '_blank')}>Figure</button>
-              <button onClick={() => window.open('https://broker.springeq.com/portal/#/home', '_blank')}>Spring EQ</button>
-              <button onClick={() => window.open('https://leo.prmg.net/tpo/dashboard', '_blank')}>PRMG</button>
-              <button onClick={() => window.open('https://flyhomes.com/buy-before-you-sell-get-started', '_blank')}>Flyhomes</button>
-              <button onClick={() => window.open('https://app.smartfihomeloans.com/home', '_blank')}>SmartFi</button>
-              <button onClick={() => window.open('https://www.npinonqm.com/#/home', '_blank')}>NPI Non-QM</button>
-              <button onClick={() => window.open('https://www.lsmlounge.com/tpo/', '_blank')}>LoanStream</button>
-              <button onClick={() => window.open('https://emma.springeq.com/home', '_blank')}>Spring EQ EMMA</button>
-              <button onClick={() => window.open('https://www.champstpo.com/#QuickPricer', '_blank')}>Champions TPO</button>
-              <button onClick={() => window.open('https://heloc.deephavenmortgage.com/portal/login', '_blank')}>Deephaven HELOC</button>
-              <button onClick={() => window.open('https://epmexperience.com/pipeline', '_blank')}>EPM</button>
-              <button onClick={() => window.open('https://theloanstore.encompasstpoconnect.com/#/home', '_blank')}>TLS (Loan Store)</button>
-              <button onClick={() => window.open('https://buttonfinance.encompasstpoconnect.com/#/content/home_395998', '_blank')}>Button Finance</button>
-              <button onClick={() => window.open('https://auth.newrez.com/signin', '_blank')}>NewRez</button>
-              <button onClick={() => window.open('https://mam.mmachine.net/Login.aspx', '_blank')}>MAM</button>
-              <button onClick={() => window.open('https://app.quantumreverse.com/dashboard', '_blank')}>Quantum Reverse</button>
-              <button onClick={() => window.open('https://kwikie.kindlending.com/login', '_blank')}>Kind Lending</button>
-              <button onClick={() => window.open('https://deephavenmortgage.lodasoft.com/tpo/dashboard', '_blank')}>Deephaven</button>
-              <button onClick={() => window.open('https://power.pennymac.com/#/home', '_blank')}>PennyMac</button>
-              <button onClick={() => window.open('https://lo.homeequity.westcapitallending.com/all-loans?view=active', '_blank')}>NFTY</button>
-            </div>
-          </div>
+          <LendersDropdown />
 
           {/* Resources Dropdown */}
           <div style={{ position: 'relative' }} className="nav-dropdown">
