@@ -1665,43 +1665,73 @@ const CalcSection = ({ borrower }) => {
 const NotifyLOASection = ({ borrower }) => {
   const [status, setStatus] = useState(null);
   const [message, setMessage] = useState('');
+  const LOA_EMAIL = 'hrose@westcapitallending.com';
+  const LOA_NAME = 'H. Rose';
 
-  const notifyMethods = [
-    { id: 'email', label: '📧 Email', description: 'Send email to LOA' },
-    { id: 'task', label: '📋 Task', description: 'Create task for LOA' },
-    { id: 'chat', label: '💬 Team Chat', description: 'Ping in team channel' },
-  ];
+  const sendEmail = () => {
+    const subject = `File Update: ${borrower.name}`;
+    const body = message || `Please review the file for ${borrower.name}.`;
+    window.open(`mailto:${LOA_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+    setStatus('✓ Email opened!');
+    setTimeout(() => setStatus(null), 3000);
+  };
 
-  const handleNotify = async (method) => {
-    setStatus(`Sending via ${method}...`);
-    // TODO: Integrate actual notification methods
-    setTimeout(() => {
-      setStatus(`✓ LOA notified via ${method}!`);
+  const createTask = async () => {
+    try {
+      const taskTitle = message || `Review file: ${borrower.name}`;
+      const today = new Date().toISOString().split('T')[0];
+      const { error } = await supabase.from('tasks').insert([{
+        borrower_id: borrower.id,
+        title: taskTitle,
+        due_date: today,
+        assigned_to: LOA_NAME,
+        type: 'task',
+        completed: false,
+      }]);
+      if (error) throw error;
+      setStatus('✓ Task created for LOA!');
       setTimeout(() => setStatus(null), 3000);
-    }, 500);
+    } catch (e) {
+      setStatus('Error: ' + e.message);
+    }
+  };
+
+  const bothActions = async () => {
+    await createTask();
+    sendEmail();
+    setStatus('✓ Task created + Email opened!');
+    setTimeout(() => setStatus(null), 3000);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
       <div style={{ fontSize: '11px', color: '#64748b' }}>
-        Notify the LOA about this file: <strong>{borrower.name}</strong>
+        Notify <strong>{LOA_NAME}</strong> about: <strong>{borrower.name}</strong>
       </div>
 
       <textarea
         value={message}
         onChange={e => setMessage(e.target.value)}
-        placeholder="Optional message to include..."
+        placeholder="Message to include (optional)..."
         style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '11px', minHeight: '60px', resize: 'vertical' }}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {notifyMethods.map(m => (
-          <button key={m.id} onClick={() => handleNotify(m.id)}
-            style={{ padding: '10px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontSize: '11px' }}>
-            <span style={{ fontWeight: '600' }}>{m.label}</span>
-            <span style={{ color: '#64748b', marginLeft: '8px' }}>{m.description}</span>
-          </button>
-        ))}
+        <button onClick={sendEmail}
+          style={{ padding: '10px', background: '#dbeafe', border: '1px solid #3b82f6', borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontSize: '11px' }}>
+          <span style={{ fontWeight: '600' }}>📧 Email LOA</span>
+          <span style={{ color: '#64748b', marginLeft: '8px' }}>Opens email to {LOA_EMAIL}</span>
+        </button>
+        <button onClick={createTask}
+          style={{ padding: '10px', background: '#dcfce7', border: '1px solid #22c55e', borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontSize: '11px' }}>
+          <span style={{ fontWeight: '600' }}>📋 Create Task</span>
+          <span style={{ color: '#64748b', marginLeft: '8px' }}>Assigns task to {LOA_NAME}</span>
+        </button>
+        <button onClick={bothActions}
+          style={{ padding: '10px', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontSize: '11px' }}>
+          <span style={{ fontWeight: '600' }}>⚡ Both</span>
+          <span style={{ color: '#64748b', marginLeft: '8px' }}>Email + Task</span>
+        </button>
       </div>
 
       {status && (
