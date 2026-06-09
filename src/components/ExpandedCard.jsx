@@ -1113,11 +1113,15 @@ We look forward to working with you and helping you get into your new home smoot
 
 // ---- Needs Section with Email/Text Templates ----
 const NeedsSection = ({ borrower, ops }) => {
-  const [showTemplates, setShowTemplates] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [search, setSearch] = useState('');
   const [notifyStatus, setNotifyStatus] = useState(null);
+  const searchRef = useRef();
+
   const stips = borrower.stipulations || [];
   const outstanding = stips.filter(s => !s.received);
   const received = stips.filter(s => s.received);
+  const existingItems = stips.map(s => s.item);
 
   // Get borrower's first name(s) for templates
   const firstName = borrower.name?.split(',')[1]?.trim()?.split(' ')[0] || borrower.name?.split(' ')[0] || 'there';
@@ -1152,7 +1156,6 @@ West Capital Lending Team`;
     }
 
     try {
-      // Create a task for Hailey due immediately
       const taskTitle = `📧 Send stips list to ${borrower.name} (${outstanding.length} items)`;
       await ops.addTask(borrower.id, taskTitle, new Date().toISOString().split('T')[0]);
       setNotifyStatus('✓ Task created for Hailey!');
@@ -1172,8 +1175,99 @@ West Capital Lending Team`;
     alert('Text copied!');
   };
 
+  const addStip = async (item) => {
+    await ops.addStipulation(borrower.id, item);
+    setShowDropdown(false);
+    setSearch('');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto' }}>
+      {/* Add stip dropdown - same style as main row */}
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={() => { setShowDropdown(!showDropdown); setTimeout(() => searchRef.current?.focus(), 50); }}
+          style={{
+            width: '100%', padding: '10px 14px', background: '#1a1a23',
+            border: '1px solid #444', borderRadius: '6px', color: '#fff',
+            fontSize: '12px', cursor: 'pointer', textAlign: 'left',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}
+        >
+          <span>+ Add stip from list</span>
+          <ChevronDown size={14} style={{ transform: showDropdown ? 'rotate(180deg)' : 'none' }} />
+        </button>
+
+        {showDropdown && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0,
+            background: '#0d0d12', border: '1px solid #444', borderRadius: '6px',
+            maxHeight: '250px', overflow: 'hidden', zIndex: 100, marginTop: '4px',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ padding: '8px', borderBottom: '1px solid #333' }}>
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Type to search stips..."
+                style={{
+                  width: '100%', padding: '6px 10px', background: '#1a1a23',
+                  border: '1px solid #555', borderRadius: '4px', color: '#fff',
+                  fontSize: '11px', outline: 'none',
+                }}
+              />
+            </div>
+            <div style={{ overflow: 'auto', flex: 1 }}>
+              {Object.entries(STIP_CATEGORIES).map(([category, items]) => {
+                const filtered = items.filter(item =>
+                  !existingItems.includes(item) &&
+                  (!search || item.toLowerCase().includes(search.toLowerCase()))
+                );
+                if (filtered.length === 0) return null;
+                return (
+                  <div key={category}>
+                    <div style={{
+                      padding: '6px 10px', background: '#1e293b', color: '#94a3b8',
+                      fontSize: '9px', fontWeight: '700', textTransform: 'uppercase',
+                      position: 'sticky', top: 0,
+                    }}>
+                      {category}
+                    </div>
+                    {filtered.map((item, i) => (
+                      <div
+                        key={i}
+                        onClick={() => addStip(item)}
+                        style={{
+                          padding: '6px 10px 6px 20px', cursor: 'pointer', fontSize: '11px',
+                          color: '#ccc', borderBottom: '1px solid #222',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+              {search.trim() && (
+                <div
+                  onClick={() => addStip(search.trim())}
+                  style={{
+                    padding: '8px 10px', cursor: 'pointer', fontSize: '11px',
+                    color: '#a78bfa', background: '#1a1a23', borderTop: '1px solid #333',
+                  }}
+                >
+                  + Add "{search.trim()}" as custom
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Quick actions */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button onClick={copyEmail} style={{
@@ -1203,18 +1297,34 @@ West Capital Lending Team`;
 
       {/* Outstanding stips */}
       <div>
-        <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', marginBottom: '6px', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', marginBottom: '6px', textTransform: 'uppercase', textAlign: 'center' }}>
           Outstanding ({outstanding.length})
         </div>
         {outstanding.length === 0 ? (
-          <div style={{ fontSize: '11px', color: '#888', padding: '8px' }}>No outstanding items</div>
+          <div style={{ fontSize: '11px', color: '#888', padding: '8px', textAlign: 'center' }}>No outstanding items</div>
         ) : (
-          <div style={{ background: '#fff', borderRadius: '6px', border: '1px solid #e5e7eb', maxHeight: '150px', overflow: 'auto' }}>
-            {outstanding.map(s => (
+          <div style={{ background: '#1f1f0d', borderRadius: '6px', border: '1px solid #f59e0b33', maxHeight: '150px', overflow: 'auto' }}>
+            {outstanding.map((s, idx) => (
               <div key={s.id} style={{
                 display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px',
-                borderBottom: '1px solid #f3f4f6', fontSize: '12px',
+                borderBottom: '1px solid #333', fontSize: '12px',
               }}>
+                {idx === 0 && (
+                  <button
+                    onClick={async () => {
+                      const today = new Date().toISOString().split('T')[0];
+                      for (const stip of outstanding) {
+                        await ops.markStipReceived(stip.id, today);
+                      }
+                    }}
+                    style={{
+                      width: '18px', height: '18px', borderRadius: '3px',
+                      background: 'none', border: '2px solid #166534', cursor: 'pointer', flexShrink: 0,
+                    }}
+                    title="Select All"
+                  />
+                )}
+                {idx !== 0 && <div style={{ width: '18px', flexShrink: 0 }} />}
                 <button
                   onClick={() => ops.markStipReceived(s.id, new Date().toISOString().split('T')[0])}
                   style={{
@@ -1223,9 +1333,9 @@ West Capital Lending Team`;
                   }}
                   title="Mark received"
                 />
-                <span style={{ flex: 1, color: '#1e293b' }}>{s.item}</span>
+                <span style={{ flex: 1, color: '#fcd34d' }}>{s.item}</span>
                 <button onClick={() => ops.removeStipulation(s.id)} style={{
-                  background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '14px',
+                  background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '14px',
                 }}>×</button>
               </div>
             ))}
@@ -1236,17 +1346,17 @@ West Capital Lending Team`;
       {/* Received stips */}
       {received.length > 0 && (
         <div>
-          <div style={{ fontSize: '10px', fontWeight: '700', color: '#22c55e', marginBottom: '6px', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#6b9b6b', marginBottom: '6px', textTransform: 'uppercase', textAlign: 'center' }}>
             Received ({received.length})
           </div>
-          <div style={{ background: '#f0fdf4', borderRadius: '6px', border: '1px solid #bbf7d0', maxHeight: '100px', overflow: 'auto' }}>
+          <div style={{ background: '#1a231a', borderRadius: '6px', border: '1px solid #2d4a2d', maxHeight: '100px', overflow: 'auto' }}>
             {received.map(s => (
               <div key={s.id} style={{
                 display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px',
-                borderBottom: '1px solid #dcfce7', fontSize: '11px', color: '#166534',
-                textDecoration: 'line-through', opacity: 0.7,
+                borderBottom: '1px solid #2d4a2d', fontSize: '11px', color: '#7cb87c',
+                textDecoration: 'line-through', opacity: 0.6,
               }}>
-                <Check size={14} style={{ color: '#22c55e' }} />
+                <Check size={14} style={{ color: '#6b9b6b' }} />
                 <span style={{ flex: 1 }}>{s.item}</span>
                 <span style={{ fontSize: '10px' }}>{s.received_date ? format(parseISO(s.received_date), 'M/d') : ''}</span>
               </div>
@@ -1259,8 +1369,8 @@ West Capital Lending Team`;
       <div style={{ marginTop: 'auto' }}>
         <div style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', marginBottom: '4px' }}>EMAIL PREVIEW</div>
         <pre style={{
-          background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px',
-          padding: '10px', fontSize: '10px', color: '#475569', whiteSpace: 'pre-wrap',
+          background: '#1a1a23', border: '1px solid #333', borderRadius: '6px',
+          padding: '10px', fontSize: '10px', color: '#94a3b8', whiteSpace: 'pre-wrap',
           maxHeight: '120px', overflow: 'auto', margin: 0, lineHeight: 1.4,
         }}>
           {emailBody}
