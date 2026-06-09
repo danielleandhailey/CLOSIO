@@ -1565,26 +1565,43 @@ const LoanTermsGrid = ({ borrower, onUpdate }) => {
   );
 };
 
-// ---- Calc Section (VA Calculator, FHA Seasoning) ----
+// ---- Calc Section (Dropdown with 4 calculators, auto-fills borrower data) ----
 const CalcSection = ({ borrower }) => {
-  // VA Funding Fee Calculator
-  const [vaLoanAmt, setVaLoanAmt] = useState(borrower.loan_amount || 400000);
-  const [vaDownPct, setVaDownPct] = useState(0);
+  const [selectedCalc, setSelectedCalc] = useState('');
+
+  // Auto-fill from borrower
+  const loanAmt = borrower.loan_amount || 400000;
+  const purchasePrice = borrower.purchase_price || 500000;
+  const rate = borrower.rate || 7.0;
+
+  // VA Calculator state
+  const [vaLoanAmt, setVaLoanAmt] = useState(loanAmt);
+  const [vaDownPct, setVaDownPct] = useState(purchasePrice > 0 ? Math.round((1 - loanAmt / purchasePrice) * 100) : 0);
   const [vaFirstTime, setVaFirstTime] = useState(true);
   const [vaDisability, setVaDisability] = useState(false);
 
-  // FHA Seasoning Calculator
+  // FHA Seasoning state
   const [fhaCloseDate, setFhaCloseDate] = useState('');
   const [fhaPayments, setFhaPayments] = useState(6);
 
-  // VA Funding Fee rates (2024)
+  // Debt Consolidation state
+  const [debts, setDebts] = useState([{ name: '', balance: 0, payment: 0, rate: 0 }]);
+  const [newLoanAmt, setNewLoanAmt] = useState(loanAmt);
+  const [newRate, setNewRate] = useState(rate);
+  const [newTerm, setNewTerm] = useState(30);
+
+  // Self-Employed state
+  const [year1Income, setYear1Income] = useState(0);
+  const [year2Income, setYear2Income] = useState(0);
+  const [addBacks, setAddBacks] = useState(0);
+
+  // VA Funding Fee calc
   const getVAFee = () => {
     if (vaDisability) return 0;
     if (vaDownPct >= 10) return vaFirstTime ? 1.25 : 1.25;
     if (vaDownPct >= 5) return vaFirstTime ? 1.5 : 1.5;
-    return vaFirstTime ? 2.15 : 3.3; // 0% down
+    return vaFirstTime ? 2.15 : 3.3;
   };
-
   const vaFee = getVAFee();
   const vaFeeAmt = vaLoanAmt * (vaFee / 100);
   const vaTotalLoan = vaLoanAmt + vaFeeAmt;
@@ -1597,67 +1614,161 @@ const CalcSection = ({ borrower }) => {
     const monthsPassed = Math.floor((today - close) / (30 * 24 * 60 * 60 * 1000));
     const seasoningDate = new Date(close);
     seasoningDate.setMonth(seasoningDate.getMonth() + fhaPayments);
-    const isEligible = monthsPassed >= fhaPayments;
-    return { monthsPassed, seasoningDate, isEligible };
+    return { monthsPassed, seasoningDate, isEligible: monthsPassed >= fhaPayments };
   };
-
   const fhaSeasoning = calcFHASeasoning();
 
+  // Debt Consolidation calc
+  const totalDebtPayment = debts.reduce((sum, d) => sum + (d.payment || 0), 0);
+  const totalDebtBalance = debts.reduce((sum, d) => sum + (d.balance || 0), 0);
+  const newPI = newLoanAmt > 0 ? (newLoanAmt * (newRate/100/12)) / (1 - Math.pow(1 + newRate/100/12, -newTerm*12)) : 0;
+  const monthlySavings = totalDebtPayment - newPI;
+
+  // Self-Employed calc (24-month average)
+  const avgIncome = ((year1Income || 0) + (year2Income || 0)) / 2;
+  const qualifyingIncome = avgIncome + (addBacks || 0);
+  const monthlyIncome = qualifyingIncome / 12;
+
+  const addDebt = () => setDebts([...debts, { name: '', balance: 0, payment: 0, rate: 0 }]);
+  const updateDebt = (i, field, val) => {
+    const updated = [...debts];
+    updated[i][field] = field === 'name' ? val : parseFloat(val) || 0;
+    setDebts(updated);
+  };
+
+  const inputStyle = { width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px', fontSize: '11px' };
+  const labelStyle = { fontSize: '10px', color: '#475569' };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflow: 'auto', fontSize: '11px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto', fontSize: '11px' }}>
+      {/* Dropdown to select calculator */}
+      <select value={selectedCalc} onChange={e => setSelectedCalc(e.target.value)}
+        style={{ padding: '8px', borderRadius: '6px', border: '1px solid #3b82f6', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+        <option value="">Select Calculator...</option>
+        <option value="va">🎖️ VA Funding Fee</option>
+        <option value="fha">🏠 FHA Streamline Seasoning</option>
+        <option value="debt">💳 Debt Consolidation</option>
+        <option value="se">📊 Self-Employed Income</option>
+      </select>
+
       {/* VA Funding Fee */}
-      <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
-        <div style={{ fontWeight: '700', color: '#166534', marginBottom: '8px' }}>🎖️ VA Funding Fee Calculator</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <label>Loan Amount:
-            <input type="number" value={vaLoanAmt} onChange={e => setVaLoanAmt(+e.target.value)}
-              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }} />
-          </label>
-          <label>Down Payment %:
-            <input type="number" value={vaDownPct} onChange={e => setVaDownPct(+e.target.value)} min="0" max="100"
-              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }} />
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <input type="checkbox" checked={vaFirstTime} onChange={e => setVaFirstTime(e.target.checked)} />
-            First-time VA use
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <input type="checkbox" checked={vaDisability} onChange={e => setVaDisability(e.target.checked)} />
-            Disability exempt
-          </label>
+      {selectedCalc === 'va' && (
+        <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
+          <div style={{ fontWeight: '700', color: '#166534', marginBottom: '8px' }}>🎖️ VA Funding Fee Calculator</div>
+          <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>Auto-filled from borrower: ${loanAmt.toLocaleString()}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <label style={labelStyle}>Loan Amount:
+              <input type="number" value={vaLoanAmt} onChange={e => setVaLoanAmt(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>Down Payment %:
+              <input type="number" value={vaDownPct} onChange={e => setVaDownPct(+e.target.value)} min="0" max="100" style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input type="checkbox" checked={vaFirstTime} onChange={e => setVaFirstTime(e.target.checked)} /> First-time VA use
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input type="checkbox" checked={vaDisability} onChange={e => setVaDisability(e.target.checked)} /> Disability exempt
+            </label>
+          </div>
+          <div style={{ marginTop: '10px', padding: '8px', background: '#dcfce7', borderRadius: '4px', textAlign: 'center' }}>
+            <div>Fee: <strong>{vaFee}%</strong> = <strong>${vaFeeAmt.toLocaleString()}</strong></div>
+            <div>Total Loan: <strong>${vaTotalLoan.toLocaleString()}</strong></div>
+          </div>
         </div>
-        <div style={{ marginTop: '10px', padding: '8px', background: '#dcfce7', borderRadius: '4px', textAlign: 'center' }}>
-          <div>Fee: <strong>{vaFee}%</strong> = <strong>${vaFeeAmt.toLocaleString()}</strong></div>
-          <div>Total Loan: <strong>${vaTotalLoan.toLocaleString()}</strong></div>
-        </div>
-      </div>
+      )}
 
       {/* FHA Seasoning */}
-      <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '6px', border: '1px solid #fde68a' }}>
-        <div style={{ fontWeight: '700', color: '#92400e', marginBottom: '8px' }}>🏠 FHA Streamline Seasoning</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <label>Original Close Date:
-            <input type="date" value={fhaCloseDate} onChange={e => setFhaCloseDate(e.target.value)}
-              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }} />
-          </label>
-          <label>Required Payments:
-            <select value={fhaPayments} onChange={e => setFhaPayments(+e.target.value)}
-              style={{ width: '100%', padding: '4px', borderRadius: '4px', border: '1px solid #ccc', marginTop: '2px' }}>
-              <option value={6}>6 payments (standard)</option>
-              <option value={12}>12 payments (some lenders)</option>
-            </select>
-          </label>
+      {selectedCalc === 'fha' && (
+        <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '6px', border: '1px solid #fde68a' }}>
+          <div style={{ fontWeight: '700', color: '#92400e', marginBottom: '8px' }}>🏠 FHA Streamline Seasoning</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <label style={labelStyle}>Original Close Date:
+              <input type="date" value={fhaCloseDate} onChange={e => setFhaCloseDate(e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>Required Payments:
+              <select value={fhaPayments} onChange={e => setFhaPayments(+e.target.value)} style={inputStyle}>
+                <option value={6}>6 payments (standard)</option>
+                <option value={12}>12 payments (some lenders)</option>
+              </select>
+            </label>
+          </div>
+          {fhaSeasoning && (
+            <div style={{ marginTop: '10px', padding: '8px', background: fhaSeasoning.isEligible ? '#dcfce7' : '#fee2e2', borderRadius: '4px', textAlign: 'center' }}>
+              <div>Months since close: <strong>{fhaSeasoning.monthsPassed}</strong></div>
+              <div>Eligible date: <strong>{fhaSeasoning.seasoningDate.toLocaleDateString()}</strong></div>
+              <div style={{ fontWeight: '700', color: fhaSeasoning.isEligible ? '#166534' : '#dc2626' }}>
+                {fhaSeasoning.isEligible ? '✓ ELIGIBLE FOR STREAMLINE' : '✗ NOT YET SEASONED'}
+              </div>
+            </div>
+          )}
         </div>
-        {fhaSeasoning && (
-          <div style={{ marginTop: '10px', padding: '8px', background: fhaSeasoning.isEligible ? '#dcfce7' : '#fee2e2', borderRadius: '4px', textAlign: 'center' }}>
-            <div>Months since close: <strong>{fhaSeasoning.monthsPassed}</strong></div>
-            <div>Eligible date: <strong>{fhaSeasoning.seasoningDate.toLocaleDateString()}</strong></div>
-            <div style={{ fontWeight: '700', color: fhaSeasoning.isEligible ? '#166534' : '#dc2626' }}>
-              {fhaSeasoning.isEligible ? '✓ ELIGIBLE FOR STREAMLINE' : '✗ NOT YET SEASONED'}
+      )}
+
+      {/* Debt Consolidation */}
+      {selectedCalc === 'debt' && (
+        <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '6px', border: '1px solid #c4b5fd' }}>
+          <div style={{ fontWeight: '700', color: '#5b21b6', marginBottom: '8px' }}>💳 Debt Consolidation Calculator</div>
+          <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>Add debts to consolidate:</div>
+          {debts.map((d, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '4px', marginBottom: '4px' }}>
+              <input placeholder="Debt name" value={d.name} onChange={e => updateDebt(i, 'name', e.target.value)} style={inputStyle} />
+              <input placeholder="Balance" type="number" value={d.balance || ''} onChange={e => updateDebt(i, 'balance', e.target.value)} style={inputStyle} />
+              <input placeholder="Payment" type="number" value={d.payment || ''} onChange={e => updateDebt(i, 'payment', e.target.value)} style={inputStyle} />
+            </div>
+          ))}
+          <button onClick={addDebt} style={{ fontSize: '10px', color: '#5b21b6', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add Debt</button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '8px' }}>
+            <label style={labelStyle}>New Loan Amt:
+              <input type="number" value={newLoanAmt} onChange={e => setNewLoanAmt(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>Rate %:
+              <input type="number" step="0.125" value={newRate} onChange={e => setNewRate(+e.target.value)} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>Term (yrs):
+              <input type="number" value={newTerm} onChange={e => setNewTerm(+e.target.value)} style={inputStyle} />
+            </label>
+          </div>
+          <div style={{ marginTop: '10px', padding: '8px', background: monthlySavings > 0 ? '#dcfce7' : '#fee2e2', borderRadius: '4px', textAlign: 'center' }}>
+            <div>Total Debt Payments: <strong>${totalDebtPayment.toLocaleString()}/mo</strong></div>
+            <div>New P&I: <strong>${Math.round(newPI).toLocaleString()}/mo</strong></div>
+            <div style={{ fontWeight: '700', color: monthlySavings > 0 ? '#166534' : '#dc2626' }}>
+              {monthlySavings > 0 ? `✓ SAVES $${Math.round(monthlySavings).toLocaleString()}/mo` : `✗ Costs $${Math.abs(Math.round(monthlySavings)).toLocaleString()} more/mo`}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Self-Employed Income */}
+      {selectedCalc === 'se' && (
+        <div style={{ background: '#fce7f3', padding: '12px', borderRadius: '6px', border: '1px solid #f9a8d4' }}>
+          <div style={{ fontWeight: '700', color: '#9d174d', marginBottom: '8px' }}>📊 Self-Employed Income Calculator</div>
+          <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px' }}>24-month average method:</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <label style={labelStyle}>Year 1 Net Income:
+              <input type="number" value={year1Income || ''} onChange={e => setYear1Income(+e.target.value)} style={inputStyle} placeholder="From tax return" />
+            </label>
+            <label style={labelStyle}>Year 2 Net Income:
+              <input type="number" value={year2Income || ''} onChange={e => setYear2Income(+e.target.value)} style={inputStyle} placeholder="From tax return" />
+            </label>
+          </div>
+          <label style={{ ...labelStyle, marginTop: '8px', display: 'block' }}>Add-backs (depreciation, etc):
+            <input type="number" value={addBacks || ''} onChange={e => setAddBacks(+e.target.value)} style={inputStyle} />
+          </label>
+          <div style={{ marginTop: '10px', padding: '8px', background: '#fbcfe8', borderRadius: '4px', textAlign: 'center' }}>
+            <div>2-Year Average: <strong>${avgIncome.toLocaleString()}</strong></div>
+            <div>+ Add-backs: <strong>${(addBacks || 0).toLocaleString()}</strong></div>
+            <div style={{ fontWeight: '700', color: '#9d174d', fontSize: '13px', marginTop: '4px' }}>
+              Monthly Qualifying: ${Math.round(monthlyIncome).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!selectedCalc && (
+        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
+          Select a calculator above
+        </div>
+      )}
     </div>
   );
 };

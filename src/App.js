@@ -195,6 +195,12 @@ const AppInner = () => {
               Calculators ▾
             </button>
             <div className="dropdown-menu">
+              <div style={{ borderBottom: '1px solid #333', margin: '4px 0', padding: '4px 8px', fontSize: '10px', color: '#6a6a80', fontWeight: '600' }}>BUILT-IN</div>
+              <button onClick={() => window.open('https://www.veteransunited.com/va-loans/calculator/', '_blank')}>🎖️ VA Funding Fee</button>
+              <button onClick={() => window.open('https://www.fha.com/fha_streamline_refinance', '_blank')}>🏠 FHA Streamline Seasoning</button>
+              <button onClick={() => window.open('https://www.bankrate.com/calculators/mortgages/debt-consolidation-calculator.aspx', '_blank')}>💳 Debt Consolidation</button>
+              <button onClick={() => window.open('https://www.calculator.net/self-employment-tax-calculator.html', '_blank')}>📊 Self-Employed Income</button>
+              <div style={{ borderBottom: '1px solid #333', margin: '4px 0', padding: '4px 8px', fontSize: '10px', color: '#6a6a80', fontWeight: '600' }}>EXTERNAL</div>
               <button onClick={() => window.open('https://www.mortgagecalculator.org', '_blank')}>Mortgage Calculator</button>
               <button onClick={() => window.open('https://nexarate.netlify.app/nexarate.netlify.app/page.genspark.site/page/toolu_01yzgm8vgfwqfwbevjzza7c8/modern_loan_calculator_final_pdf.html', '_blank')}>Net Effective</button>
               <button onClick={() => window.open('https://app.quantumreverse.com/fcc03f2f-2545-488d-a22a-45b3ea0ee6b2?type=htmlForm', '_blank')}>Quantum Reverse Calc</button>
