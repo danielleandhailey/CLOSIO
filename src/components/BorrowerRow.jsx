@@ -253,7 +253,10 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
           {/* Outstanding */}
           {outstanding.length > 0 && (
             <div style={{ padding: '8px 20px' }}>
-              {/* Select All box */}
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                Outstanding ({outstanding.length})
+              </div>
+              {/* Select All box - outline only, above yellow boxes */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
                 <button
                   onClick={async () => {
@@ -264,16 +267,10 @@ const StipsModal = ({ borrower, onClose, onAddStip, onMarkReceived, onRemoveStip
                   }}
                   style={{
                     width: '22px', height: '22px', borderRadius: '4px',
-                    background: '#166534', border: 'none', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'none', border: '2px solid #166534', cursor: 'pointer',
                   }}
                   title="Select All"
-                >
-                  <Check size={14} style={{ color: '#86efac' }} />
-                </button>
-              </div>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
-                Outstanding ({outstanding.length})
+                />
               </div>
               {outstanding.map(s => (
                 <div key={s.id} style={{

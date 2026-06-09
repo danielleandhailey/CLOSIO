@@ -6,35 +6,17 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // MarketWatch widget API - matches CNBC closely
-    const mwRes = await fetch(
-      'https://api.wsj.net/api/dylan/quotes/v2/comp/quote?id=BX:TMUBMUSD10Y&accept=application/json'
+    // Alpha Vantage - free, reliable
+    const avRes = await fetch(
+      'https://www.alphavantage.co/query?function=TREASURY_YIELD&interval=daily&maturity=10year&apikey=demo'
     );
-    const mwData = await mwRes.json();
-    const mwRate = mwData?.data?.[0]?.last;
-    if (mwRate) {
-      return res.status(200).json({ rate: parseFloat(mwRate).toFixed(3), success: true, source: 'wsj' });
+    const avData = await avRes.json();
+    const avRate = avData?.data?.[0]?.value;
+    if (avRate && avRate !== '.') {
+      return res.status(200).json({ rate: parseFloat(avRate).toFixed(3), success: true, source: 'alphavantage' });
     }
 
-    // Fallback: Tradingview-style endpoint
-    const tvRes = await fetch(
-      'https://scanner.tradingview.com/bond/scan',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          symbols: { tickers: ['TVC:US10Y'] },
-          columns: ['close']
-        })
-      }
-    );
-    const tvData = await tvRes.json();
-    const tvRate = tvData?.data?.[0]?.d?.[0];
-    if (tvRate) {
-      return res.status(200).json({ rate: parseFloat(tvRate).toFixed(3), success: true, source: 'tradingview' });
-    }
-
-    // Fallback: Twelve Data API
+    // Twelve Data API (usually works)
     const apiKey = '36b46313317e454b8f57f99323653c2f';
     const response = await fetch(
       `https://api.twelvedata.com/price?symbol=TNX&apikey=${apiKey}`
@@ -45,13 +27,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ rate: parseFloat(data.price).toFixed(3), success: true, source: 'twelvedata' });
     }
 
-    // Final fallback: FRED (prior day close)
+    // FRED (prior day close - always works)
     const fredKey = '0e8dd4ee7d6651eaff6e8a9817d768fb';
     const fredRes = await fetch(
       `https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`
     );
     const fredData = await fredRes.json();
-    if (fredData.observations && fredData.observations.length > 0) {
+    if (fredData.observations && fredData.observations.length > 0 && fredData.observations[0].value !== '.') {
       return res.status(200).json({ rate: parseFloat(fredData.observations[0].value).toFixed(3), success: true, source: 'fred' });
     }
 
