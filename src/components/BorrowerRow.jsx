@@ -711,7 +711,7 @@ const AddTagInline = ({ borrower, onAdd, sc }) => {
 // Loan Type dropdown under borrower name
 const LoanTypeDropdown = ({ borrower, onUpdate }) => {
   const [open, setOpen, ref] = useDropdown();
-  const TYPES = ['Purchase', 'Refinance', 'HELOC', 'Reverse'];
+  const TYPES = ['Purchase', 'Refinance', 'HELOC', 'Reverse', 'Debt Consol', 'R/T', 'DPA', 'OTC'];
 
   const getDisplayType = () => {
     const raw = (borrower.loan_purpose || borrower.loan_type || '').toLowerCase();
@@ -761,6 +761,68 @@ const LoanTypeDropdown = ({ borrower, onUpdate }) => {
               {t}
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Small lender dropdown under borrower name
+const LenderDropdownSmall = ({ borrower, onUpdate }) => {
+  const [open, setOpen, ref] = useDropdown();
+  const lender = borrower.lender;
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <span
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        style={{
+          fontSize: '9px', color: lender ? '#22c55e' : '#64748b', fontWeight: '600',
+          textTransform: 'uppercase', letterSpacing: '0.5px', cursor: 'pointer',
+          padding: '2px 4px', borderRadius: '3px',
+          background: open ? '#1e293b' : 'transparent',
+        }}
+        title="Click to change lender"
+      >
+        {lender || '+ Lender'}
+      </span>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, zIndex: 400,
+          background: '#fff', border: '1px solid #ddd', borderRadius: '6px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.15)', minWidth: '120px', padding: '4px',
+          maxHeight: '200px', overflowY: 'auto',
+        }}>
+          {LENDER_OPTIONS.map(l => (
+            <button
+              key={l}
+              type="button"
+              onClick={e => { e.stopPropagation(); onUpdate(borrower.id, { lender: l }); setOpen(false); }}
+              style={{
+                display: 'block', width: '100%', padding: '6px 10px', border: 'none',
+                background: lender === l ? '#dcfce7' : 'transparent',
+                color: '#333', cursor: 'pointer', borderRadius: '4px',
+                fontSize: '11px', fontWeight: '600', textAlign: 'left',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+              onMouseLeave={e => e.currentTarget.style.background = lender === l ? '#dcfce7' : 'transparent'}
+            >
+              {l}
+            </button>
+          ))}
+          {lender && (
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); onUpdate(borrower.id, { lender: null }); setOpen(false); }}
+              style={{
+                display: 'block', width: '100%', padding: '6px 10px', border: 'none',
+                background: 'transparent', color: '#ef4444', cursor: 'pointer', borderRadius: '4px',
+                fontSize: '11px', fontWeight: '600', textAlign: 'left', borderTop: '1px solid #eee', marginTop: '4px',
+              }}
+            >
+              Clear
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -1178,7 +1240,7 @@ const BorrowerRow = ({
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
-        {/* Name + Type */}
+        {/* Name + Type + Lender */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span
             className="borrower-name"
@@ -1188,7 +1250,10 @@ const BorrowerRow = ({
           >
             {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
           </span>
-          <LoanTypeDropdown borrower={borrower} onUpdate={onUpdate} />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <LoanTypeDropdown borrower={borrower} onUpdate={onUpdate} />
+            <LenderDropdownSmall borrower={borrower} onUpdate={onUpdate} />
+          </div>
         </div>
 
         {/* Badges after expand button */}
