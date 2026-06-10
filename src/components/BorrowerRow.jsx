@@ -1225,16 +1225,26 @@ const BorrowerRow = ({
             <div
               style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '40px', flex: 1, overflow: 'hidden' }}
             >
-              {noteLines.slice(0, 2).map((line, idx) => {
+              {noteLines.slice(0, 3).map((line, idx, arr) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
                 const noteText = match ? match[2] : line;
+                const hasMoreAfter = idx < arr.length - 1;
+                const truncatedText = noteText.length > 120 ? noteText.substring(0, 117) + '...' : noteText;
                 return (
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '5px', cursor: 'pointer', flex: '1 1 45%', minWidth: '250px' }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'flex-start',
+                      gap: '5px',
+                      cursor: 'pointer',
+                      flexShrink: hasMoreAfter ? 1 : 0,
+                      maxWidth: hasMoreAfter ? '33%' : 'none',
+                      overflow: 'hidden'
+                    }}
                     title={noteText}
                   >
                     <button
@@ -1243,9 +1253,17 @@ const BorrowerRow = ({
                       style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '11px', padding: '0 2px', flexShrink: 0 }}
                       title="Delete this note"
                     >x</button>
-                    {dateStr && <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, whiteSpace: 'nowrap' }}>{dateStr}</span>}
-                    <span style={{ fontSize: '12px', color: '#cbd5e1', wordBreak: 'break-word' }}>
-                      {noteText}
+                    {dateStr && <span style={{ fontSize: '13px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, whiteSpace: 'nowrap' }}>{dateStr}</span>}
+                    <span style={{
+                      fontSize: '14px',
+                      color: '#cbd5e1',
+                      display: '-webkit-box',
+                      WebkitLineClamp: hasMoreAfter ? 3 : 'unset',
+                      WebkitBoxOrient: 'vertical',
+                      overflow: hasMoreAfter ? 'hidden' : 'visible',
+                      lineHeight: '1.3'
+                    }}>
+                      {hasMoreAfter ? truncatedText : noteText}
                     </span>
                   </div>
                 );
