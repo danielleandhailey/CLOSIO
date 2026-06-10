@@ -40,11 +40,16 @@ const PipelinePage = ({ borrowers, ops }) => {
 
   const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'HELOC', 'Reverse', 'Refi/HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM', 'DPA', 'OTC'];
 
-  // Stage counts
+  // Stage counts (Stips Needed counts borrowers with stips_needed > 0)
   const stageCounts = useMemo(() => {
     const counts = {};
     STAGES.forEach(s => { counts[s] = 0; });
-    borrowers.forEach(b => { if (counts[b.stage] !== undefined) counts[b.stage]++; });
+    borrowers.forEach(b => {
+      if (b.stage === 'Stips Needed' || (b.stips_needed && b.stips_needed > 0)) {
+        counts['Stips Needed']++;
+      }
+      if (counts[b.stage] !== undefined && b.stage !== 'Stips Needed') counts[b.stage]++;
+    });
     return counts;
   }, [borrowers]);
 
