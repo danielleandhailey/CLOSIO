@@ -435,9 +435,9 @@ body[data-theme="light"] .btn-icon:hover {
 }
 
 .borrower-name {
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--text);
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
   white-space: nowrap;
   flex-shrink: 0;
   width: 140px;
