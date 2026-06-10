@@ -164,7 +164,7 @@ export default async function handler(req, res) {
           if (byEmail?.length) existingBorrower = byEmail[0];
         }
 
-        // Try name match as last resort
+        // Try name match as last resort (exact, then partial)
         if (!existingBorrower && name) {
           const { data: byName } = await supabase
             .from('borrowers')
@@ -172,6 +172,15 @@ export default async function handler(req, res) {
             .ilike('name', name)
             .limit(1);
           if (byName?.length) existingBorrower = byName[0];
+        }
+        // Try last name + first initial if still no match
+        if (!existingBorrower && lastName && firstName) {
+          const { data: byPartial } = await supabase
+            .from('borrowers')
+            .select('*')
+            .ilike('name', `${lastName}%${firstName.charAt(0)}%`)
+            .limit(1);
+          if (byPartial?.length) existingBorrower = byPartial[0];
         }
 
         // If existing borrower, update fields from Bonzo
