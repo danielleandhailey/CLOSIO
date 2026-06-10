@@ -18,20 +18,22 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBorrower, setEditingBorrower] = useState(null);
 
-  // Auto Bonzo sync every 30 minutes when page is open
+  // Auto Bonzo sync at startup and every 15 minutes
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const doSync = async () => {
       try {
         const res = await fetch('/api/bonzo-pull');
         const data = await res.json();
         if (data.created > 0 || data.updated > 0) {
           console.log('Auto Bonzo sync:', data);
-          window.location.reload(); // Refresh to show new data
+          window.location.reload();
         }
       } catch (e) {
         console.error('Auto Bonzo sync error:', e);
       }
-    }, 30 * 60 * 1000); // 30 minutes
+    };
+    doSync(); // Run at startup
+    const interval = setInterval(doSync, 15 * 60 * 1000); // Every 15 min
     return () => clearInterval(interval);
   }, []);
 
