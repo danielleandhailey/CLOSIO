@@ -2223,6 +2223,88 @@ const GetPaidSection = ({ borrower, onUpdate }) => {
   );
 };
 
+// ---- Communication Section ----
+const CommunicationSection = ({ borrower }) => {
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [error, setError] = useState(null);
+
+  const fetchBonzoComms = async () => {
+    if (!borrower.bonzo_id) {
+      setError('No Bonzo ID linked');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/bonzo-comms?prospectId=${borrower.bonzo_id}`);
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setMessages(data.messages || []);
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ fontSize: '12px', color: '#334155' }}>
+      {borrower.bonzo_id ? (
+        <>
+          <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={fetchBonzoComms}
+              disabled={loading}
+              style={{
+                padding: '6px 12px', background: '#ec4899', color: '#fff', border: 'none',
+                borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+              }}
+            >
+              {loading ? 'Loading...' : 'Pull Bonzo Messages'}
+            </button>
+            <a
+              href={`https://platform.getbonzo.com/conversations/${borrower.bonzo_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#ec4899', fontSize: '11px', fontWeight: '600' }}
+            >
+              Open in Bonzo
+            </a>
+          </div>
+          {error && <div style={{ color: '#ef4444', marginBottom: '8px' }}>{error}</div>}
+          {messages.length > 0 ? (
+            <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {messages.map((m, i) => (
+                <div key={i} style={{
+                  padding: '8px', background: m.direction === 'outbound' ? '#dbeafe' : '#f1f5f9',
+                  borderRadius: '6px', borderLeft: `3px solid ${m.direction === 'outbound' ? '#3b82f6' : '#64748b'}`,
+                }}>
+                  <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '4px' }}>
+                    {m.direction === 'outbound' ? '→ Sent' : '← Received'} • {m.date}
+                  </div>
+                  <div>{m.body}</div>
+                </div>
+              ))}
+            </div>
+          ) : !loading && (
+            <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
+              Click "Pull Bonzo Messages" to load communication history
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
+          No Bonzo ID linked. Sync from Bonzo first.
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ---- Notify LOA Section ----
 const NotifyLOASection = ({ borrower }) => {
   const [status, setStatus] = useState(null);
@@ -3011,6 +3093,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
 
   const tabs = [
     { id: 'notes',    label: 'NOTES & TASKS' },
+    { id: 'comms',    label: 'COMMUNICATION' },
     { id: 'docs',     label: 'DOCUMENTS' },
     { id: 'borrowers', label: 'BORROWERS' },
     { id: 'terms',    label: 'LOAN TERMS' },
@@ -3065,6 +3148,14 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
             <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
             <TasksSection borrower={borrower} ops={ops} />
             {closeBtn('notes')}
+          </div>
+        )}
+
+        {openTabs.has('comms') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💬 Communication</div>
+            <CommunicationSection borrower={borrower} />
+            {closeBtn('comms')}
           </div>
         )}
 
