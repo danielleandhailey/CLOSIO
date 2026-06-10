@@ -2223,6 +2223,125 @@ const GetPaidSection = ({ borrower, onUpdate }) => {
   );
 };
 
+// ---- Bonzo Notes Section ----
+const BonzoNotesSection = ({ borrower }) => {
+  const [loading, setLoading] = useState(false);
+  const [notes, setNotes] = useState([]);
+  const [newNote, setNewNote] = useState('');
+  const [error, setError] = useState(null);
+
+  const fetchBonzoNotes = async () => {
+    if (!borrower.bonzo_id) {
+      setError('No Bonzo ID linked');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/bonzo-notes?prospectId=${borrower.bonzo_id}`);
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setNotes(data.notes || []);
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pushNote = async () => {
+    if (!newNote.trim() || !borrower.bonzo_id) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/bonzo-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prospectId: borrower.bonzo_id, note: newNote.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewNote('');
+        fetchBonzoNotes();
+      } else {
+        setError(data.error);
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ fontSize: '12px', color: '#93c5fd' }}>
+      {borrower.bonzo_id ? (
+        <>
+          <div style={{ marginBottom: '12px', display: 'flex', gap: '8px' }}>
+            <button
+              onClick={fetchBonzoNotes}
+              disabled={loading}
+              style={{
+                padding: '6px 12px', background: '#3b82f6', color: '#fff', border: 'none',
+                borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+              }}
+            >
+              {loading ? 'Loading...' : 'Pull Notes'}
+            </button>
+          </div>
+          <div style={{ marginBottom: '12px', display: 'flex', gap: '6px' }}>
+            <input
+              type="text"
+              value={newNote}
+              onChange={e => setNewNote(e.target.value)}
+              placeholder="Add note to Bonzo..."
+              style={{
+                flex: 1, padding: '6px 10px', background: '#0f2744', border: '1px solid #3b82f6',
+                borderRadius: '4px', color: '#fff', fontSize: '12px',
+              }}
+              onKeyDown={e => e.key === 'Enter' && pushNote()}
+            />
+            <button
+              onClick={pushNote}
+              disabled={loading || !newNote.trim()}
+              style={{
+                padding: '6px 12px', background: '#22c55e', color: '#fff', border: 'none',
+                borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+              }}
+            >
+              Push
+            </button>
+          </div>
+          {error && <div style={{ color: '#f87171', marginBottom: '8px' }}>{error}</div>}
+          {notes.length > 0 ? (
+            <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {notes.map((n, i) => (
+                <div key={i} style={{
+                  padding: '8px', background: '#0f2744', borderRadius: '6px',
+                  borderLeft: '3px solid #3b82f6',
+                }}>
+                  <div style={{ fontSize: '10px', color: '#60a5fa', marginBottom: '4px' }}>{n.date}</div>
+                  <div style={{ color: '#e0f2fe' }}>{n.body}</div>
+                </div>
+              ))}
+            </div>
+          ) : !loading && (
+            <div style={{ color: '#60a5fa', textAlign: 'center', padding: '20px' }}>
+              Click "Pull Notes" to load from Bonzo
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ color: '#60a5fa', textAlign: 'center', padding: '20px' }}>
+          No Bonzo ID linked. Sync from Bonzo first.
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ---- Communication Section ----
 const CommunicationSection = ({ borrower }) => {
   const [loading, setLoading] = useState(false);
@@ -3092,7 +3211,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
   };
 
   const tabs = [
-    { id: 'notes',    label: 'NOTES & TASKS' },
+    { id: 'notes',    label: 'NOTES' },
+    { id: 'tasks',    label: 'TASKS' },
+    { id: 'bonzonotes', label: 'BONZO NOTES' },
     { id: 'comms',    label: 'COMMUNICATION' },
     { id: 'docs',     label: 'DOCUMENTS' },
     { id: 'borrowers', label: 'BORROWERS' },
@@ -3144,10 +3265,25 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
         {openTabs.has('notes') && (
           <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📝 Notes & Tasks</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📝 Notes</div>
             <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
-            <TasksSection borrower={borrower} ops={ops} />
             {closeBtn('notes')}
+          </div>
+        )}
+
+        {openTabs.has('tasks') && (
+          <div style={boxStyle}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>✅ Tasks</div>
+            <TasksSection borrower={borrower} ops={ops} />
+            {closeBtn('tasks')}
+          </div>
+        )}
+
+        {openTabs.has('bonzonotes') && (
+          <div style={{ ...boxStyle, background: '#1e3a5f', border: '2px solid #3b82f6' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#60a5fa', marginBottom: '12px' }}>📘 Bonzo Notes</div>
+            <BonzoNotesSection borrower={borrower} />
+            {closeBtn('bonzonotes')}
           </div>
         )}
 
