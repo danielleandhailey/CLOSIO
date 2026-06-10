@@ -81,9 +81,9 @@ export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
         if (!a.is_updated && b.is_updated) return 1;
         return stageIdx(a.stage) - stageIdx(b.stage);
       case 'stips':
-        // STIPS needed first (substage = 'Stips Needed')
-        if (a.substage === 'Stips Needed' && b.substage !== 'Stips Needed') return -1;
-        if (a.substage !== 'Stips Needed' && b.substage === 'Stips Needed') return 1;
+        // STIPS needed first (stage = 'Stips Needed')
+        if (a.stage === 'Stips Needed' && b.stage !== 'Stips Needed') return -1;
+        if (a.stage !== 'Stips Needed' && b.stage === 'Stips Needed') return 1;
         return stageIdx(a.stage) - stageIdx(b.stage);
       case 'duplicates':
         // Duplicates first (is_duplicate = true)
