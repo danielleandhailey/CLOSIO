@@ -185,21 +185,13 @@ export default async function handler(req, res) {
           const updateData = {
             timezone: p.timezone || existingBorrower.timezone,
             bonzo_id: String(p.id),
-            bonzo_last_sync: new Date().toISOString()
+            bonzo_last_sync: new Date().toISOString(),
+            is_updated: true  // Always mark as updated when synced from Bonzo
           };
 
-          // Log what Bonzo sends for debugging
-          console.log('SYNC:', existingBorrower.name, '| mortgage.loan_purpose:', mortgage.loan_purpose, '| p.loan_purpose:', p.loan_purpose);
-
-          // Sync loan_purpose if Bonzo has it and existing is empty or different
+          // Sync loan_purpose if Bonzo has it
           if (loanPurpose && loanPurpose !== existingBorrower.loan_purpose) {
             updateData.loan_purpose = loanPurpose;
-            updateData.is_updated = true;
-          }
-
-          // If stage mapping exists and is different, mark as updated
-          if (stageMapping && stageMapping.stage !== existingBorrower.stage) {
-            updateData.is_updated = true;
           }
 
           await supabase
