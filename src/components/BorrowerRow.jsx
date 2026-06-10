@@ -1502,6 +1502,21 @@ const BorrowerRow = ({
             ))}
           </div>
 
+          {/* Bonzo fields: occupancy, lead_source, lead_id */}
+          {(borrower.occupancy || borrower.lead_source || borrower.lead_id) && (
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginRight: '12px' }}>
+              {borrower.occupancy && (
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>{borrower.occupancy}</span>
+              )}
+              {borrower.lead_source && (
+                <span style={{ fontSize: '11px', color: '#60a5fa', fontWeight: '700' }}>{borrower.lead_source}</span>
+              )}
+              {borrower.lead_id && (
+                <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>ID: {borrower.lead_id}</span>
+              )}
+            </div>
+          )}
+
           {/* +Lender and +Tag buttons fixed on right */}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
             <LenderBadge borrower={borrower} onUpdate={onUpdate} />

@@ -281,6 +281,7 @@ export default async function handler(req, res) {
           updated_at: new Date().toISOString(),
           // Extra Bonzo fields for borrower card
           lead_source: p.lead_source || p.source || undefined,
+          lead_id: p.lead_id || p.external_id || String(p.id) || undefined,
           birthday: p.birthday || p.date_of_birth || undefined,
           timezone: p.timezone || undefined,
         };
