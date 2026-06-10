@@ -1154,7 +1154,7 @@ const BorrowerRow = ({
           title="Click to manage stips"
           onClick={(e) => { e.stopPropagation(); setShowStipsModal(true); }}
           >
-            STIPS NEEDED
+            NEED
             {totalCount > 0 && (
               <span style={{
                 background: outstandingCount > 0 ? '#dc2626' : '#166534',
@@ -1221,9 +1221,17 @@ const BorrowerRow = ({
             await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
           };
 
+          // Truncate at word boundary
+          const truncateAtWord = (text, maxLen) => {
+            if (text.length <= maxLen) return text;
+            const truncated = text.substring(0, maxLen);
+            const lastSpace = truncated.lastIndexOf(' ');
+            return (lastSpace > maxLen - 30 ? truncated.substring(0, lastSpace) : truncated) + '...';
+          };
+
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '40px', flex: 1, overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '12px', flex: 1, overflow: 'hidden', marginLeft: '10px' }}
             >
               {noteLines.slice(0, 3).map((line, idx, arr) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
@@ -1231,7 +1239,7 @@ const BorrowerRow = ({
                 const dateStr = match ? match[1] : '';
                 const noteText = match ? match[2] : line;
                 const hasMoreAfter = idx < arr.length - 1;
-                const truncatedText = noteText.length > 120 ? noteText.substring(0, 117) + '...' : noteText;
+                const truncatedText = truncateAtWord(noteText, 100);
                 return (
                   <div
                     key={idx}
@@ -1241,8 +1249,8 @@ const BorrowerRow = ({
                       alignItems: 'flex-start',
                       gap: '5px',
                       cursor: 'pointer',
-                      flexShrink: hasMoreAfter ? 1 : 0,
-                      maxWidth: hasMoreAfter ? '33%' : 'none',
+                      flex: hasMoreAfter ? '1 1 0' : '0 0 auto',
+                      maxWidth: hasMoreAfter ? '32%' : 'none',
                       overflow: 'hidden'
                     }}
                     title={noteText}
@@ -1258,12 +1266,12 @@ const BorrowerRow = ({
                       fontSize: '14px',
                       color: '#cbd5e1',
                       display: '-webkit-box',
-                      WebkitLineClamp: hasMoreAfter ? 3 : 'unset',
+                      WebkitLineClamp: 3,
                       WebkitBoxOrient: 'vertical',
-                      overflow: hasMoreAfter ? 'hidden' : 'visible',
+                      overflow: 'hidden',
                       lineHeight: '1.3'
                     }}>
-                      {hasMoreAfter ? truncatedText : noteText}
+                      {truncatedText}
                     </span>
                   </div>
                 );
