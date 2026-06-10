@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     // Fetch prospects from Bonzo - get multiple pages
     let allProspects = [];
     let page = 1;
-    const maxPages = 5; // Fetch 250 to sync more borrowers
+    const maxPages = 20; // Fetch up to 1000 to get DR-Leads pipeline too
 
     while (page <= maxPages) {
       const response = await fetch(`${BONZO_API_URL}/prospects?per_page=50&page=${page}&sort=-created_at`, {
