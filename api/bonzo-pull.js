@@ -164,6 +164,16 @@ export default async function handler(req, res) {
           if (byEmail?.length) existingBorrower = byEmail[0];
         }
 
+        // Try name match as last resort
+        if (!existingBorrower && name) {
+          const { data: byName } = await supabase
+            .from('borrowers')
+            .select('*')
+            .ilike('name', name)
+            .limit(1);
+          if (byName?.length) existingBorrower = byName[0];
+        }
+
         // If existing borrower, update fields from Bonzo
         if (existingBorrower) {
           const bonzoStageName = p.pipeline?.stage?.name || p.pipeline?.stage || p.pipeline_stage?.name || p.pipeline_stage || p.stage?.name || p.stage || '';
