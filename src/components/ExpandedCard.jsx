@@ -2325,8 +2325,8 @@ const BonzoNotesSection = ({ borrower }) => {
                   padding: '10px', background: '#0f2744', borderRadius: '6px',
                   borderLeft: '3px solid #3b82f6',
                 }}>
-                  <div style={{ fontSize: '10px', color: '#f59e0b', marginBottom: '4px' }}>{n.date}</div>
-                  <div style={{ color: '#fff', fontSize: '14px', lineHeight: 1.5 }}>{stripHtmlNotes(n.body)}</div>
+                  <div style={{ fontSize: '12px', color: '#f59e0b', marginBottom: '4px' }}>{n.date}</div>
+                  <div style={{ color: '#fff', fontSize: '16px', lineHeight: 1.6 }}>{stripHtmlNotes(n.body)}</div>
                 </div>
               ))}
             </div>
@@ -2410,10 +2410,10 @@ const CommunicationSection = ({ borrower }) => {
                   padding: '12px', background: m.direction === 'outbound' ? '#dbeafe' : '#f8fafc',
                   borderRadius: '8px', borderLeft: `4px solid ${m.direction === 'outbound' ? '#3b82f6' : '#64748b'}`,
                 }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>
                     {m.direction === 'outbound' ? '→ Sent' : '← Received'} • {m.date}
                   </div>
-                  <div style={{ fontSize: '14px', color: '#1e293b', lineHeight: 1.5 }}>{stripHtml(m.body)}</div>
+                  <div style={{ fontSize: '16px', color: '#1e293b', lineHeight: 1.6 }}>{stripHtml(m.body)}</div>
                 </div>
               ))}
             </div>
