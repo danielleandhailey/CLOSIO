@@ -99,6 +99,41 @@ const MatrixPage = () => {
     setQuestion('');
     setAsking(true);
 
+    // Check if user wants to store a note
+    const storeMatch = q.match(/^store\s*this[:\s]+(.+)/i);
+    if (storeMatch && user) {
+      const noteText = storeMatch[1].trim();
+      setChatHistory(h => [...h, { role: 'user', content: q }]);
+      try {
+        // Save to lender_matrices as "My Notes"
+        const { data: existing } = await supabase.from('lender_matrices')
+          .select('id, ai_index')
+          .eq('user_id', user.id)
+          .eq('lender_name', 'My Notes')
+          .single();
+
+        const newIndex = existing?.ai_index ? `${existing.ai_index}\n- ${noteText}` : `- ${noteText}`;
+
+        await supabase.from('lender_matrices').upsert({
+          id: existing?.id,
+          user_id: user.id,
+          lender_name: 'My Notes',
+          ai_index: newIndex,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+
+        setChatHistory(h => [...h, { role: 'ai', content: `Stored! "${noteText}"` }]);
+        // Refresh matrices
+        const { data } = await supabase.from('lender_matrices').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+        setMatrices(data || []);
+      } catch (e) {
+        setChatHistory(h => [...h, { role: 'ai', content: `Error storing note: ${e.message}` }]);
+      } finally {
+        setAsking(false);
+      }
+      return;
+    }
+
     const context = matrices.map(m => `Lender: ${m.lender_name}\n${m.ai_index || ''}`).join('\n\n---\n\n');
     console.log('Matrix context length:', context.length, 'matrices:', matrices.length);
     console.log('First matrix ai_index:', matrices[0]?.ai_index?.substring(0, 100));
