@@ -27,7 +27,7 @@ const NotesSection = ({ borrower, ops, onClose }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1 }}>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
         <input
           type="text"
@@ -43,7 +43,7 @@ const NotesSection = ({ borrower, ops, onClose }) => {
           style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer', fontSize: '12px' }}
         >+ Add</button>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: '300px', maxHeight: '500px' }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         {noteLines.length > 0 ? noteLines.map((line, i) => {
           const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
           const dateStr = match ? match[1] : '';
@@ -3257,9 +3257,20 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
       {/* Content Boxes */}
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
         {openTabs.has('notes') && (
-          <div style={{ ...boxStyle, minHeight: '450px' }}>
+          <div style={{ ...boxStyle, minHeight: '450px', height: '500px' }}>
             <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
-            {closeBtn('notes')}
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: 'auto', paddingTop: '12px' }}>
+              {borrower.bonzo_id && (
+                <button type="button" onClick={() => toggleTab('bonzonotes')}
+                  style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                  View Bonzo Notes
+                </button>
+              )}
+              <button type="button" onClick={() => closeTab('notes')}
+                style={{ background: '#64748b', color: '#fff', border: 'none', padding: '4px 16px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                Close
+              </button>
+            </div>
           </div>
         )}
 
