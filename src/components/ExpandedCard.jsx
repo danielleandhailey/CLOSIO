@@ -43,21 +43,21 @@ const NotesSection = ({ borrower, ops, onClose }) => {
           style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer', fontSize: '12px' }}
         >+ Add</button>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', background: '#0f172a', borderRadius: '6px', padding: '12px' }}>
         {noteLines.length > 0 ? noteLines.map((line, i) => {
           const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
           const dateStr = match ? match[1] : '';
           const noteText = match ? match[2] : line;
           return (
-            <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '10px', marginBottom: '6px', background: '#1e293b', borderRadius: '5px' }}>
+            <div key={i} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: i < noteLines.length - 1 ? '1px solid #334155' : 'none' }}>
               {dateStr && (
-                <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '55px' }}>{dateStr}</span>
+                <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '600', marginBottom: '4px' }}>{dateStr}</div>
               )}
-              <span style={{ fontSize: '14px', color: '#fff', flex: 1, lineHeight: 1.4 }}>{noteText}</span>
+              <div style={{ fontSize: '14px', color: '#fff', lineHeight: 1.5 }}>{noteText}</div>
             </div>
           );
         }) : (
-          <div style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>No notes yet</div>
+          <div style={{ color: '#64748b', textAlign: 'center', padding: '40px' }}>No notes yet</div>
         )}
       </div>
     </div>
@@ -2309,25 +2309,25 @@ const BonzoNotesSection = ({ borrower }) => {
           </div>
           {error && <div style={{ color: '#f87171', marginBottom: '8px' }}>{error}</div>}
           {notes.length > 0 ? (
-            <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {notes.map((n, i) => (
                 <div key={i} style={{
-                  padding: '8px', background: '#0f2744', borderRadius: '6px',
+                  padding: '10px', background: '#0f2744', borderRadius: '6px',
                   borderLeft: '3px solid #3b82f6',
                 }}>
-                  <div style={{ fontSize: '10px', color: '#60a5fa', marginBottom: '4px' }}>{n.date}</div>
-                  <div style={{ color: '#e0f2fe' }}>{n.body}</div>
+                  <div style={{ fontSize: '10px', color: '#f59e0b', marginBottom: '4px' }}>{n.date}</div>
+                  <div style={{ color: '#fff', fontSize: '14px', lineHeight: 1.5 }}>{n.body}</div>
                 </div>
               ))}
             </div>
           ) : !loading && (
-            <div style={{ color: '#60a5fa', textAlign: 'center', padding: '20px' }}>
+            <div style={{ color: '#fff', textAlign: 'center', padding: '20px' }}>
               Click "Pull Notes" to load from Bonzo
             </div>
           )}
         </>
       ) : (
-        <div style={{ color: '#60a5fa', textAlign: 'center', padding: '20px' }}>
+        <div style={{ color: '#fff', textAlign: 'center', padding: '20px' }}>
           No Bonzo ID linked. Sync from Bonzo first.
         </div>
       )}
