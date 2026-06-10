@@ -50,12 +50,16 @@ https://credit.advcredit.com/smartpay/SmartPay.aspx?uid=0c9eb1f6-559e-48e8-bca4-
 - "[Name] portal link" = just the link, not credentials
 - When user corrects you ("wrong", "fix it", "no it's", "actually it's"), the correction is automatically saved to My Notes
 - MOST RECENT DATA RULE: When multiple uploads exist for the same lender or lead source, ALWAYS use the most recent data. Newer uploads override older ones.
-- LEAD ANALYTICS COLORS (by type):
-  - CASHOUT: BLUE, MAROON, BROWN, BLACK, GREEN, ORANGE, TEAL, CHRYSOLITE, TOPAZ, ONYX, AMETHYST, GARNET, EMERALD, JASPER, LAPIS, RUBY
-  - R/T (Rate/Term): MAROON, LAPIS
-  - PURCHASE: MAROON, ORANGE, CHRYSOLITE, BLUE, EMERALD, TOPAZ, RUBY
-- Each lead color has Min/Avg/Max pricing and a conversion percentage
-- Golden Leads = premium high-intent leads (can be toggled on/off)`
+- LEAD ANALYTICS: User will drop screenshots with current lead stats. Use MOST RECENT screenshot data - prices change daily.
+- LEAD COLORS by type:
+  - PURCHASE: MAROON ($5-18), ORANGE ($8-25), CHRYSOLITE ($5-18), BLUE ($4-5), EMERALD ($20-65), TOPAZ ($14-18), RUBY ($20-30). Early/Mid/Late funnel affects price.
+  - CASHOUT: BLUE ($7-18, 10%), MAROON Home Equity ($14-19, 5%), BROWN ($7-25), BLACK HELOC ($32-33), GREEN, ORANGE, TEAL, ONYX, AMETHYST, GARNET, EMERALD, JASPER, LAPIS, RUBY
+  - R/T: MAROON ($5-18), LAPIS ($5-8)
+  - HELOC: MAROON 700+ ($22-25), BLACK ($32-33), TEAL, EMERALD, GARNET, AMETHYST, RUBY
+- Each color has Min/Avg/Max pricing and conversion %. Lower price + higher % = better ROI.
+- Golden Leads = premium high-intent (toggle on/off)
+- When user asks "best leads to buy": compare cost vs conversion %, recommend highest ROI
+- When user drops new lead stats screenshot, that data overrides old pricing`
       : `You are a mortgage lending expert. The user has not uploaded any lender guidelines yet. Let them know they should upload PDF guidelines to get specific answers, but you can provide general mortgage knowledge if they'd like.`;
 
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
