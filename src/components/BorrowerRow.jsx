@@ -1233,47 +1233,23 @@ const BorrowerRow = ({
             <div
               style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '6px', flex: 1, overflow: 'hidden', marginLeft: '0' }}
             >
-              {noteLines.slice(0, 3).map((line, idx, arr) => {
+              {noteLines.slice(0, 3).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
                 const noteText = match ? match[2] : line;
-                const hasMoreAfter = idx < arr.length - 1;
-                const truncatedText = truncateAtWord(noteText, 100);
+                const truncatedText = truncateAtWord(noteText, 80);
                 return (
-                  <div
+                  <span
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'flex-start',
-                      gap: '5px',
-                      cursor: 'pointer',
-                      flex: hasMoreAfter ? '1 1 0' : '0 0 auto',
-                      maxWidth: hasMoreAfter ? '32%' : 'none',
-                      overflow: 'hidden'
-                    }}
+                    style={{ cursor: 'pointer', fontSize: '13px', color: '#cbd5e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={noteText}
                   >
-                    <button
-                      type="button"
-                      onClick={(e) => deleteNote(e, line)}
-                      style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '11px', padding: '0 2px', flexShrink: 0 }}
-                      title="Delete this note"
-                    >x</button>
-                    {dateStr && <span style={{ fontSize: '13px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, whiteSpace: 'nowrap' }}>{dateStr}</span>}
-                    <span style={{
-                      fontSize: '14px',
-                      color: '#cbd5e1',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: '1.3'
-                    }}>
-                      {truncatedText}
-                    </span>
-                  </div>
+                    <span style={{ color: '#64748b', marginRight: '2px' }}>x</span>
+                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
+                    {truncatedText}
+                  </span>
                 );
               })}
             </div>
