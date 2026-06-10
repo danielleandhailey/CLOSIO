@@ -107,7 +107,7 @@ const MatrixPage = () => {
 
     // Check if user wants to store a note OR is correcting AI
     const storeMatch = q.match(/^store\s*this[:\s]+(.+)/i);
-    const correctionMatch = q.match(/^(wrong|fix it|no it'?s|actually it'?s|correct(?:ion)?)[:\s]+(.+)/i);
+    const correctionMatch = q.match(/^(wrong|fix it|no it'?s|actually it'?s|correct(?:ion)?|remember this|remember|learn|note this)[:\s]+(.+)/i);
 
     if ((storeMatch || correctionMatch) && user) {
       const noteText = storeMatch ? storeMatch[1].trim() : correctionMatch[2].trim();

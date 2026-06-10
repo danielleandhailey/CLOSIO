@@ -48,11 +48,50 @@ const AIChatBubble = ({ borrowers, onNavigate }) => {
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
-    
+
     const userMsg = { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+
+    // Check for store/learn/remember commands
+    const storeMatch = text.match(/^(store\s*this|remember this|remember|learn|note this)[:\s]+(.+)/i);
+    const correctionMatch = text.match(/^(wrong|fix it|no it'?s|actually it'?s|correct(?:ion)?)[:\s]+(.+)/i);
+
+    if (storeMatch || correctionMatch) {
+      const noteText = storeMatch ? storeMatch[2].trim() : correctionMatch[2].trim();
+      const isCorrection = !!correctionMatch;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: existing } = await supabase.from('lender_matrices')
+            .select('id, ai_index')
+            .eq('user_id', user.id)
+            .eq('lender_name', 'My Notes')
+            .single();
+
+          const res = await fetch('/api/secure-notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              noteText,
+              existingIndex: existing?.ai_index || ''
+            })
+          });
+          const result = await res.json();
+          if (result.error) throw new Error(result.error);
+
+          const msg = isCorrection ? `Learned! Updated: "${noteText}"` : `Stored! "${noteText}"`;
+          setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
+        }
+      } catch (e) {
+        setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     try {
       const pipelineCtx = buildPipelineContext(borrowers);
