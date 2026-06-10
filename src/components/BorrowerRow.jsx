@@ -1078,9 +1078,9 @@ const BorrowerRow = ({
           onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_favorite: !borrower.is_favorite }); }}
           style={{
             cursor: 'pointer',
-            fontSize: '16px',
+            fontSize: '22px',
             color: borrower.is_favorite ? '#fbbf24' : '#4a5568',
-            marginRight: '4px',
+            marginRight: '6px',
           }}
           title={borrower.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
         >
@@ -1174,8 +1174,8 @@ const BorrowerRow = ({
           </span>
         )}
 
-        {/* Fixed spacer - notes always start here after NEED */}
-        <div style={{ minWidth: '120px', flexShrink: 0 }} />
+        {/* Small spacer after NEED */}
+        <div style={{ width: '8px', flexShrink: 0 }} />
 
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
