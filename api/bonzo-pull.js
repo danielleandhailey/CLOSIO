@@ -164,18 +164,25 @@ export default async function handler(req, res) {
           if (byEmail?.length) existingBorrower = byEmail[0];
         }
 
-        // If existing borrower, update timezone + bonzo_id regardless of pipeline
+        // If existing borrower, update fields from Bonzo
         if (existingBorrower) {
-          // Check if stage changed to set is_updated flag
           const bonzoStageName = p.pipeline?.stage?.name || p.pipeline?.stage || p.pipeline_stage?.name || p.pipeline_stage || p.stage?.name || p.stage || '';
           const pipelineName = p.pipeline?.name || p.pipeline || '';
           const stageMapping = mapBonzoStage(bonzoStageName, pipelineName);
+          const mortgage = p.mortgage || {};
+          const loanPurpose = mortgage.loan_purpose || p.loan_purpose || '';
 
           const updateData = {
             timezone: p.timezone || existingBorrower.timezone,
             bonzo_id: String(p.id),
             bonzo_last_sync: new Date().toISOString()
           };
+
+          // Sync loan_purpose if Bonzo has it and existing is empty or different
+          if (loanPurpose && loanPurpose !== existingBorrower.loan_purpose) {
+            updateData.loan_purpose = loanPurpose;
+            updateData.is_updated = true;
+          }
 
           // If stage mapping exists and is different, mark as updated
           if (stageMapping && stageMapping.stage !== existingBorrower.stage) {
