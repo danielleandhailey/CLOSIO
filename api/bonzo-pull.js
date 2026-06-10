@@ -178,6 +178,9 @@ export default async function handler(req, res) {
             bonzo_last_sync: new Date().toISOString()
           };
 
+          // Log what Bonzo sends for debugging
+          console.log('SYNC:', existingBorrower.name, '| mortgage.loan_purpose:', mortgage.loan_purpose, '| p.loan_purpose:', p.loan_purpose);
+
           // Sync loan_purpose if Bonzo has it and existing is empty or different
           if (loanPurpose && loanPurpose !== existingBorrower.loan_purpose) {
             updateData.loan_purpose = loanPurpose;
