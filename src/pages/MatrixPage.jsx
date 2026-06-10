@@ -111,27 +111,31 @@ const MatrixPage = () => {
       const noteText = storeMatch[1].trim();
       setChatHistory(h => [...h, { role: 'user', content: q }]);
       try {
-        // Save to lender_matrices as "My Notes"
+        // Get existing notes
         const { data: existing } = await supabase.from('lender_matrices')
           .select('id, ai_index')
           .eq('user_id', user.id)
           .eq('lender_name', 'My Notes')
           .single();
 
-        const newIndex = existing?.ai_index ? `${existing.ai_index}\n- ${noteText}` : `- ${noteText}`;
+        // Store encrypted via API
+        const res = await fetch('/api/secure-notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            noteText,
+            existingIndex: existing?.ai_index || ''
+          })
+        });
+        const result = await res.json();
+        if (result.error) throw new Error(result.error);
 
-        await supabase.from('lender_matrices').upsert({
-          id: existing?.id,
-          user_id: user.id,
-          lender_name: 'My Notes',
-          ai_index: newIndex,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
-
-        setChatHistory(h => [...h, { role: 'ai', content: `Stored! "${noteText}"` }]);
-        // Refresh matrices
-        const { data } = await supabase.from('lender_matrices').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-        setMatrices(data || []);
+        setChatHistory(h => [...h, { role: 'ai', content: `Stored securely! "${noteText}"` }]);
+        // Refresh matrices (decrypted)
+        const fetchRes = await fetch(`/api/secure-notes?userId=${user.id}`);
+        const fetchData = await fetchRes.json();
+        setMatrices(fetchData.data || []);
       } catch (e) {
         setChatHistory(h => [...h, { role: 'ai', content: `Error storing note: ${e.message}` }]);
       } finally {
