@@ -1208,6 +1208,20 @@ const BorrowerRow = ({
           {borrower.is_favorite ? '★' : '☆'}
         </span>
 
+        {/* Golden Lead Ball */}
+        <span
+          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_golden: !borrower.is_golden }); }}
+          style={{
+            cursor: 'pointer',
+            fontSize: '18px',
+            marginRight: '6px',
+            filter: borrower.is_golden ? 'drop-shadow(0 0 4px #ffd700)' : 'none',
+          }}
+          title={borrower.is_golden ? 'Remove Golden Lead' : 'Mark as Golden Lead'}
+        >
+          {borrower.is_golden ? '🥇' : '⚪'}
+        </span>
+
         {/* Need button - adds STIPS pill */}
         <span
           onClick={async (e) => {
