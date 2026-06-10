@@ -1130,7 +1130,14 @@ const BorrowerRow = ({
           </span>
           {(borrower.loan_purpose || borrower.loan_type) && (
             <span style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {borrower.loan_purpose || borrower.loan_type}
+              {(() => {
+                const raw = (borrower.loan_purpose || borrower.loan_type || '').toLowerCase();
+                if (raw.includes('purchase')) return 'PURCHASE';
+                if (raw.includes('refi')) return 'REFINANCE';
+                if (raw.includes('heloc')) return 'HELOC';
+                if (raw.includes('reverse')) return 'REVERSE';
+                return (borrower.loan_purpose || borrower.loan_type).toUpperCase();
+              })()}
             </span>
           )}
         </div>
