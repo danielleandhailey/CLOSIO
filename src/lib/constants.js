@@ -77,6 +77,7 @@ export const SORT_OPTIONS = [
   { value: 'first_name',    label: 'First Name' },
   { value: 'last_name',     label: 'Last Name' },
   { value: 'new',           label: 'New' },
+  { value: 'updated',       label: 'Updated' },
   { value: 'stips',         label: 'Stips Needed' },
   { value: 'coe_date',      label: 'COE Date' },
   { value: 'floating',      label: 'Floating' },
