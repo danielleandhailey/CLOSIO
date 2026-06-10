@@ -2217,11 +2217,21 @@ const GetPaidSection = ({ borrower, onUpdate }) => {
 };
 
 // ---- Bonzo Notes Section ----
+const stripHtmlNotes = (html) => {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#\d+;/g, '').replace(/\s+/g, ' ').trim();
+};
+
 const BonzoNotesSection = ({ borrower }) => {
   const [loading, setLoading] = useState(false);
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
   const [error, setError] = useState(null);
+
+  // Auto-pull on mount
+  React.useEffect(() => {
+    if (borrower.bonzo_id) fetchBonzoNotes();
+  }, [borrower.bonzo_id]);
 
   const fetchBonzoNotes = async () => {
     if (!borrower.bonzo_id) {
@@ -2316,13 +2326,13 @@ const BonzoNotesSection = ({ borrower }) => {
                   borderLeft: '3px solid #3b82f6',
                 }}>
                   <div style={{ fontSize: '10px', color: '#f59e0b', marginBottom: '4px' }}>{n.date}</div>
-                  <div style={{ color: '#fff', fontSize: '14px', lineHeight: 1.5 }}>{n.body}</div>
+                  <div style={{ color: '#fff', fontSize: '14px', lineHeight: 1.5 }}>{stripHtmlNotes(n.body)}</div>
                 </div>
               ))}
             </div>
           ) : !loading && (
             <div style={{ color: '#fff', textAlign: 'center', padding: '20px' }}>
-              Click "Pull Notes" to load from Bonzo
+              No notes found
             </div>
           )}
         </>
@@ -2336,6 +2346,11 @@ const BonzoNotesSection = ({ borrower }) => {
 };
 
 // ---- Communication Section ----
+const stripHtml = (html) => {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#\d+;/g, '').replace(/\s+/g, ' ').trim();
+};
+
 const CommunicationSection = ({ borrower }) => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -2389,16 +2404,16 @@ const CommunicationSection = ({ borrower }) => {
           </div>
           {error && <div style={{ color: '#ef4444', marginBottom: '8px' }}>{error}</div>}
           {messages.length > 0 ? (
-            <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {messages.map((m, i) => (
                 <div key={i} style={{
-                  padding: '8px', background: m.direction === 'outbound' ? '#dbeafe' : '#f1f5f9',
-                  borderRadius: '6px', borderLeft: `3px solid ${m.direction === 'outbound' ? '#3b82f6' : '#64748b'}`,
+                  padding: '12px', background: m.direction === 'outbound' ? '#dbeafe' : '#f8fafc',
+                  borderRadius: '8px', borderLeft: `4px solid ${m.direction === 'outbound' ? '#3b82f6' : '#64748b'}`,
                 }}>
-                  <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>
                     {m.direction === 'outbound' ? '→ Sent' : '← Received'} • {m.date}
                   </div>
-                  <div>{m.body}</div>
+                  <div style={{ fontSize: '14px', color: '#1e293b', lineHeight: 1.5 }}>{stripHtml(m.body)}</div>
                 </div>
               ))}
             </div>
