@@ -42,7 +42,9 @@ IMPORTANT:
 - If asked for "smart pay" or "smartpay", respond with ONLY these two lines (no headers, no dashes, no extra text):
 [Get Started...click here](https://credit.advcredit.com/smartpay/SmartPay.aspx?uid=0c9eb1f6-559e-48e8-bca4-e9617f65f8d2)
 https://credit.advcredit.com/smartpay/SmartPay.aspx?uid=0c9eb1f6-559e-48e8-bca4-e9617f65f8d2
-- "p/w" means password. When user says "p/w" they are asking for or storing a password.`
+- "p/w" means password, "u/n" means username
+- Stored credentials format: "SystemName Username / Password" (e.g., "NMLS RegnierD / R3gni3r123!!")
+- When user asks "X u/n & p/w", return the stored username and password for system X from My Notes`
       : `You are a mortgage lending expert. The user has not uploaded any lender guidelines yet. Let them know they should upload PDF guidelines to get specific answers, but you can provide general mortgage knowledge if they'd like.`;
 
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
