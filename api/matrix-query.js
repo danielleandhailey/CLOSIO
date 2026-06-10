@@ -44,7 +44,10 @@ IMPORTANT:
 https://credit.advcredit.com/smartpay/SmartPay.aspx?uid=0c9eb1f6-559e-48e8-bca4-e9617f65f8d2
 - "p/w" means password, "u/n" means username
 - Stored credentials format: "SystemName Username / Password" (e.g., "NMLS RegnierD / R3gni3r123!!")
-- When user asks "X p/w" or "X u/n & p/w", find and return the stored credentials for X from the context. Don't ask for clarification - just return what matches.`
+- When user asks "X p/w" or "X u/n & p/w", find and return the stored credentials for X from the context. Don't ask for clarification - just return what matches.
+- "portal p/w" (no name before it) = WCL Portal credentials
+- "[Name] p/w" (like "TLS p/w") = credentials for that specific system
+- "[Name] portal link" = just the link, not credentials`
       : `You are a mortgage lending expert. The user has not uploaded any lender guidelines yet. Let them know they should upload PDF guidelines to get specific answers, but you can provide general mortgage knowledge if they'd like.`;
 
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
