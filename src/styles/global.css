@@ -351,8 +351,9 @@ body[data-theme="light"] .btn-icon:hover {
   padding: 8px 20px;
   background: var(--bg);
   border-bottom: 2px solid var(--border);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   flex-shrink: 0;
+  overflow-x: auto;
 }
 
 .stage-pill {
