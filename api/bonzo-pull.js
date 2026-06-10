@@ -203,9 +203,11 @@ export default async function handler(req, res) {
 
         if (!stageMapping) {
           // Stage not importable - skip
-          console.log('SKIP:', name, 'stage:', bonzoStageName, 'pipeline:', pipelineName);
+          console.log('SKIP:', name, '| stage:', bonzoStageName, '| pipeline:', pipelineName);
           results.skipped++;
           continue;
+        } else {
+          console.log('IMPORT:', name, '| stage:', bonzoStageName, '→', stageMapping.stage, '| pipeline:', pipelineName);
         }
 
         // Build borrower data - pull ALL fields from Bonzo
