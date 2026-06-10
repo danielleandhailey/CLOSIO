@@ -18,6 +18,23 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBorrower, setEditingBorrower] = useState(null);
 
+  // Auto Bonzo sync every 30 minutes when page is open
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/bonzo-pull');
+        const data = await res.json();
+        if (data.created > 0 || data.updated > 0) {
+          console.log('Auto Bonzo sync:', data);
+          window.location.reload(); // Refresh to show new data
+        }
+      } catch (e) {
+        console.error('Auto Bonzo sync error:', e);
+      }
+    }, 30 * 60 * 1000); // 30 minutes
+    return () => clearInterval(interval);
+  }, []);
+
   const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'HELOC', 'Reverse', 'Refi/HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM', 'DPA', 'OTC'];
 
   // Stage counts
