@@ -3,10 +3,10 @@
 // ============================================================
 
 export const STAGES = [
+  'Stips Needed',
   'HOT',
   'Updated',
   'Working',
-  'Stips Needed',
   'Credit Upgrade',
   'Shopping',
   'Processing',
