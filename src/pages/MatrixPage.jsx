@@ -24,6 +24,12 @@ const MatrixPage = () => {
   }, [chatHistory]);
   const dropRef = useRef();
   const inputRef = useRef();
+  const chatEndRef = useRef();
+
+  // Auto-scroll to bottom when chat updates
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
 
   useEffect(() => {
     if (!user) return;
@@ -261,6 +267,7 @@ const MatrixPage = () => {
               <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} /> Looking through your matrices…
             </div>
           )}
+          <div ref={chatEndRef} />
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
