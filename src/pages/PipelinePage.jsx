@@ -40,15 +40,23 @@ const PipelinePage = ({ borrowers, ops }) => {
 
   const LOAN_TYPES = ['All', 'Purchase', 'Refinance', 'HELOC', 'Reverse', 'Refi/HELOC', 'DSCR', 'Bank Statement', 'VA', 'FHA', 'Conventional', 'Jumbo', 'Non-QM', 'DPA', 'OTC'];
 
-  // Stage counts (Stips Needed counts borrowers with stips_needed > 0)
+  // Stage counts (special handling for Stips Needed and Updated)
   const stageCounts = useMemo(() => {
     const counts = {};
     STAGES.forEach(s => { counts[s] = 0; });
     borrowers.forEach(b => {
+      // Stips Needed: count borrowers with stips_needed > 0
       if (b.stage === 'Stips Needed' || (b.stips_needed && b.stips_needed > 0)) {
         counts['Stips Needed']++;
       }
-      if (counts[b.stage] !== undefined && b.stage !== 'Stips Needed') counts[b.stage]++;
+      // Updated: count borrowers with is_updated flag
+      if (b.is_updated) {
+        counts['Updated']++;
+      }
+      // Normal stage counting (skip Stips Needed and Updated since handled above)
+      if (counts[b.stage] !== undefined && b.stage !== 'Stips Needed' && b.stage !== 'Updated') {
+        counts[b.stage]++;
+      }
     });
     return counts;
   }, [borrowers]);
@@ -70,8 +78,16 @@ const PipelinePage = ({ borrowers, ops }) => {
         return loanType.includes(filterLower) || loanPurpose.includes(filterLower);
       });
     }
-    // Filter by stage
-    if (filterStage !== 'All') list = list.filter(b => b.stage === filterStage);
+    // Filter by stage (special handling for Stips Needed and Updated)
+    if (filterStage !== 'All') {
+      if (filterStage === 'Stips Needed') {
+        list = list.filter(b => b.stage === 'Stips Needed' || (b.stips_needed && b.stips_needed > 0));
+      } else if (filterStage === 'Updated') {
+        list = list.filter(b => b.is_updated);
+      } else {
+        list = list.filter(b => b.stage === filterStage);
+      }
+    }
     // Search
     if (search.trim()) {
       const q = search.toLowerCase();
