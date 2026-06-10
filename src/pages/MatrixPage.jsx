@@ -187,7 +187,12 @@ const MatrixPage = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {[...matrices]
-              .sort((a, b) => a.lender_name.localeCompare(b.lender_name))
+              .sort((a, b) => {
+                // Pin "My Notes" to top
+                if (a.lender_name === 'My Notes') return -1;
+                if (b.lender_name === 'My Notes') return 1;
+                return a.lender_name.localeCompare(b.lender_name);
+              })
               .filter((m, i, arr) => arr.findIndex(x => x.lender_name === m.lender_name) === i)
               .map(m => {
                 const parts = m.lender_name.split(' ');

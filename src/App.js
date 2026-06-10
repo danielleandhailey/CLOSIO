@@ -188,7 +188,7 @@ const AppInner = () => {
               {tab === 'Calendar' && '📅 '}
               {tab === 'Rate Retread' && '📉 '}
               {tab === 'Matrix' && '🗂 '}
-              {tab}
+              {tab === 'Matrix' ? 'Matrix+' : tab}
             </button>
           ))}
 
