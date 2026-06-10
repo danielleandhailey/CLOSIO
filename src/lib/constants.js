@@ -4,6 +4,7 @@
 
 export const STAGES = [
   'HOT',
+  'Updated',
   'Working',
   'Stips Needed',
   'Credit Upgrade',
@@ -32,6 +33,7 @@ export const STAGES_BY_TYPE = {
 
 export const STAGE_COLORS = {
   'HOT':           { bg: '#ef4444', text: '#fff', light: '#fee2e2' },
+  'Updated':       { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
   'Working':       { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
   'Stips Needed':  { bg: '#fbbf24', text: '#000', light: '#fef3c7' },
   'Credit Upgrade':{ bg: '#ec4899', text: '#fff', light: '#fce7f3' },
