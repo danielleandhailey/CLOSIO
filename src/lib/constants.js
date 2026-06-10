@@ -16,6 +16,9 @@ export const STAGES = [
   'Future Deal',
   'DNQ',
   'CXLD',
+  'Not Interested',
+  'Went With Competitor',
+  'Went Dark',
 ];
 
 // Stages by loan type - Shopping removed for Refi
@@ -41,6 +44,9 @@ export const STAGE_COLORS = {
   'Future Deal':   { bg: '#14b8a6', text: '#fff', light: '#ccfbf1' },
   'DNQ':           { bg: '#6b7280', text: '#fff', light: '#e5e7eb' },
   'CXLD':          { bg: '#ef4444', text: '#fff', light: '#fee2e2' },
+  'Not Interested':       { bg: '#9ca3af', text: '#fff', light: '#f3f4f6' },
+  'Went With Competitor': { bg: '#f97316', text: '#fff', light: '#ffedd5' },
+  'Went Dark':            { bg: '#1f2937', text: '#fff', light: '#374151' },
 };
 
 // Preset tags — add new ones here with one line

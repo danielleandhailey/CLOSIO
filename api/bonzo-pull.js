@@ -28,6 +28,8 @@ const mapBonzoStage = (bonzoStage, pipelineName) => {
     if (lower === 'funded') return { stage: 'Funded', substage: null };
     if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
     if (lower === 'dnq') return { stage: 'DNQ', substage: null };
+    if (lower === 'not interested') return { stage: 'Not Interested', substage: null };
+    if (lower === 'stop') return { stage: 'Not Interested', substage: null }; // STOP = Do Not Contact
   }
 
   // DR - Leads pipeline stages
@@ -42,8 +44,9 @@ const mapBonzoStage = (bonzoStage, pipelineName) => {
     if (lower === '$$ funded $$' || lower === 'ss funded ss' || lower === 'funded') return { stage: 'Funded', substage: null };
     if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
     if (lower === 'dnq!' || lower === 'dnq') return { stage: 'DNQ', substage: null };
-    // Skip these - user can manually move existing borrowers
-    // 'went dark', 'went with competitor', 'not interested'
+    if (lower === 'went dark') return { stage: 'Went Dark', substage: null };
+    if (lower === 'went with competitor') return { stage: 'Went With Competitor', substage: null };
+    if (lower === 'not interested') return { stage: 'Not Interested', substage: null };
   }
 
   // DR - Recycled pipeline (disabled for now - uncomment later)
@@ -106,7 +109,7 @@ export default async function handler(req, res) {
       allProspects = allProspects.concat(pageProspects);
       console.log(`Fetched page ${page}: ${pageProspects.length} prospects`);
 
-      if (pageProspects.length < 100) break; // Last page
+      if (pageProspects.length < 50) break; // Last page (we fetch 50 per page)
       page++;
     }
 
