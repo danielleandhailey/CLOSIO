@@ -1119,15 +1119,21 @@ const BorrowerRow = ({
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
-        {/* Name - click to expand */}
-        <span
-          className="borrower-name"
+        {/* Name + Type - click to expand */}
+        <div
           onClick={() => onExpand(borrower.id)}
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}
           title="Click to open file"
         >
-          {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
-        </span>
+          <span className="borrower-name">
+            {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
+          </span>
+          {(borrower.loan_purpose || borrower.loan_type) && (
+            <span style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {borrower.loan_purpose || borrower.loan_type}
+            </span>
+          )}
+        </div>
 
         {/* Badges after expand button */}
         {borrower.is_new && (
@@ -1139,6 +1145,16 @@ const BorrowerRow = ({
           title="Click to dismiss"
           onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_new: false }); }}
           >NEW</span>
+        )}
+        {borrower.is_updated && !borrower.is_new && (
+          <span style={{
+            marginLeft: '8px', padding: '1px 6px', background: '#22c55e', color: '#fff',
+            fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
+            letterSpacing: '0.5px', cursor: 'pointer',
+          }}
+          title="Click to dismiss"
+          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_updated: false }); }}
+          >UPDATED</span>
         )}
         {borrower.bonzo_last_sync && !borrower.is_new && (
           <span style={{ marginLeft: '6px', color: '#00ff7f', fontSize: '10px', fontWeight: '600' }}
