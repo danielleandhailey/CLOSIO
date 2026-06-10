@@ -27,46 +27,39 @@ const NotesSection = ({ borrower, ops, onClose }) => {
   };
 
   return (
-    <div>
-      <div className="section-heading">NOTES</div>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
         <input
           type="text"
           value={newNote}
           onChange={e => setNewNote(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
           placeholder="Add a note..."
-          style={{ flex: 1, padding: '8px 12px', borderRadius: '5px', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: '12px' }}
+          style={{ flex: 1, padding: '8px 12px', borderRadius: '5px', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: '13px' }}
         />
         <button
           type="button"
           onClick={handleAdd}
-          style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer' }}
-        >Add</button>
-        <button
-          type="button"
-          onClick={handleSaveClose}
-          style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer', fontSize: '11px' }}
-        >Save/Close</button>
+          style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '5px', fontWeight: '600', cursor: 'pointer', fontSize: '12px' }}
+        >+ Add</button>
       </div>
-      {noteLines.length > 0 && (
-        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-          {noteLines.map((line, i) => {
-            // Parse [M/D/YY] prefix
-            const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
-            const dateStr = match ? match[1] : '';
-            const noteText = match ? match[2] : line;
-            return (
-              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '10px', marginBottom: '6px', background: '#1e293b', borderRadius: '5px' }}>
-                {dateStr && (
-                  <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '55px' }}>{dateStr}</span>
-                )}
-                <span style={{ fontSize: '14px', color: '#fff', flex: 1 }}>{noteText}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: '300px', maxHeight: '500px' }}>
+        {noteLines.length > 0 ? noteLines.map((line, i) => {
+          const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
+          const dateStr = match ? match[1] : '';
+          const noteText = match ? match[2] : line;
+          return (
+            <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '10px', marginBottom: '6px', background: '#1e293b', borderRadius: '5px' }}>
+              {dateStr && (
+                <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '55px' }}>{dateStr}</span>
+              )}
+              <span style={{ fontSize: '14px', color: '#fff', flex: 1, lineHeight: 1.4 }}>{noteText}</span>
+            </div>
+          );
+        }) : (
+          <div style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>No notes yet</div>
+        )}
+      </div>
     </div>
   );
 };
@@ -3233,7 +3226,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     { id: 'notifyloa', label: 'NOTIFY LOA' },
   ];
 
-  const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '400px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '200px' };
+  const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '500px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '400px' };
   const closeBtn = (id) => (
     <div style={{ textAlign: 'center', marginTop: 'auto', paddingTop: '12px' }}>
       <button type="button" onClick={() => closeTab(id)}
@@ -3264,8 +3257,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
       {/* Content Boxes */}
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
         {openTabs.has('notes') && (
-          <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📝 Notes</div>
+          <div style={{ ...boxStyle, minHeight: '450px' }}>
             <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
             {closeBtn('notes')}
           </div>
@@ -3273,7 +3265,6 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
 
         {openTabs.has('tasks') && (
           <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>✅ Tasks</div>
             <TasksSection borrower={borrower} ops={ops} />
             {closeBtn('tasks')}
           </div>
