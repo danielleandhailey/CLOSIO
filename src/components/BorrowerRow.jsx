@@ -1078,7 +1078,7 @@ const BorrowerRow = ({
           onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_favorite: !borrower.is_favorite }); }}
           style={{
             cursor: 'pointer',
-            fontSize: '22px',
+            fontSize: '26px',
             color: borrower.is_favorite ? '#fbbf24' : '#4a5568',
             marginRight: '6px',
           }}
@@ -1175,7 +1175,7 @@ const BorrowerRow = ({
         )}
 
         {/* Small spacer after NEED */}
-        <div style={{ width: '8px', flexShrink: 0 }} />
+        <div style={{ width: '4px', flexShrink: 0 }} />
 
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
@@ -1231,7 +1231,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '8px', flex: 1, overflow: 'hidden' }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '6px', flex: 1, overflow: 'hidden', marginLeft: '0' }}
             >
               {noteLines.slice(0, 3).map((line, idx, arr) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
