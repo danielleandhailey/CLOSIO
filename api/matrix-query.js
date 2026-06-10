@@ -49,7 +49,13 @@ https://credit.advcredit.com/smartpay/SmartPay.aspx?uid=0c9eb1f6-559e-48e8-bca4-
 - "[Name] p/w" (like "TLS p/w") = credentials for that specific system
 - "[Name] portal link" = just the link, not credentials
 - When user corrects you ("wrong", "fix it", "no it's", "actually it's"), the correction is automatically saved to My Notes
-- MOST RECENT DATA RULE: When multiple uploads exist for the same lender or lead source, ALWAYS use the most recent data. Newer uploads override older ones.`
+- MOST RECENT DATA RULE: When multiple uploads exist for the same lender or lead source, ALWAYS use the most recent data. Newer uploads override older ones.
+- LEAD ANALYTICS COLORS (by type):
+  - CASHOUT: BLUE, MAROON, BROWN, BLACK, GREEN, ORANGE, TEAL, CHRYSOLITE, TOPAZ, ONYX, AMETHYST, GARNET, EMERALD, JASPER, LAPIS, RUBY
+  - R/T (Rate/Term): MAROON, LAPIS
+  - PURCHASE: MAROON, ORANGE, CHRYSOLITE, BLUE, EMERALD, TOPAZ, RUBY
+- Each lead color has Min/Avg/Max pricing and a conversion percentage
+- Golden Leads = premium high-intent leads (can be toggled on/off)`
       : `You are a mortgage lending expert. The user has not uploaded any lender guidelines yet. Let them know they should upload PDF guidelines to get specific answers, but you can provide general mortgage knowledge if they'd like.`;
 
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
