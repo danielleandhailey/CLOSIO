@@ -50,18 +50,18 @@ const NotesSection = ({ borrower, ops, onClose }) => {
         >Save/Close</button>
       </div>
       {noteLines.length > 0 && (
-        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
           {noteLines.map((line, i) => {
             // Parse [M/D/YY] prefix
             const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
             const dateStr = match ? match[1] : '';
             const noteText = match ? match[2] : line;
             return (
-              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '8px', marginBottom: '4px', background: '#1e293b', borderRadius: '5px' }}>
+              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '10px', marginBottom: '6px', background: '#1e293b', borderRadius: '5px' }}>
                 {dateStr && (
-                  <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '50px' }}>{dateStr}</span>
+                  <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '600', flexShrink: 0, minWidth: '55px' }}>{dateStr}</span>
                 )}
-                <span style={{ fontSize: '12px', color: '#e2e8f0', flex: 1 }}>{noteText}</span>
+                <span style={{ fontSize: '14px', color: '#fff', flex: 1 }}>{noteText}</span>
               </div>
             );
           })}
