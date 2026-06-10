@@ -105,10 +105,13 @@ const MatrixPage = () => {
     setQuestion('');
     setAsking(true);
 
-    // Check if user wants to store a note
+    // Check if user wants to store a note OR is correcting AI
     const storeMatch = q.match(/^store\s*this[:\s]+(.+)/i);
-    if (storeMatch && user) {
-      const noteText = storeMatch[1].trim();
+    const correctionMatch = q.match(/^(wrong|fix it|no it'?s|actually it'?s|correct(?:ion)?)[:\s]+(.+)/i);
+
+    if ((storeMatch || correctionMatch) && user) {
+      const noteText = storeMatch ? storeMatch[1].trim() : correctionMatch[2].trim();
+      const isCorrection = !!correctionMatch;
       setChatHistory(h => [...h, { role: 'user', content: q }]);
       try {
         // Get existing notes
@@ -131,7 +134,8 @@ const MatrixPage = () => {
         const result = await res.json();
         if (result.error) throw new Error(result.error);
 
-        setChatHistory(h => [...h, { role: 'ai', content: `Stored securely! "${noteText}"` }]);
+        const msg = isCorrection ? `Learned! Updated: "${noteText}"` : `Stored securely! "${noteText}"`;
+        setChatHistory(h => [...h, { role: 'ai', content: msg }]);
         // Refresh matrices (decrypted)
         const fetchRes = await fetch(`/api/secure-notes?userId=${user.id}`);
         const fetchData = await fetchRes.json();
