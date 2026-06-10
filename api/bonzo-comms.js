@@ -19,8 +19,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch conversations for this prospect
-    const response = await fetch(`${BONZO_API_URL}/prospects/${prospectId}/conversations`, {
+    // Fetch messages for this prospect
+    const response = await fetch(`${BONZO_API_URL}/prospects/${prospectId}/messages`, {
       headers: {
         'Authorization': `Bearer ${BONZO_TOKEN}`,
         'Accept': 'application/json',
@@ -34,18 +34,15 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    const conversations = data.data || data || [];
+    const rawMessages = data.data || data || [];
 
     // Format messages
-    const messages = conversations.flatMap(conv => {
-      const msgs = conv.messages || [];
-      return msgs.map(m => ({
-        direction: m.direction || (m.from_user ? 'outbound' : 'inbound'),
-        body: m.body || m.message || m.text || '',
-        date: m.created_at ? new Date(m.created_at).toLocaleString() : '',
-        type: m.type || 'sms',
-      }));
-    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+    const messages = rawMessages.map(m => ({
+      direction: m.direction || (m.from_user ? 'outbound' : 'inbound'),
+      body: m.body || m.message || m.text || m.content || '',
+      date: m.created_at ? new Date(m.created_at).toLocaleString() : '',
+      type: m.type || 'sms',
+    })).sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return res.status(200).json({ success: true, messages });
 
