@@ -11,21 +11,48 @@ const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPAB
 
 // ONLY these Bonzo stages get imported (null = skip)
 // Returns { stage, substage } or null to skip
-const mapBonzoStage = (bonzoStage) => {
+const mapBonzoStage = (bonzoStage, pipelineName) => {
   const lower = (bonzoStage || '').toLowerCase().trim();
+  const pipeline = (pipelineName || '').toLowerCase();
 
-  // EXACT matches for Bonzo stages
-  if (lower === 'stips needed') return { stage: 'Working', substage: 'Stips Needed' };
-  if (lower === 'working') return { stage: 'Working', substage: null };
-  if (lower === 'approved - need stips') return { stage: 'Shopping', substage: 'Stips Needed' };
-  if (lower === 'pre-approved - shopping') return { stage: 'Shopping', substage: null };
-  if (lower === 'in processing') return { stage: 'Processing', substage: null };
-  if (lower === 'closed / paid') return { stage: 'Closed/Paid', substage: null };
-  if (lower === 'funded') return { stage: 'Funded', substage: null };
-  if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
-  if (lower === 'dnq') return { stage: 'DNQ', substage: null };
+  // DR - Purchase pipeline stages
+  if (pipeline.includes('purchase')) {
+    if (lower === 'hot!') return { stage: 'HOT', substage: null };
+    if (lower === 'stips needed') return { stage: 'Working', substage: 'Stips Needed' };
+    if (lower === 'working') return { stage: 'Working', substage: null };
+    if (lower === 'approved - need stips') return { stage: 'Shopping', substage: 'Stips Needed' };
+    if (lower === 'pre-approved - shopping') return { stage: 'Shopping', substage: null };
+    if (lower === 'in processing') return { stage: 'Processing', substage: null };
+    if (lower === 'closed / paid') return { stage: 'Closed/Paid', substage: null };
+    if (lower === 'funded') return { stage: 'Funded', substage: null };
+    if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
+    if (lower === 'dnq') return { stage: 'DNQ', substage: null };
+  }
+
+  // DR - Leads pipeline stages
+  if (pipeline.includes('leads')) {
+    if (lower === 'working') return { stage: 'Working', substage: null };
+    if (lower === 'in processing') return { stage: 'Processing', substage: null };
+    if (lower === 'ss funded ss' || lower === 'funded') return { stage: 'Funded', substage: null };
+    if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
+    if (lower === 'dnq!' || lower === 'dnq') return { stage: 'DNQ', substage: null };
+  }
+
+  // DR - Recycled pipeline (disabled for now - uncomment later)
+  // if (pipeline.includes('recycled')) {
+  //   if (lower === 'working') return { stage: 'Recycled', substage: null };
+  // }
 
   return null; // null = don't import
+};
+
+// Map loan_purpose to loan_type
+const mapLoanType = (loanPurpose) => {
+  const lower = (loanPurpose || '').toLowerCase().trim();
+  if (lower.includes('purchase')) return 'Purchase';
+  if (lower.includes('refi') || lower.includes('rate') || lower.includes('term') || lower.includes('r/t')) return 'Refi & R/T';
+  if (lower.includes('heloc') || lower.includes('equity')) return 'HELOC';
+  return null; // Unknown
 };
 
 export default async function handler(req, res) {
@@ -140,9 +167,10 @@ export default async function handler(req, res) {
           continue;
         }
 
-        // For NEW imports: only from "DR - Purchase" pipeline
+        // For NEW imports: only from DR - Purchase or DR - Leads pipelines
         const pipelineName = p.pipeline?.name || p.pipeline || '';
-        if (pipelineName !== 'DR - Purchase') {
+        const allowedPipelines = ['DR - Purchase', 'DR - Leads'];
+        if (!allowedPipelines.some(ap => pipelineName.includes(ap.replace('DR - ', '')))) {
           results.skipped++;
           continue;
         }
@@ -163,25 +191,28 @@ export default async function handler(req, res) {
 
         // Check if this Bonzo stage should be imported
         const bonzoStageName = p.pipeline?.stage?.name || p.pipeline?.stage || p.pipeline_stage?.name || p.pipeline_stage || p.stage?.name || p.stage || '';
-        const stageMapping = mapBonzoStage(bonzoStageName);
+        const stageMapping = mapBonzoStage(bonzoStageName, pipelineName);
 
         if (!stageMapping) {
           // Stage not importable - skip
-          console.log('SKIP:', name, 'stage:', bonzoStageName);
+          console.log('SKIP:', name, 'stage:', bonzoStageName, 'pipeline:', pipelineName);
           results.skipped++;
           continue;
         }
 
         // Build borrower data - pull ALL fields from Bonzo
         const mortgage = p.mortgage || {};
+        const loanPurpose = mortgage.loan_purpose || p.loan_purpose || '';
+        const loanType = mapLoanType(loanPurpose);
+
         const borrowerData = {
           name: name || undefined,
           phone: phone || undefined,
           email: email || undefined,
           stage: stageMapping?.stage || 'Working',
           substage: stageMapping?.substage || null,
-          loan_purpose: mortgage.loan_purpose || p.loan_purpose || undefined,
-          loan_type: mortgage.loan_type || p.loan_type || undefined,
+          loan_purpose: loanPurpose || undefined,
+          loan_type: loanType || undefined,
           purchase_price: parseFloat(mortgage.purchase_price || p.purchase_price) || undefined,
           loan_amount: parseFloat(mortgage.loan_amount || p.loan_amount) || undefined,
           rate: parseFloat(mortgage.interest_rate || p.interest_rate) || undefined,
