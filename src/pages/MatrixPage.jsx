@@ -196,9 +196,13 @@ const MatrixPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {[...matrices]
               .sort((a, b) => {
-                // Pin "My Notes" to top
-                if (a.lender_name === 'My Notes') return -1;
-                if (b.lender_name === 'My Notes') return 1;
+                // Pin "My Notes" and "Lead Quality" to top
+                const pinned = ['My Notes', 'Lead Quality'];
+                const aPin = pinned.indexOf(a.lender_name);
+                const bPin = pinned.indexOf(b.lender_name);
+                if (aPin !== -1 && bPin !== -1) return aPin - bPin;
+                if (aPin !== -1) return -1;
+                if (bPin !== -1) return 1;
                 return a.lender_name.localeCompare(b.lender_name);
               })
               .filter((m, i, arr) => arr.findIndex(x => x.lender_name === m.lender_name) === i)

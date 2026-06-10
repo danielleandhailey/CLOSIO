@@ -48,7 +48,10 @@ https://credit.advcredit.com/smartpay/SmartPay.aspx?uid=0c9eb1f6-559e-48e8-bca4-
 - "portal p/w" (no name before it) = WCL Portal credentials
 - "[Name] p/w" (like "TLS p/w") = credentials for that specific system
 - "[Name] portal link" = just the link, not credentials
-- When user corrects you ("wrong", "fix it", "no it's", "actually it's"), the correction is automatically saved to My Notes`
+- When user corrects you ("wrong", "fix it", "no it's", "actually it's"), the correction is automatically saved to My Notes
+- MOST RECENT DATA RULE: When multiple uploads exist for the same lender or lead source, ALWAYS use the most recent data. Newer uploads override older ones.
+- LEAD QUALITY COLORS: Red = hot/high intent, Yellow = warm/medium intent, Green = cold/low intent. Higher color = higher cost but better conversion. When asked about lead quality, reference these colors.
+- Lead costs vary by source and color. Help user evaluate ROI: "Is $45 for yellow leads worth it?" = compare conversion rates vs cost per lead.`
       : `You are a mortgage lending expert. The user has not uploaded any lender guidelines yet. Let them know they should upload PDF guidelines to get specific answers, but you can provide general mortgage knowledge if they'd like.`;
 
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
