@@ -10,7 +10,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SE
 const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // ONLY these Bonzo stages get imported (null = skip)
-// Returns { stage, substage } or null to skip
+// Returns { stage, substage, tag, autoNote } or null to skip
 const mapBonzoStage = (bonzoStage, pipelineName) => {
   const lower = (bonzoStage || '').toLowerCase().trim();
   const pipeline = (pipelineName || '').toLowerCase();
@@ -23,6 +23,7 @@ const mapBonzoStage = (bonzoStage, pipelineName) => {
     if (lower === 'approved - need stips') return { stage: 'Shopping', substage: 'Stips Needed' };
     if (lower === 'pre-approved - shopping') return { stage: 'Shopping', substage: null };
     if (lower === 'in processing') return { stage: 'Processing', substage: null };
+    if (lower === 'reverse mtg') return { stage: 'Working', substage: null, tag: 'Reverse' };
     if (lower === 'closed / paid') return { stage: 'Closed/Paid', substage: null };
     if (lower === 'funded') return { stage: 'Funded', substage: null };
     if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
@@ -32,10 +33,17 @@ const mapBonzoStage = (bonzoStage, pipelineName) => {
   // DR - Leads pipeline stages
   if (pipeline.includes('leads')) {
     if (lower === 'working') return { stage: 'Working', substage: null };
+    if (lower === 'reverse') return { stage: 'Working', substage: null, tag: 'Reverse' };
+    if (lower === 'credit repair') return { stage: 'Credit Upgrade', substage: null };
+    if (lower === 'need full app - figure denied' || lower.includes('figure denied')) {
+      return { stage: 'Working', substage: null, loanType: 'HELOC', autoNote: '**FIGURE DENIED - NEEDS FULL APP**' };
+    }
     if (lower === 'in processing') return { stage: 'Processing', substage: null };
-    if (lower === 'ss funded ss' || lower === 'funded') return { stage: 'Funded', substage: null };
+    if (lower === '$$ funded $$' || lower === 'ss funded ss' || lower === 'funded') return { stage: 'Funded', substage: null };
     if (lower === 'future deal') return { stage: 'Future Deal', substage: null };
     if (lower === 'dnq!' || lower === 'dnq') return { stage: 'DNQ', substage: null };
+    // Skip these - user can manually move existing borrowers
+    // 'went dark', 'went with competitor', 'not interested'
   }
 
   // DR - Recycled pipeline (disabled for now - uncomment later)
@@ -203,7 +211,8 @@ export default async function handler(req, res) {
         // Build borrower data - pull ALL fields from Bonzo
         const mortgage = p.mortgage || {};
         const loanPurpose = mortgage.loan_purpose || p.loan_purpose || '';
-        const loanType = mapLoanType(loanPurpose);
+        // Use stage mapping loanType override, else derive from loan_purpose
+        const loanType = stageMapping?.loanType || mapLoanType(loanPurpose);
 
         const borrowerData = {
           name: name || undefined,
@@ -213,6 +222,8 @@ export default async function handler(req, res) {
           substage: stageMapping?.substage || null,
           loan_purpose: loanPurpose || undefined,
           loan_type: loanType || undefined,
+          // Auto note from stage mapping
+          notes: stageMapping?.autoNote || undefined,
           purchase_price: parseFloat(mortgage.purchase_price || p.purchase_price) || undefined,
           loan_amount: parseFloat(mortgage.loan_amount || p.loan_amount) || undefined,
           rate: parseFloat(mortgage.interest_rate || p.interest_rate) || undefined,
@@ -254,10 +265,21 @@ export default async function handler(req, res) {
           borrowerData.last_touched = new Date().toISOString();
           borrowerData.user_id = 'c75c0dc8-5bf4-4911-9b48-41c94d2e3494'; // Danielle's user_id
           borrowerData.is_new = true; // Mark as new for hot pink badge
-          const { error } = await supabase
+          const { data: newBorrower, error } = await supabase
             .from('borrowers')
-            .insert([borrowerData]);
+            .insert([borrowerData])
+            .select()
+            .single();
           if (error) throw error;
+
+          // Add tag if stage mapping has one
+          if (stageMapping?.tag && newBorrower) {
+            await supabase.from('borrower_tags').insert({
+              borrower_id: newBorrower.id,
+              tag: stageMapping.tag
+            });
+          }
+
           results.created++;
         }
       } catch (e) {
