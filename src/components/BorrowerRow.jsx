@@ -777,14 +777,14 @@ const LenderDropdownSmall = ({ borrower, onUpdate }) => {
       <span
         onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
         style={{
-          fontSize: '9px', color: lender ? '#22c55e' : '#64748b', fontWeight: '600',
+          fontSize: '9px', color: '#64748b', fontWeight: '600',
           textTransform: 'uppercase', letterSpacing: '0.5px', cursor: 'pointer',
           padding: '2px 4px', borderRadius: '3px',
           background: open ? '#1e293b' : 'transparent',
         }}
         title="Click to change lender"
       >
-        {lender || '+ Lender'}
+        {lender || '+ LENDER'}
       </span>
       {open && (
         <div style={{

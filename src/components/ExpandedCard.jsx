@@ -3257,9 +3257,11 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
       {/* Content Boxes */}
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
         {openTabs.has('notes') && (
-          <div style={{ ...boxStyle, minHeight: '450px', height: '500px' }}>
-            <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: 'auto', paddingTop: '12px' }}>
+          <div style={{ ...boxStyle, minHeight: '500px', height: '550px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', paddingTop: '12px', flexShrink: 0 }}>
               {borrower.bonzo_id && (
                 <button type="button" onClick={() => toggleTab('bonzonotes')}
                   style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
