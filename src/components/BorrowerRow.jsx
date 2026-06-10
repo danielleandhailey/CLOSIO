@@ -708,6 +708,65 @@ const AddTagInline = ({ borrower, onAdd, sc }) => {
   );
 };
 
+// Loan Type dropdown under borrower name
+const LoanTypeDropdown = ({ borrower, onUpdate }) => {
+  const [open, setOpen, ref] = useDropdown();
+  const TYPES = ['Purchase', 'Refinance', 'HELOC', 'Reverse'];
+
+  const getDisplayType = () => {
+    const raw = (borrower.loan_purpose || borrower.loan_type || '').toLowerCase();
+    if (raw.includes('purchase')) return 'PURCHASE';
+    if (raw.includes('refi')) return 'REFINANCE';
+    if (raw.includes('heloc')) return 'HELOC';
+    if (raw.includes('reverse')) return 'REVERSE';
+    if (raw) return raw.toUpperCase();
+    return null;
+  };
+
+  const displayType = getDisplayType();
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <span
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        style={{
+          fontSize: '9px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase',
+          letterSpacing: '0.5px', cursor: 'pointer', padding: '2px 4px', borderRadius: '3px',
+          background: open ? '#1e293b' : 'transparent',
+        }}
+        title="Click to change loan type"
+      >
+        {displayType || '+ Type'}
+      </span>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, zIndex: 400,
+          background: '#fff', border: '1px solid #ddd', borderRadius: '6px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.15)', minWidth: '100px', padding: '4px',
+        }}>
+          {TYPES.map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={e => { e.stopPropagation(); onUpdate(borrower.id, { loan_purpose: t }); setOpen(false); }}
+              style={{
+                display: 'block', width: '100%', padding: '6px 10px', border: 'none',
+                background: displayType === t.toUpperCase() ? '#ede9fe' : 'transparent',
+                color: '#333', cursor: 'pointer', borderRadius: '4px',
+                fontSize: '11px', fontWeight: '600', textAlign: 'left',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+              onMouseLeave={e => e.currentTarget.style.background = displayType === t.toUpperCase() ? '#ede9fe' : 'transparent'}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Lender badge with dropdown + Flyhomes secondary
 const LenderBadge = ({ borrower, onUpdate }) => {
   const [open, setOpen, ref] = useDropdown();
@@ -1119,27 +1178,17 @@ const BorrowerRow = ({
         {/* Stage dropdown */}
         <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
 
-        {/* Name + Type - click to expand */}
-        <div
-          onClick={() => onExpand(borrower.id)}
-          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}
-          title="Click to open file"
-        >
-          <span className="borrower-name">
+        {/* Name + Type */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span
+            className="borrower-name"
+            onClick={() => onExpand(borrower.id)}
+            style={{ cursor: 'pointer' }}
+            title="Click to open file"
+          >
             {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
           </span>
-          {(borrower.loan_purpose || borrower.loan_type) && (
-            <span style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {(() => {
-                const raw = (borrower.loan_purpose || borrower.loan_type || '').toLowerCase();
-                if (raw.includes('purchase')) return 'PURCHASE';
-                if (raw.includes('refi')) return 'REFINANCE';
-                if (raw.includes('heloc')) return 'HELOC';
-                if (raw.includes('reverse')) return 'REVERSE';
-                return (borrower.loan_purpose || borrower.loan_type).toUpperCase();
-              })()}
-            </span>
-          )}
+          <LoanTypeDropdown borrower={borrower} onUpdate={onUpdate} />
         </div>
 
         {/* Badges after expand button */}
