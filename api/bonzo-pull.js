@@ -252,6 +252,7 @@ export default async function handler(req, res) {
           results.updated++;
         } else {
           borrowerData.last_touched = new Date().toISOString();
+          borrowerData.user_id = 'c75c0dc8-5bf4-4911-9b48-41c94d2e3494'; // Danielle's user_id
           borrowerData.is_new = true; // Mark as new for hot pink badge
           const { error } = await supabase
             .from('borrowers')
