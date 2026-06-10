@@ -1174,8 +1174,8 @@ const BorrowerRow = ({
           </span>
         )}
 
-        {/* Spacer to push notes to fixed position */}
-        <div style={{ width: '20px', flexShrink: 0 }} />
+        {/* Fixed spacer - notes always start here after NEED */}
+        <div style={{ minWidth: '120px', flexShrink: 0 }} />
 
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
@@ -1231,7 +1231,7 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '12px', flex: 1, overflow: 'hidden', marginLeft: '10px' }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '8px', flex: 1, overflow: 'hidden' }}
             >
               {noteLines.slice(0, 3).map((line, idx, arr) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
