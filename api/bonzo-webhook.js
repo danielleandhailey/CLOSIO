@@ -10,7 +10,11 @@ const mapStage = (bonzoStage) => {
   const stageMap = {
     'aged working': 'Working',
     'working': 'Working',
-    'new lead': 'Working',
+    'new lead': 'New Lead',
+    'new leads': 'New Lead',
+    'new lead day 1': 'New Lead',
+    'new leads (day 1-7)': 'New Lead',
+    'new leads day 1': 'New Lead',
     'shopping': 'Shopping',
     'processing': 'Processing',
     'funded': 'Funded',
