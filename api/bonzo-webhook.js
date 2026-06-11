@@ -140,8 +140,20 @@ export default async function handler(req, res) {
       if (error) throw error;
       result = { action: 'updated', borrower: updated };
     } else {
-      // Create new
+      // Create new - mark as NEW and potentially HOT
       borrowerData.last_touched = new Date().toISOString();
+      borrowerData.is_new = true;
+      borrowerData.bonzo_created_at = new Date().toISOString();
+
+      // Check if WCL lead - mark as HOT
+      const isWCL = (data.lead_source || '').toLowerCase().includes('wcl') ||
+                    (data.source || '').toLowerCase().includes('wcl') ||
+                    (data.lead_source || '').toLowerCase().includes('lead store');
+      if (isWCL) {
+        borrowerData.stage = 'HOT';
+        borrowerData.notes = `🔥 WCL LEAD - CALL IMMEDIATELY!\n${borrowerData.notes || ''}`;
+      }
+
       const { data: created, error } = await supabase
         .from('borrowers')
         .insert([borrowerData])
@@ -149,6 +161,18 @@ export default async function handler(req, res) {
         .single();
       if (error) throw error;
       result = { action: 'created', borrower: created };
+
+      // Store notification for real-time alert
+      await supabase
+        .from('notifications')
+        .insert([{
+          type: 'new_lead',
+          title: isWCL ? '🔥 NEW WCL LEAD!' : '📥 New Lead',
+          message: `${borrowerData.name} - CALL NOW!`,
+          borrower_id: created.id,
+          created_at: new Date().toISOString(),
+          read: false,
+        }]).catch(e => console.log('Notification insert skipped:', e.message));
     }
 
     console.log('Bonzo sync result:', result.action, result.borrower?.name);
