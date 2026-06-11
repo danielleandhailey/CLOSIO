@@ -533,8 +533,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </div>
 
-        {/* 9. LEAD STORE */}
-        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* 9. LEAD STORE with Golden Ball */}
+        <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{
+            width: '28px', height: '28px', borderRadius: '50%',
+            border: '3px solid #ffd700',
+            background: 'transparent',
+            marginBottom: '4px',
+            boxShadow: '0 0 8px rgba(255, 215, 0, 0.5)'
+          }} />
           <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Lead Store</div>
         </div>
 
