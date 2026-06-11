@@ -762,7 +762,6 @@ body[data-theme="light"] .btn-icon:hover {
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
 }
-}
 
 .modal-title {
   font-size: 16px;
