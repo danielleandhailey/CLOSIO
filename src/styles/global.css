@@ -358,8 +358,8 @@ body[data-theme="light"] .btn-icon:hover {
 /* ---- Stage pills ---- */
 .stage-bar {
   display: flex;
-  gap: 6px;
-  padding: 8px 20px;
+  gap: 8px;
+  padding: 8px 20px 8px 40px;
   background: var(--bg);
   border-bottom: 2px solid var(--border);
   flex-wrap: nowrap;
