@@ -202,7 +202,7 @@ const PipelinePage = ({ borrowers, ops }) => {
 
         {/* Stage filter */}
         <select className="select-input" value={filterStage} onChange={e => setFilterStage(e.target.value)}>
-          <option value="All">All Stages</option>
+          <option value="All">All</option>
           {(STAGES_BY_TYPE[filterType] || STAGES).map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
