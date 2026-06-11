@@ -1268,11 +1268,22 @@ const BorrowerRow = ({
           <span style={{
             marginLeft: '8px', padding: '1px 6px', background: '#ff1493', color: '#fff',
             fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
-            letterSpacing: '0.5px', cursor: 'pointer',
+            letterSpacing: '0.5px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
           }}
           title="Click to dismiss"
           onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_new: false }); }}
-          >NEW</span>
+          >NEW
+          {borrower.bonzo_created_at && (
+            <span style={{ fontWeight: '400', fontSize: '8px', opacity: 0.9 }}>
+              {(() => {
+                try {
+                  const d = new Date(borrower.bonzo_created_at);
+                  return format(d, 'M/d h:mma');
+                } catch { return ''; }
+              })()}
+            </span>
+          )}
+          </span>
         )}
         {borrower.is_updated && !borrower.is_new && (
           <span style={{
