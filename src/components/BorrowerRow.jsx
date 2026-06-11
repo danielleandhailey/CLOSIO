@@ -1313,9 +1313,9 @@ const BorrowerRow = ({
             fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
             letterSpacing: '0.5px', cursor: 'pointer',
           }}
-          title="Click to dismiss"
-          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_updated: false }); }}
-          >UPDATED</span>
+          title={borrower.updated_fields?.length ? `Updated: ${borrower.updated_fields.join(', ')}` : 'Click to dismiss'}
+          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_updated: false, updated_fields: null }); }}
+          >UPD: {borrower.updated_fields?.length ? borrower.updated_fields.join(', ') : ''}</span>
         )}
         {borrower.bonzo_last_sync && !borrower.is_new && (
           <span style={{ marginLeft: '6px', color: '#64748b', fontSize: '10px', fontWeight: '600' }}

@@ -40,11 +40,12 @@ export const bonzoService = {
         const closioStage = BONZO_STAGE_MAP[lead.stage?.toLowerCase()] || 'Working';
         
         // Check if borrower already exists (match by name + phone or email)
-        const { data: existing } = await supabase
+        const { data: existingRows } = await supabase
           .from('borrowers')
-          .select('id')
+          .select('*')
           .or(`name.ilike.${lead.first_name} ${lead.last_name},phone.eq.${lead.phone},email.eq.${lead.email}`)
-          .single();
+          .limit(1);
+        const existing = existingRows?.[0];
 
         const borrowerData = {
           name: `${lead.first_name} ${lead.last_name}`.trim(),
@@ -58,9 +59,22 @@ export const bonzoService = {
         };
 
         if (existing) {
-          await supabase.from('borrowers').update(borrowerData).eq('id', existing.id);
-          updated++;
+          // Track what fields changed
+          const changedFields = [];
+          if (borrowerData.notes && borrowerData.notes !== existing.notes) changedFields.push('notes');
+          if (borrowerData.stage && borrowerData.stage !== existing.stage) changedFields.push('stage');
+          if (borrowerData.phone && borrowerData.phone !== existing.phone) changedFields.push('phone');
+          if (borrowerData.email && borrowerData.email !== existing.email) changedFields.push('email');
+
+          if (changedFields.length > 0) {
+            borrowerData.is_updated = true;
+            borrowerData.updated_fields = changedFields;
+            borrowerData.bonzo_last_sync = new Date().toISOString();
+            await supabase.from('borrowers').update(borrowerData).eq('id', existing.id);
+            updated++;
+          }
         } else {
+          borrowerData.is_new = true;
           await supabase.from('borrowers').insert([borrowerData]);
           added++;
         }

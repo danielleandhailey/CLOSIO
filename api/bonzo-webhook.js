@@ -156,6 +156,10 @@ export default async function handler(req, res) {
       // All new leads go to "New Lead" stage with yellow highlight + bell
       borrowerData.stage = 'New Lead';
       borrowerData.is_hot_lead = true;
+      // Default loan_type so it shows in pipeline (required for filtering)
+      if (!borrowerData.loan_type) {
+        borrowerData.loan_type = 'DR Purchase';
+      }
 
       if (isWCL) {
         borrowerData.notes = `🔥 WCL LEAD - CALL IMMEDIATELY!\n${borrowerData.notes || ''}`;
