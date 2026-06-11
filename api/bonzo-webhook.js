@@ -43,8 +43,11 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const data = req.body;
-    console.log('Bonzo webhook received:', JSON.stringify(data, null, 2));
+    const rawData = req.body;
+    console.log('Bonzo webhook received:', JSON.stringify(rawData, null, 2));
+
+    // Handle nested prospect object from event hooks
+    const data = rawData.prospect || rawData.data || rawData;
 
     // Extract fields from Bonzo payload
     const firstName = data.first_name || data.firstName || '';
