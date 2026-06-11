@@ -964,11 +964,17 @@ const AutoTagPills = ({ borrower }) => {
   );
 };
 
+// Map old stage names to display names
+const displayStage = (stage) => {
+  if (stage === 'Went With Competitor') return 'W/Competitor';
+  return stage;
+};
+
 // Stage dropdown on each row
 const StageDropdown = ({ borrower, onMoveStage }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef();
-  const sc = STAGE_COLORS[borrower.stage] || STAGE_COLORS['Working'];
+  const sc = STAGE_COLORS[borrower.stage] || STAGE_COLORS['Went With Competitor'] || STAGE_COLORS['Working'];
 
   useEffect(() => {
     if (!open) return;
@@ -991,7 +997,7 @@ const StageDropdown = ({ borrower, onMoveStage }) => {
           boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
         }}
       >
-        {borrower.stage} ▾
+        {displayStage(borrower.stage)} ▾
       </button>
       {open && (
         <div style={{
