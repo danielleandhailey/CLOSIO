@@ -20,6 +20,7 @@ const mapBonzoStage = (bonzoStage, pipelineName) => {
     if (lower === 'hot!') return { stage: 'HOT', substage: null };
     if (lower === 'stips needed') return { stage: 'Working', substage: 'Stips Needed' };
     if (lower === 'working') return { stage: 'Working', substage: null };
+    if (lower === 'credit repair') return { stage: 'Credit Upgrade', substage: null };
     if (lower === 'approved - need stips') return { stage: 'Shopping', substage: 'Stips Needed' };
     if (lower === 'pre-approved - shopping') return { stage: 'Shopping', substage: null };
     if (lower === 'in processing') return { stage: 'Processing', substage: null };
