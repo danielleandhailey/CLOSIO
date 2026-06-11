@@ -27,8 +27,8 @@ export const STAGES = [
 export const STAGES_BY_TYPE = {
   'Purchase': STAGES,
   'Refinance': STAGES.filter(s => s !== 'Shopping'),
-  'HELOC': ['Working', 'Stips Needed', 'Credit Upgrade', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
-  'Reverse': ['Working', 'Stips Needed', 'Credit Upgrade', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
+  'HELOC': ['New Lead', 'Working', 'Stips Needed', 'Credit Upgrade', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
+  'Reverse': ['New Lead', 'Working', 'Stips Needed', 'Credit Upgrade', 'Processing', 'Funded', 'Closed/Paid', 'Future Deal', 'DNQ', 'CXLD'],
   'Refi/HELOC': STAGES.filter(s => s !== 'Shopping'),
 };
 
