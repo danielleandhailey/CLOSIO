@@ -1244,24 +1244,24 @@ const BorrowerRow = ({
           Need
         </span>
 
-        {/* Stage dropdown */}
-        <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
-
-        {/* Name + Type + Lender */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span
-            className="borrower-name"
-            onClick={() => onExpand(borrower.id)}
-            style={{ cursor: 'pointer' }}
-            title="Click to open file"
-          >
-            {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
-          </span>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        {/* Stage dropdown with Type + Lender underneath */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', paddingLeft: '2px' }}>
             <LoanTypeDropdown borrower={borrower} onUpdate={onUpdate} />
             <LenderDropdownSmall borrower={borrower} onUpdate={onUpdate} />
           </div>
         </div>
+
+        {/* Borrower Name */}
+        <span
+          className="borrower-name"
+          onClick={() => onExpand(borrower.id)}
+          style={{ cursor: 'pointer' }}
+          title="Click to open file"
+        >
+          {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
+        </span>
 
         {/* Badges after expand button */}
         {borrower.is_new && (
