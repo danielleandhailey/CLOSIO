@@ -195,27 +195,39 @@ export default async function handler(req, res) {
             timezone: p.timezone || existingBorrower.timezone,
             bonzo_id: String(p.id),
             bonzo_last_sync: new Date().toISOString(),
-            is_updated: !existingBorrower.is_new,  // Only mark updated if not new
             occupancy: mortgage.property_use || p.property_use || existingBorrower.occupancy,
             property_type: mortgage.property_type || p.property_type || existingBorrower.property_type,
             lead_source: p.lead_source || p.source || existingBorrower.lead_source,
             lead_id: p.lead_id || p.external_id || existingBorrower.lead_id,
           };
 
+          // Track if anything meaningful changed
+          let hasChanges = false;
+
           // Sync loan_purpose if Bonzo has it
           if (loanPurpose && loanPurpose !== existingBorrower.loan_purpose) {
             updateData.loan_purpose = loanPurpose;
+            hasChanges = true;
           }
 
-          // Sync stage from Bonzo if mapped
-          if (stageMapping && stageMapping.stage) {
+          // Sync stage from Bonzo if mapped and different
+          if (stageMapping && stageMapping.stage && stageMapping.stage !== existingBorrower.stage) {
             updateData.stage = stageMapping.stage;
             if (stageMapping.substage) updateData.substage = stageMapping.substage;
+            hasChanges = true;
           }
 
-          // Sync loan_type (pipeline type)
+          // Sync loan_type (pipeline type) if different
           const loanType = stageMapping?.loanType || mortgage.loan_type || p.loan_type;
-          if (loanType) updateData.loan_type = loanType;
+          if (loanType && loanType !== existingBorrower.loan_type) {
+            updateData.loan_type = loanType;
+            hasChanges = true;
+          }
+
+          // Only set is_updated if something meaningful changed AND not a new lead
+          if (hasChanges && !existingBorrower.is_new) {
+            updateData.is_updated = true;
+          }
 
           await supabase
             .from('borrowers')
