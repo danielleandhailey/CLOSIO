@@ -84,6 +84,8 @@ const PipelinePage = ({ borrowers, ops }) => {
         list = list.filter(b => b.stage === 'Stips Needed' || (b.stips_needed && b.stips_needed > 0));
       } else if (filterStage === 'Updated') {
         list = list.filter(b => b.is_updated);
+      } else if (filterStage === 'W/Competitor') {
+        list = list.filter(b => b.stage === 'W/Competitor' || b.stage === 'Went With Competitor');
       } else {
         list = list.filter(b => b.stage === filterStage);
       }
