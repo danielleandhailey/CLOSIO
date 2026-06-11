@@ -173,7 +173,7 @@ const AppInner = () => {
       <nav className="top-nav">
         <div className="brand">
           <strong style={{ color: '#fff', fontWeight: '800', letterSpacing: '0.02em' }}>CLOSIO™</strong>
-          <span>Close More. Pipeline Manager.</span>
+          <span style={{ color: '#64748b', fontSize: '11px' }}>Close More. Stress Less.</span>
         </div>
 
         <div className="nav-tabs">
