@@ -172,8 +172,11 @@ const AppInner = () => {
       {/* Top Nav */}
       <nav className="top-nav">
         <div className="brand">
-          <strong style={{ color: '#fff', fontWeight: '800', letterSpacing: '0.02em' }}>CLOSIO™</strong>
-          <span style={{ color: '#64748b', fontSize: '11px' }}>Close More. Stress Less.</span>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+            <strong style={{ color: '#fff', fontWeight: '800', letterSpacing: '0.05em', fontSize: '18px' }}>CLOSIO<sup style={{ fontSize: '10px', color: '#0d9488' }}>™</sup></strong>
+            <span style={{ color: '#94a3b8', fontSize: '10px', fontWeight: '500' }}>Close More.</span>
+            <span style={{ color: '#64748b', fontSize: '9px', fontWeight: '400', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Pipeline Manager</span>
+          </div>
         </div>
 
         <div className="nav-tabs">
