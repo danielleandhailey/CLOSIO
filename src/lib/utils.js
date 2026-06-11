@@ -65,11 +65,30 @@ export const touchedRecently = (lastTouched) => {
 
 // ---- Sorting ----
 export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
-  const stageIdx = (s) => stageOrder.indexOf(s);
+  // Map old stage names to new ones for sorting
+  const normalizeStage = (s) => {
+    if (s === 'Went With Competitor') return 'W/Competitor';
+    return s;
+  };
+  const stageIdx = (s) => {
+    const idx = stageOrder.indexOf(normalizeStage(s));
+    return idx === -1 ? 999 : idx; // Unknown stages go to end
+  };
   return [...borrowers].sort((a, b) => {
     switch (sortBy) {
       case 'stage':
-        return stageIdx(a.stage) - stageIdx(b.stage);
+        // First by stage order
+        const stageDiff = stageIdx(a.stage) - stageIdx(b.stage);
+        if (stageDiff !== 0) return stageDiff;
+        // Within same stage: favorites first
+        if (a.is_favorite && !b.is_favorite) return -1;
+        if (!a.is_favorite && b.is_favorite) return 1;
+        // Then stips needed
+        const aStips = a.stips_needed || 0;
+        const bStips = b.stips_needed || 0;
+        if (aStips > 0 && bStips === 0) return -1;
+        if (aStips === 0 && bStips > 0) return 1;
+        return 0;
       case 'new':
         // NEW borrowers first (is_new = true)
         if (a.is_new && !b.is_new) return -1;
