@@ -18,7 +18,7 @@ export const STAGES = [
   'DNQ',
   'CXLD',
   'Not Interested',
-  'Went With Competitor',
+  'W/Competitor',
   'Went Dark',
 ];
 
@@ -47,7 +47,7 @@ export const STAGE_COLORS = {
   'DNQ':           { bg: '#6b7280', text: '#fff', light: '#e5e7eb' },
   'CXLD':          { bg: '#ef4444', text: '#fff', light: '#fee2e2' },
   'Not Interested':       { bg: '#9ca3af', text: '#fff', light: '#f3f4f6' },
-  'Went With Competitor': { bg: '#f97316', text: '#fff', light: '#ffedd5' },
+  'W/Competitor': { bg: '#f97316', text: '#fff', light: '#ffedd5' },
   'Went Dark':            { bg: '#1f2937', text: '#fff', light: '#374151' },
 };
 

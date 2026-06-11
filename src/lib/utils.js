@@ -76,9 +76,11 @@ export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
         if (!a.is_new && b.is_new) return 1;
         return stageIdx(a.stage) - stageIdx(b.stage);
       case 'updated':
-        // UPDATED borrowers first (is_updated = true)
-        if (a.is_updated && !b.is_updated) return -1;
-        if (!a.is_updated && b.is_updated) return 1;
+        // UPDATED borrowers first (is_updated = true, but NOT is_new)
+        const aUpdated = a.is_updated && !a.is_new;
+        const bUpdated = b.is_updated && !b.is_new;
+        if (aUpdated && !bUpdated) return -1;
+        if (!aUpdated && bUpdated) return 1;
         return stageIdx(a.stage) - stageIdx(b.stage);
       case 'stips':
         // STIPS needed first - by stips_needed count (NEED tags)
