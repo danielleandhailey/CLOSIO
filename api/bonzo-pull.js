@@ -293,6 +293,7 @@ export default async function handler(req, res) {
           credit_score: parseInt(mortgage.credit_score || p.credit_score) || undefined,
           bonzo_id: String(p.id),
           bonzo_last_sync: new Date().toISOString(),
+          bonzo_created_at: p.created_at || undefined,
           updated_at: new Date().toISOString(),
           // Extra Bonzo fields for borrower card
           lead_source: p.lead_source || p.source || undefined,
