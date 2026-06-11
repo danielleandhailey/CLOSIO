@@ -170,16 +170,19 @@ export default async function handler(req, res) {
       result = { action: 'created', borrower: created };
 
       // Store notification for real-time alert
-      await supabase
-        .from('notifications')
-        .insert([{
-          type: 'new_lead',
-          title: isWCL ? '🔥 NEW WCL LEAD!' : '📥 New Lead',
-          message: `${borrowerData.name} - CALL NOW!`,
-          borrower_id: created.id,
-          created_at: new Date().toISOString(),
-          read: false,
-        }]).catch(e => console.log('Notification insert skipped:', e.message));
+      try {
+        await supabase
+          .from('notifications')
+          .insert([{
+            type: 'new_lead',
+            title: isWCL ? '🔥 NEW WCL LEAD!' : '📥 New Lead',
+            message: `${borrowerData.name} - CALL NOW!`,
+            borrower_id: created.id,
+            read: false,
+          }]);
+      } catch (notifErr) {
+        console.log('Notification insert skipped:', notifErr.message);
+      }
     }
 
     console.log('Bonzo sync result:', result.action, result.borrower?.name);
