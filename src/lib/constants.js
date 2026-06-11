@@ -48,6 +48,7 @@ export const STAGE_COLORS = {
   'CXLD':          { bg: '#ef4444', text: '#fff', light: '#fee2e2' },
   'Not Interested':       { bg: '#9ca3af', text: '#fff', light: '#f3f4f6' },
   'W/Competitor': { bg: '#f97316', text: '#fff', light: '#ffedd5' },
+  'Went With Competitor': { bg: '#f97316', text: '#fff', light: '#ffedd5' },
   'Went Dark':            { bg: '#1f2937', text: '#fff', light: '#374151' },
 };
 
