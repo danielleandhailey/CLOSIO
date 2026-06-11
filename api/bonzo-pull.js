@@ -195,7 +195,11 @@ export default async function handler(req, res) {
             timezone: p.timezone || existingBorrower.timezone,
             bonzo_id: String(p.id),
             bonzo_last_sync: new Date().toISOString(),
-            is_updated: true  // Always mark as updated when synced from Bonzo
+            is_updated: !existingBorrower.is_new,  // Only mark updated if not new
+            occupancy: mortgage.property_use || p.property_use || existingBorrower.occupancy,
+            property_type: mortgage.property_type || p.property_type || existingBorrower.property_type,
+            lead_source: p.lead_source || p.source || existingBorrower.lead_source,
+            lead_id: p.lead_id || p.external_id || existingBorrower.lead_id,
           };
 
           // Sync loan_purpose if Bonzo has it
