@@ -157,6 +157,52 @@ const AppInner = () => {
     return () => window.removeEventListener('openMatrix', handler);
   }, []);
 
+  // Request browser notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Poll for new lead notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const checkNotifications = async () => {
+      try {
+        const { data } = await import('./lib/supabase').then(m =>
+          m.supabase.from('notifications').select('*').eq('read', false).order('created_at', { ascending: false }).limit(5)
+        );
+
+        if (data?.length) {
+          data.forEach(n => {
+            // Play sound
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+
+            // Browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification(n.title, { body: n.message, icon: '/favicon.ico', requireInteraction: true });
+            }
+
+            // Mark as read
+            import('./lib/supabase').then(m =>
+              m.supabase.from('notifications').update({ read: true }).eq('id', n.id)
+            );
+          });
+
+          // Refresh borrowers to show new lead
+          if (ops.refreshBorrowers) ops.refreshBorrowers();
+        }
+      } catch (e) { /* ignore */ }
+    };
+
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, [user, ops]);
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f13', color: '#9f67f7', fontFamily: 'Space Mono, monospace', fontSize: '14px' }}>

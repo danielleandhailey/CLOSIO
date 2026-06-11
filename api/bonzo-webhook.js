@@ -145,10 +145,14 @@ export default async function handler(req, res) {
       borrowerData.is_new = true;
       borrowerData.bonzo_created_at = new Date().toISOString();
 
-      // Check if WCL lead - mark as HOT
+      // Check if WCL lead - mark as HOT with glowing bell
       const isWCL = (data.lead_source || '').toLowerCase().includes('wcl') ||
                     (data.source || '').toLowerCase().includes('wcl') ||
                     (data.lead_source || '').toLowerCase().includes('lead store');
+
+      // All new leads get hot_lead flag for yellow highlight + bell
+      borrowerData.is_hot_lead = true;
+
       if (isWCL) {
         borrowerData.stage = 'HOT';
         borrowerData.notes = `🔥 WCL LEAD - CALL IMMEDIATELY!\n${borrowerData.notes || ''}`;

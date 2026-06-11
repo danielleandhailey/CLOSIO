@@ -1191,12 +1191,34 @@ const BorrowerRow = ({
     ? format(typeof borrower.last_touched === 'string' ? parseISO(borrower.last_touched) : borrower.last_touched, 'M/d')
     : '—';
 
+  // Hot lead glow style
+  const isHotLead = borrower.is_hot_lead;
+  const hotLeadStyle = isHotLead ? {
+    background: 'linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.08) 50%, transparent 100%)',
+    animation: 'hotLeadPulse 2s ease-in-out infinite',
+  } : {};
+
   return (
     <div style={{ position: 'relative' }}>
       <div className={`borrower-row ${isExpanded ? 'expanded' : ''}`} style={{
         borderLeft: `3px solid ${getTypeBorderColor(borrower.loan_type || borrower.loan_purpose)}`,
         ...(dropHighlight ? { background: '#e0f2fe', boxShadow: '0 0 0 2px #7dd3fc' } : {}),
+        ...hotLeadStyle,
       }}>
+        {/* Hot Lead Bell - click to clear */}
+        {isHotLead && (
+          <span
+            onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_hot_lead: false }); }}
+            style={{
+              cursor: 'pointer',
+              fontSize: '18px',
+              marginRight: '6px',
+              animation: 'bellRing 0.5s ease-in-out infinite',
+            }}
+            title="Click to mark as handled"
+          >🔔</span>
+        )}
+
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 

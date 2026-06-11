@@ -5,6 +5,17 @@
   50% { transform: scale(1.1); }
 }
 
+@keyframes hotLeadPulse {
+  0%, 100% { background: linear-gradient(90deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.1) 50%, transparent 100%); }
+  50% { background: linear-gradient(90deg, rgba(251, 191, 36, 0.35) 0%, rgba(251, 191, 36, 0.15) 50%, transparent 100%); }
+}
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
+}
+
 :root {
   /* Refined dark palette - more Bonzo-like slate with subtle teal accent */
   --bg: #0f1419;
