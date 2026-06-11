@@ -207,6 +207,16 @@ export default async function handler(req, res) {
             updateData.loan_purpose = loanPurpose;
           }
 
+          // Sync stage from Bonzo if mapped
+          if (stageMapping && stageMapping.stage) {
+            updateData.stage = stageMapping.stage;
+            if (stageMapping.substage) updateData.substage = stageMapping.substage;
+          }
+
+          // Sync loan_type (pipeline type)
+          const loanType = stageMapping?.loanType || mortgage.loan_type || p.loan_type;
+          if (loanType) updateData.loan_type = loanType;
+
           await supabase
             .from('borrowers')
             .update(updateData)
