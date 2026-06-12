@@ -48,8 +48,8 @@ export const useBorrowers = () => {
   useEffect(() => {
     fetchBorrowers();
 
-    // Poll every 30 seconds for webhook-created records
-    const pollInterval = setInterval(fetchBorrowers, 30000);
+    // Poll every 60 seconds for webhook-created records
+    const pollInterval = setInterval(fetchBorrowers, 60000);
 
     // Real-time subscription for borrowers
     const borrowerSub = supabase
