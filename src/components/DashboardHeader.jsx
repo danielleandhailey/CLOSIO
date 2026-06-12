@@ -398,20 +398,20 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <SmallCard icon={Users} label="Pipeline" value={totalLoans} color="#8b5cf6" />
           {(() => {
-            const hotLeadCount = borrowers.filter(b => b.is_hot_lead).length;
+            const newLeadCount = borrowers.filter(b => b.stage === 'New Lead').length;
             return (
               <div style={{
-                background: hotLeadCount > 0 ? '#fbbf24' : 'var(--surface2)',
+                background: newLeadCount > 0 ? '#fff' : 'var(--surface2)',
                 borderRadius: '6px', padding: '4px 8px',
-                border: hotLeadCount > 0 ? '1px solid #f59e0b' : '1px solid var(--border)',
+                border: newLeadCount > 0 ? '1px solid #ccc' : '1px solid var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                cursor: hotLeadCount > 0 ? 'pointer' : 'default',
+                cursor: newLeadCount > 0 ? 'pointer' : 'default',
               }}
-              onClick={() => hotLeadCount > 0 && onFilterStage('New Lead')}
-              title={hotLeadCount > 0 ? 'New leads!' : 'No new leads'}
+              onClick={() => newLeadCount > 0 && onFilterStage('New Lead')}
+              title={newLeadCount > 0 ? 'New leads!' : 'No new leads'}
               >
-                <span style={{ fontSize: '14px', color: hotLeadCount > 0 ? '#000' : '#6b7280' }}>🔔</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: hotLeadCount > 0 ? '#000' : '#6b7280' }}>{hotLeadCount}</span>
+                <span style={{ fontSize: '14px', color: newLeadCount > 0 ? '#000' : '#6b7280' }}>🔔</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: newLeadCount > 0 ? '#000' : '#6b7280' }}>{newLeadCount}</span>
               </div>
             );
           })()}
