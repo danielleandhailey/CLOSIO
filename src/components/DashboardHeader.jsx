@@ -394,8 +394,28 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
     <div className="dashboard-header" style={{ padding: '10px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch', width: '100%' }}>
 
-        {/* 1. PIPELINE */}
-        <SmallCard icon={Users} label="Pipeline" value={totalLoans} color="#8b5cf6" />
+        {/* 1. PIPELINE + BELL stacked */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <SmallCard icon={Users} label="Pipeline" value={totalLoans} color="#8b5cf6" />
+          {(() => {
+            const hotLeadCount = borrowers.filter(b => b.is_hot_lead).length;
+            return (
+              <div style={{
+                background: hotLeadCount > 0 ? '#fbbf24' : 'var(--surface2)',
+                borderRadius: '6px', padding: '4px 8px',
+                border: hotLeadCount > 0 ? '1px solid #f59e0b' : '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                cursor: hotLeadCount > 0 ? 'pointer' : 'default',
+              }}
+              onClick={() => hotLeadCount > 0 && onFilterStage('New Lead')}
+              title={hotLeadCount > 0 ? 'New leads!' : 'No new leads'}
+              >
+                <span style={{ fontSize: '14px', color: hotLeadCount > 0 ? '#000' : '#6b7280' }}>🔔</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: hotLeadCount > 0 ? '#000' : '#6b7280' }}>{hotLeadCount}</span>
+              </div>
+            );
+          })()}
+        </div>
 
         {/* 2. PROCESSING + FUNDED stacked */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px 10px', minWidth: '60px', border: '1px solid var(--border)' }}>
@@ -533,36 +553,6 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
           </div>
         </div>
 
-        {/* 9. HOT LEADS BELL */}
-        {(() => {
-          const hotLeadCount = borrowers.filter(b => b.is_hot_lead).length;
-          return hotLeadCount > 0 ? (
-            <div style={{
-              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-              borderRadius: '8px', padding: '8px 12px', minWidth: '50px',
-              border: '1px solid #fbbf24',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              animation: 'hotLeadPulse 2s ease-in-out infinite',
-              cursor: 'pointer',
-            }}
-            title="Hot leads waiting!"
-            >
-              <span style={{ fontSize: '24px', animation: 'bellRing 0.5s ease-in-out infinite' }}>🔔</span>
-              <div style={{ fontSize: '12px', color: '#000', fontWeight: '800' }}>{hotLeadCount}</div>
-            </div>
-          ) : (
-            <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '60px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{
-                width: '28px', height: '28px', borderRadius: '50%',
-                border: '3px solid #ffd700',
-                background: 'transparent',
-                marginBottom: '4px',
-                boxShadow: '0 0 8px rgba(255, 215, 0, 0.5)'
-              }} />
-              <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase' }}>Lead Store</div>
-            </div>
-          );
-        })()}
 
         {/* 11. REVENUE & VOLUME */}
         <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '8px 12px', minWidth: '90px', border: '1px solid var(--border)' }}>
