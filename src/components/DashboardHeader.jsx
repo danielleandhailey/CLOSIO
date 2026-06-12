@@ -401,17 +401,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             const newLeadCount = borrowers.filter(b => b.stage === 'New Lead').length;
             return (
               <div style={{
-                background: newLeadCount > 0 ? '#0ea5e9' : 'var(--surface2)',
-                borderRadius: '6px', padding: '4px 8px',
-                border: newLeadCount > 0 ? '1px solid #0284c7' : '1px solid var(--border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px',
                 cursor: newLeadCount > 0 ? 'pointer' : 'default',
+                padding: '4px',
               }}
               onClick={() => newLeadCount > 0 && onFilterStage('New Lead')}
               title={newLeadCount > 0 ? 'New leads!' : 'No new leads'}
               >
-                <span style={{ fontSize: '14px' }}>🔔</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: newLeadCount > 0 ? '#fff' : '#6b7280' }}>{newLeadCount}</span>
+                <span style={{ fontSize: '22px', opacity: newLeadCount > 0 ? 1 : 0.4 }}>🔔</span>
+                <span style={{ fontSize: '16px', fontWeight: '800', color: newLeadCount > 0 ? '#0ea5e9' : '#6b7280' }}>{newLeadCount}</span>
               </div>
             );
           })()}

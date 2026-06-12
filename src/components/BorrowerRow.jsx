@@ -1194,7 +1194,7 @@ const BorrowerRow = ({
   // Hot lead glow style
   const isHotLead = borrower.is_hot_lead;
   const hotLeadStyle = isHotLead ? {
-    background: 'linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.08) 50%, transparent 100%)',
+    background: 'linear-gradient(90deg, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0.06) 50%, transparent 100%)',
   } : {};
 
   return (
@@ -1283,7 +1283,7 @@ const BorrowerRow = ({
         {/* Badges after expand button */}
         {borrower.is_new && (
           <span style={{
-            marginLeft: '8px', padding: '1px 6px', background: '#ff1493', color: '#fff',
+            marginLeft: '8px', padding: '1px 6px', background: '#0ea5e9', color: '#fff',
             fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
             letterSpacing: '0.5px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
           }}
