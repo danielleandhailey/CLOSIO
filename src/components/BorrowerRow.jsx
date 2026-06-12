@@ -1204,20 +1204,6 @@ const BorrowerRow = ({
         ...(dropHighlight ? { background: '#e0f2fe', boxShadow: '0 0 0 2px #7dd3fc' } : {}),
         ...hotLeadStyle,
       }}>
-        {/* Hot Lead Bell - click to clear */}
-        {isHotLead && (
-          <span
-            onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_hot_lead: false }); }}
-            style={{
-              cursor: 'pointer',
-              fontSize: '18px',
-              marginRight: '6px',
-              animation: 'bellRing 0.5s ease-in-out infinite',
-            }}
-            title="Click to mark as handled"
-          >🔔</span>
-        )}
-
         {/* Checkbox */}
         <input type="checkbox" className="borrower-checkbox" checked={isSelected} onChange={e => onSelect(borrower.id, e.target.checked)} />
 
@@ -1273,6 +1259,19 @@ const BorrowerRow = ({
             <LenderDropdownSmall borrower={borrower} onUpdate={onUpdate} />
           </div>
         </div>
+
+        {/* Hot Lead Bell - click to clear */}
+        {isHotLead && (
+          <span
+            onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_hot_lead: false }); }}
+            style={{
+              cursor: 'pointer',
+              fontSize: '16px',
+              marginRight: '4px',
+            }}
+            title="Click to mark as handled"
+          >🔔</span>
+        )}
 
         {/* Borrower Name */}
         <span
