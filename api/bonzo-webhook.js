@@ -162,6 +162,8 @@ export default async function handler(req, res) {
       if (!borrowerData.loan_type) {
         borrowerData.loan_type = 'DR Purchase';
       }
+      // REQUIRED: user_id for RLS - Danielle's account
+      borrowerData.user_id = 'c75c0dc8-5bf4-4911-9b48-41c94d2e3494';
 
       if (isWCL) {
         borrowerData.notes = `🔥 WCL LEAD - CALL IMMEDIATELY!\n${borrowerData.notes || ''}`;
