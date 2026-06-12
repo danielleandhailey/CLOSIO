@@ -33,7 +33,7 @@ export const STAGES_BY_TYPE = {
 };
 
 export const STAGE_COLORS = {
-  'New Lead':      { bg: '#06b6d4', text: '#fff', light: '#cffafe' },
+  'New Lead':      { bg: '#ffffff', text: '#000', light: '#000000', lightText: '#fff' },
   'HOT':           { bg: '#ef4444', text: '#fff', light: '#fee2e2' },
   'Updated':       { bg: '#22c55e', text: '#fff', light: '#dcfce7' },
   'Working':       { bg: '#3b82f6', text: '#fff', light: '#dbeafe' },
