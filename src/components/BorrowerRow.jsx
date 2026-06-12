@@ -1195,7 +1195,6 @@ const BorrowerRow = ({
   const isHotLead = borrower.is_hot_lead;
   const hotLeadStyle = isHotLead ? {
     background: 'linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.08) 50%, transparent 100%)',
-    animation: 'hotLeadPulse 2s ease-in-out infinite',
   } : {};
 
   return (
