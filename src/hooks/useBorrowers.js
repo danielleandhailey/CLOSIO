@@ -48,6 +48,9 @@ export const useBorrowers = () => {
   useEffect(() => {
     fetchBorrowers();
 
+    // Poll every 30 seconds for webhook-created records
+    const pollInterval = setInterval(fetchBorrowers, 30000);
+
     // Real-time subscription for borrowers
     const borrowerSub = supabase
       .channel('borrowers-channel')
@@ -69,6 +72,7 @@ export const useBorrowers = () => {
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(borrowerSub);
     };
   }, [fetchBorrowers]);
