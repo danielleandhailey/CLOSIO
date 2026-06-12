@@ -169,12 +169,17 @@ export default async function handler(req, res) {
         borrowerData.notes = `🔥 WCL LEAD - CALL IMMEDIATELY!\n${borrowerData.notes || ''}`;
       }
 
+      console.log('Inserting borrower:', JSON.stringify(borrowerData, null, 2));
       const { data: created, error } = await supabase
         .from('borrowers')
         .insert([borrowerData])
         .select()
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error('INSERT ERROR:', error);
+        throw error;
+      }
+      console.log('Created borrower ID:', created?.id);
       result = { action: 'created', borrower: created };
 
       // Store notification for real-time alert
