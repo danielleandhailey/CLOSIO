@@ -8,14 +8,16 @@ const BONZO_STAGE_MAP = {
   'hot': 'Working',
   'active': 'Working',
   'working': 'Working',
-  'new lead': 'New Lead',
-  'new leads': 'New Lead',
-  'new lead day 1': 'New Lead',
-  'new leads (day 1-7)': 'New Lead',
-  'new leads day 1': 'New Lead',
   'shopping': 'Shopping',
   'in escrow': "Processing",
   'funded': 'Funded',
+};
+
+// Helper to map stage with "new lead" variant detection
+const mapBonzoStage = (stage) => {
+  const lower = (stage || '').toLowerCase().trim();
+  if (lower.includes('new lead')) return 'New Lead';
+  return BONZO_STAGE_MAP[lower] || 'Working';
 };
 
 export const bonzoService = {
@@ -42,7 +44,7 @@ export const bonzoService = {
       let updated = 0;
 
       for (const lead of (data.prospects || data.data || [])) {
-        const closioStage = BONZO_STAGE_MAP[lead.stage?.toLowerCase()] || 'Working';
+        const closioStage = mapBonzoStage(lead.stage);
         
         // Check if borrower already exists (match by name + phone or email)
         const { data: existingRows } = await supabase

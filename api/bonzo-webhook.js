@@ -7,14 +7,13 @@ const supabase = createClient(
 
 // Map Bonzo stage to CLOSIO stage
 const mapStage = (bonzoStage) => {
+  const lower = (bonzoStage || '').toLowerCase().trim();
+  // Catch all "new lead" variants first
+  if (lower.includes('new lead')) return 'New Lead';
+
   const stageMap = {
     'aged working': 'Working',
     'working': 'Working',
-    'new lead': 'New Lead',
-    'new leads': 'New Lead',
-    'new lead day 1': 'New Lead',
-    'new leads (day 1-7)': 'New Lead',
-    'new leads day 1': 'New Lead',
     'shopping': 'Shopping',
     'processing': 'Processing',
     'funded': 'Funded',
@@ -25,7 +24,6 @@ const mapStage = (bonzoStage) => {
     'cxld': 'CXLD',
     'cancelled': 'CXLD',
   };
-  const lower = (bonzoStage || '').toLowerCase();
   return stageMap[lower] || 'Working';
 };
 
