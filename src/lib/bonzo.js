@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-const BONZO_API_KEY = process.env.REACT_APP_BONZO_API_KEY;
+const BONZO_API_KEY = process.env.BONZO_API_TOKEN || process.env.REACT_APP_BONZO_API_KEY;
 const BONZO_WEBHOOK_URL = process.env.REACT_APP_BONZO_WEBHOOK_URL;
 
 // Stage mapping from Bonzo to CLOSIO
