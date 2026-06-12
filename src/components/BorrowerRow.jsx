@@ -1253,25 +1253,22 @@ const BorrowerRow = ({
 
         {/* Stage dropdown with Type + Lender underneath */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <StageDropdown borrower={borrower} onMoveStage={onMoveStage} />
+            {/* Hot Lead Bell - click to clear */}
+            {isHotLead && (
+              <span
+                onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_hot_lead: false }); }}
+                style={{ cursor: 'pointer', fontSize: '12px' }}
+                title="Click to mark as handled"
+              >🔔</span>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', paddingLeft: '2px' }}>
             <LoanTypeDropdown borrower={borrower} onUpdate={onUpdate} />
             <LenderDropdownSmall borrower={borrower} onUpdate={onUpdate} />
           </div>
         </div>
-
-        {/* Hot Lead Bell - click to clear */}
-        {isHotLead && (
-          <span
-            onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_hot_lead: false }); }}
-            style={{
-              cursor: 'pointer',
-              fontSize: '16px',
-              marginRight: '4px',
-            }}
-            title="Click to mark as handled"
-          >🔔</span>
-        )}
 
         {/* Borrower Name */}
         <span

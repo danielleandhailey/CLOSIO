@@ -401,9 +401,9 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
             const newLeadCount = borrowers.filter(b => b.stage === 'New Lead').length;
             return (
               <div style={{
-                background: newLeadCount > 0 ? '#fff' : 'var(--surface2)',
+                background: newLeadCount > 0 ? '#d4a574' : 'var(--surface2)',
                 borderRadius: '6px', padding: '4px 8px',
-                border: newLeadCount > 0 ? '1px solid #ccc' : '1px solid var(--border)',
+                border: newLeadCount > 0 ? '1px solid #b8956a' : '1px solid var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
                 cursor: newLeadCount > 0 ? 'pointer' : 'default',
               }}

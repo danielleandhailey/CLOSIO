@@ -285,7 +285,7 @@ const PipelinePage = ({ borrowers, ops }) => {
           }}
           checked={selectedIds.size > 0 && selectedIds.size === displayedBorrowers.length}
           title="Select All"
-          style={{ width: '14px', height: '14px', cursor: 'pointer', marginRight: '8px' }}
+          style={{ width: '14px', height: '14px', cursor: 'pointer', marginRight: '8px', marginLeft: '4px' }}
         />
         <button
           type="button"
