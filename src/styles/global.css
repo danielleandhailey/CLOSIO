@@ -71,6 +71,8 @@ html { background: var(--bg); }
 [data-theme="light"] .card-actions .btn-icon:hover { background: #e0e0f0 !important; }
 [data-theme="light"] .select-input { background: #ffffff !important; color: #1a1a2e !important; border-color: #c0c0d8 !important; }
 [data-theme="light"] .search-input { background: #ffffff !important; color: #1a1a2e !important; border-color: #c0c0d8 !important; }
+[data-theme="light"] .borrower-row span[style*="color: #a0a0b8"] { color: #2a2a3e !important; }
+[data-theme="light"] .borrower-row span[style*="color:#a0a0b8"] { color: #2a2a3e !important; }
 
 /* Light mode overrides */
 [data-theme="light"] {

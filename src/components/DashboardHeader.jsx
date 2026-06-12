@@ -403,15 +403,15 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <div style={{
                 background: newLeadCount > 0 ? '#d4a574' : 'var(--surface2)',
                 borderRadius: '6px', padding: '4px 8px',
-                border: newLeadCount > 0 ? '1px solid #b8956a' : '1px solid var(--border)',
+                border: newLeadCount > 0 ? '2px solid #5a4a3a' : '1px solid var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
                 cursor: newLeadCount > 0 ? 'pointer' : 'default',
               }}
               onClick={() => newLeadCount > 0 && onFilterStage('New Lead')}
               title={newLeadCount > 0 ? 'New leads!' : 'No new leads'}
               >
-                <span style={{ fontSize: '14px', color: newLeadCount > 0 ? '#000' : '#6b7280' }}>🔔</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: newLeadCount > 0 ? '#000' : '#6b7280' }}>{newLeadCount}</span>
+                <span style={{ fontSize: '14px', filter: newLeadCount > 0 ? 'drop-shadow(0 0 1px #333)' : 'none' }}>🔔</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: newLeadCount > 0 ? '#2a2a2a' : '#6b7280' }}>{newLeadCount}</span>
               </div>
             );
           })()}
