@@ -245,6 +245,14 @@ const fileToBase64 = (file) => new Promise((res, rej) => {
   reader.readAsDataURL(file);
 });
 
+// Do two borrower names share any name word? Used to catch wrong-file doc drops.
+const sameBorrower = (a, b) => {
+  const tokens = (n) => (n || '').toLowerCase().match(/[a-z]{2,}/g) || [];
+  const ta = tokens(a), tb = tokens(b);
+  if (!ta.length || !tb.length) return true; // can't tell — don't block
+  return ta.some(t => tb.includes(t));
+};
+
 // Rebuild a Blob from stored base64 (for re-uploading a queued file to storage)
 const base64ToBlob = (b64, mime) => {
   const bytes = atob(b64 || '');
@@ -576,6 +584,18 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
           continue;
         }
 
+        // If the doc is clearly for a different borrower, ask before applying anything
+        if (extracted.borrower_name && borrower.name && !sameBorrower(extracted.borrower_name, borrower.name)) {
+          const apply = window.confirm(
+            `This document looks like it's for "${extracted.borrower_name}", but this file is "${borrower.name}".\n\nOK = add it to THIS file anyway.\nCancel = skip this document.`
+          );
+          if (!apply) {
+            await supabase.from('doc_queue').delete().eq('id', row.id);
+            await loadQueue();
+            continue;
+          }
+        }
+
         // Save a Documents record (best-effort storage upload so the link works)
         let filePath = '';
         try {
@@ -588,11 +608,12 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
           }
         } catch (e) { /* storage not configured */ }
 
-        await supabase.from('documents').insert([{
+        const { error: docErr } = await supabase.from('documents').insert([{
           borrower_id: borrower.id, name: row.file_name,
           file_path: filePath || row.file_name, file_type: row.mime_type,
           ai_summary: aiSummary,
         }]);
+        if (docErr) console.error('documents insert failed:', docErr.message);
 
         await applyExtractedData(borrower, extracted, ops);
 
