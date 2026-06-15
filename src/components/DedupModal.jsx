@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
+import { STAGES } from '../lib/constants';
 
 const digits = (s) => (s || '').replace(/\D/g, '');
+const contactScore = (b) => ((b.email && b.email.trim() ? 2 : 0) + (digits(b.phone) ? 1 : 0));
 const lastName = (n) => (n || '').toLowerCase().split(',')[0].replace(/[^a-z]/g, '').trim();
 const firstName = (n) => ((n || '').toLowerCase().split(',')[1] || '').replace(/[^a-z\s]/g, ' ').trim();
 const recency = (b) => new Date(b.updated_at || b.last_touched || b.created_at || 0).getTime();
@@ -42,25 +44,30 @@ const buildGroups = (borrowers) => {
   borrowers.forEach(b => { const r = find(b.id); (map[r] = map[r] || []).push(b); });
   return Object.values(map)
     .filter(g => g.length > 1)
-    .map(g => g.slice().sort((a, b) => recency(b) - recency(a))); // newest first
+    // Default keeper = most contact info (email/phone), tie-break most recent
+    .map(g => g.slice().sort((a, b) => (contactScore(b) - contactScore(a)) || (recency(b) - recency(a))));
 };
 
 const DedupModal = ({ borrowers, onMerge, onClose }) => {
   const groups = useMemo(() => buildGroups(borrowers), [borrowers]);
   const [winners, setWinners] = useState({});   // groupId -> winnerId
   const [excluded, setExcluded] = useState({}); // borrowerId -> true (leave it out)
+  const [stagePick, setStagePick] = useState({}); // groupId -> chosen stage
   const [busy, setBusy] = useState(null);
 
-  const winnerOf = (g) => winners[g[0].id] || g[0].id; // default = most recent
+  const winnerOf = (g) => winners[g[0].id] || g[0].id; // default = best keeper
 
   const doMerge = async (g) => {
     const winnerId = winnerOf(g);
     const losers = g.filter(b => b.id !== winnerId && !excluded[b.id]).map(b => b.id);
     if (!losers.length) return;
-    const wName = g.find(b => b.id === winnerId)?.name;
-    if (!window.confirm(`Merge ${losers.length} record(s) into "${wName}"?\nBlanks fill from the others, their docs/notes move over, then the extras are removed.`)) return;
+    const winner = g.find(b => b.id === winnerId);
+    const overrides = {};
+    const st = stagePick[g[0].id];
+    if (st && st !== winner.stage) overrides.stage = st;
+    if (!window.confirm(`Merge ${losers.length} record(s) into "${winner.name}"?\nBlanks fill from the others, their docs/notes move over, then the extras are removed.`)) return;
     setBusy(g[0].id);
-    try { await onMerge(winnerId, losers); } catch (e) { alert('Merge failed: ' + e.message); }
+    try { await onMerge(winnerId, losers, overrides); } catch (e) { alert('Merge failed: ' + e.message); }
     setBusy(null);
   };
 
@@ -103,7 +110,15 @@ const DedupModal = ({ borrowers, onMerge, onClose }) => {
                           {b.stage || '—'} · {b.phone || 'no phone'} · {b.email || 'no email'} · last {recencyLabel(b)}
                         </div>
                       </div>
-                      {!isWinner && (
+                      {isWinner ? (
+                        <select
+                          value={stagePick[g[0].id] ?? (b.stage || '')}
+                          onChange={e => setStagePick(s => ({ ...s, [g[0].id]: e.target.value }))}
+                          title="Stage for the kept record"
+                          style={{ background: '#0f0f17', color: '#f0f0ff', border: '1px solid #3a3a55', borderRadius: '5px', fontSize: '11px', padding: '3px 6px' }}>
+                          {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      ) : (
                         <label style={{ fontSize: '10px', color: '#9a9ab8', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                           <input type="checkbox" checked={!isOut}
                             onChange={() => setExcluded(x => ({ ...x, [b.id]: isOut ? undefined : true }))} />

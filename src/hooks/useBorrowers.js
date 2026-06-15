@@ -308,7 +308,7 @@ export const useBorrowers = () => {
 
   // Merge duplicates: keep winnerId, fill its blank fields from the losers,
   // move child records (docs, tasks, contacts, etc.) onto the winner, delete losers.
-  const mergeBorrowers = async (winnerId, loserIds) => {
+  const mergeBorrowers = async (winnerId, loserIds, overrides = {}) => {
     const winner = borrowers.find(b => b.id === winnerId);
     const losers = (loserIds || []).map(id => borrowers.find(b => b.id === id)).filter(Boolean);
     if (!winner || !losers.length) return;
@@ -330,6 +330,9 @@ export const useBorrowers = () => {
     // Combine income arrays across all records
     const allIncomes = [winner, ...losers].flatMap(b => Array.isArray(b.incomes) ? b.incomes : []);
     if (allIncomes.length) updates.incomes = allIncomes;
+
+    // Force any explicit overrides (e.g. a corrected stage chosen at merge time)
+    Object.assign(updates, overrides);
 
     // Move child records from each loser to the winner
     const childTables = ['documents', 'tasks', 'contacts', 'contingencies', 'stipulations', 'borrower_tags', 'stage_history', 'notes_history'];
