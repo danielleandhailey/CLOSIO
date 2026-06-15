@@ -427,7 +427,12 @@ const AppInner = () => {
           <AIChatBubble borrowers={borrowers} onNavigate={setActiveTab} />
           <TeamChatBubble />
           {showDedup && (
-            <DedupModal borrowers={borrowers} onMerge={ops.mergeBorrowers} onClose={() => setShowDedup(false)} />
+            <DedupModal
+              borrowers={borrowers}
+              onMerge={ops.mergeBorrowers}
+              onDelete={async (ids) => { for (const id of ids) await ops.deleteBorrower(id); }}
+              onClose={() => setShowDedup(false)}
+            />
           )}
         </>
       )}

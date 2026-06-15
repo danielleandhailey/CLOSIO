@@ -48,7 +48,7 @@ const buildGroups = (borrowers) => {
     .map(g => g.slice().sort((a, b) => (contactScore(b) - contactScore(a)) || (recency(b) - recency(a))));
 };
 
-const DedupModal = ({ borrowers, onMerge, onClose }) => {
+const DedupModal = ({ borrowers, onMerge, onDelete, onClose }) => {
   const groups = useMemo(() => buildGroups(borrowers), [borrowers]);
   const [winners, setWinners] = useState({});   // groupId -> winnerId
   const [excluded, setExcluded] = useState({}); // borrowerId -> true (leave it out)
@@ -68,6 +68,15 @@ const DedupModal = ({ borrowers, onMerge, onClose }) => {
     if (!window.confirm(`Merge ${losers.length} record(s) into "${winner.name}"?\nBlanks fill from the others, their docs/notes move over, then the extras are removed.`)) return;
     setBusy(g[0].id);
     try { await onMerge(winnerId, losers, overrides); } catch (e) { alert('Merge failed: ' + e.message); }
+    setBusy(null);
+  };
+
+  const doDelete = async (g) => {
+    const ids = g.filter(b => !excluded[b.id]).map(b => b.id);
+    if (!ids.length) return;
+    if (!window.confirm(`Permanently delete ${ids.length} record(s) in this group? This cannot be undone.`)) return;
+    setBusy(g[0].id);
+    try { await onDelete(ids); } catch (e) { alert('Delete failed: ' + e.message); }
     setBusy(null);
   };
 
@@ -128,10 +137,17 @@ const DedupModal = ({ borrowers, onMerge, onClose }) => {
                     </div>
                   );
                 })}
-                <button type="button" disabled={busy === g[0].id} onClick={() => doMerge(g)}
-                  style={{ marginTop: '10px', width: '100%', padding: '8px', borderRadius: '6px', background: busy === g[0].id ? '#475569' : '#8b4cf7', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 800 }}>
-                  {busy === g[0].id ? 'Merging…' : 'Merge this group'}
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <button type="button" disabled={busy === g[0].id} onClick={() => doMerge(g)}
+                    style={{ flex: 1, padding: '8px', borderRadius: '6px', background: busy === g[0].id ? '#475569' : '#8b4cf7', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 800 }}>
+                    {busy === g[0].id ? 'Working…' : 'Merge this group'}
+                  </button>
+                  <button type="button" disabled={busy === g[0].id} onClick={() => doDelete(g)}
+                    title="Delete these records entirely"
+                    style={{ padding: '8px 12px', borderRadius: '6px', background: 'transparent', color: '#f87171', border: '1px solid #f87171', cursor: 'pointer', fontSize: '12px', fontWeight: 800 }}>
+                    Delete all
+                  </button>
+                </div>
               </div>
             );
           })}
