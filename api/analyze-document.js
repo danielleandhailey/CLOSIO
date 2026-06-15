@@ -179,6 +179,9 @@ export default async function handler(req, res) {
                   'credit report, paystub, W-2, or appraisal. Read it carefully and call extract_mortgage_data ' +
                   'with every field you can find. On a CD or LE, be sure to capture the Loan Amount, Interest Rate, ' +
                   'and Closing Date from the Loan Terms and Costs at Closing sections. ' +
+                  'If this is a paystub, W-2, VOE, or otherwise shows employment earnings, you MUST fill the ' +
+                  'incomes array — one entry per earner — including person, employer, employment_type, pay_frequency, ' +
+                  'amount_per_period (the current-period gross), ytd_gross, ytd_as_of_date (the pay/period date), and category. ' +
                   'Only include fields actually present in the document — do not guess.',
               },
             ],
