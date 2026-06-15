@@ -440,7 +440,8 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
           // Populate every applicable tab from the extracted data (shared logic)
           await applyExtractedData(borrower, extracted, ops);
 
-          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary } : x));
+          const fieldCount = extracted ? Object.keys(extracted).length : 0;
+          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary, fieldCount } : x));
         } catch (e) {
           setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
         }
@@ -535,18 +536,31 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
         </div>
       )}
 
-      {/* Completed results — compact inline */}
+      {/* Completed results — per file, shows field count + any error */}
       {!processing && progress.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '8px', padding: '8px 12px', background: '#0d2010', border: '1px solid #22c55e', borderRadius: '6px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '11px', fontWeight: '700', color: '#22c55e', whiteSpace: 'nowrap' }}>✅ Done:</span>
-          <div style={{ flex: 1, fontSize: '11px', color: '#b8b8d8', lineHeight: 1.5 }}>
-            {progress.map((p, i) => (
-              <span key={i}>{p.name.length > 30 ? p.name.slice(0, 30) + '…' : p.name}{i < progress.length - 1 ? ' · ' : ''}</span>
-            ))}
-          </div>
+        <div style={{ marginTop: '8px', padding: '8px 12px', background: '#15151f', border: '1px solid #3a3a55', borderRadius: '6px' }}>
+          {progress.map((p, i) => {
+            const errored = (p.summary || '').startsWith('Error') || p.summary === 'AI analysis unavailable';
+            const noFields = !errored && (p.fieldCount || 0) === 0;
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '4px 0', fontSize: '11px' }}>
+                <span style={{ flexShrink: 0 }}>{errored ? '❌' : noFields ? '⚠️' : '✅'}</span>
+                <div style={{ flex: 1, color: '#d8d8e8', lineHeight: 1.4 }}>
+                  <span style={{ fontWeight: '600' }}>{p.name.length > 34 ? p.name.slice(0, 34) + '…' : p.name}</span>
+                  {errored ? (
+                    <span style={{ color: '#f87171' }}> — {p.summary}</span>
+                  ) : noFields ? (
+                    <span style={{ color: '#fbbf24' }}> — read OK but found 0 fields to fill</span>
+                  ) : (
+                    <span style={{ color: '#22c55e' }}> — {p.fieldCount} field{p.fieldCount > 1 ? 's' : ''} filled</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
           <button type="button" onClick={() => setProgress([])}
-            style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #22c55e', color: '#22c55e', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '700', flexShrink: 0 }}>
-            ✕
+            style={{ marginTop: '6px', padding: '2px 10px', background: 'transparent', border: '1px solid #6a6a80', color: '#a0a0b8', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '700' }}>
+            Clear
           </button>
         </div>
       )}
