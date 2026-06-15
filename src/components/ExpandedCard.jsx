@@ -245,6 +245,27 @@ const fileToBase64 = (file) => new Promise((res, rej) => {
   reader.readAsDataURL(file);
 });
 
+// The documents table has been seen as both 'documents' and 'Documents' — try
+// both so saves/reads work regardless of how the table was created.
+const fetchDocuments = async (borrowerId) => {
+  for (const t of ['documents', 'Documents']) {
+    const { data, error } = await supabase.from(t)
+      .select('*').eq('borrower_id', borrowerId).order('created_at', { ascending: false });
+    if (!error) return data || [];
+  }
+  return [];
+};
+const insertDocument = async (record) => {
+  const errs = [];
+  for (const t of ['documents', 'Documents']) {
+    const { error } = await supabase.from(t).insert([record]);
+    if (!error) return null;
+    errs.push(error.message);
+  }
+  // prefer the real reason (e.g. permission) over a "relation does not exist"
+  return errs.find(m => !/exist|relation/i.test(m)) || errs[0];
+};
+
 // Do two borrower names share any name word? Used to catch wrong-file doc drops.
 const sameBorrower = (a, b) => {
   const tokens = (n) => (n || '').toLowerCase().match(/[a-z]{2,}/g) || [];
@@ -469,14 +490,14 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
   const [processing, setProcessing] = useState(false);
   const [paused, setPaused] = useState(false);
   const [docs, setDocs] = useState([]);
+  const [docSaveError, setDocSaveError] = useState(null);
   const [showDocs, setShowDocs] = useState(!compact);
   const inputRef = useRef();
   const pausedRef = useRef(false);
   const runningRef = useRef(false);
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
-    setDocs(data || []);
+    setDocs(await fetchDocuments(borrower.id));
   }, [borrower.id]);
 
   // Load the queue list (without the heavy base64 `data` column)
@@ -608,12 +629,13 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
           }
         } catch (e) { /* storage not configured */ }
 
-        const { error: docErr } = await supabase.from('documents').insert([{
+        const docErr = await insertDocument({
           borrower_id: borrower.id, name: row.file_name,
           file_path: filePath || row.file_name, file_type: row.mime_type,
           ai_summary: aiSummary,
-        }]);
-        if (docErr) console.error('documents insert failed:', docErr.message);
+        });
+        if (docErr) { console.error('documents insert failed:', docErr); setDocSaveError(docErr); }
+        else setDocSaveError(null);
 
         await applyExtractedData(borrower, extracted, ops);
 
@@ -712,7 +734,8 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
       {/* Saved docs list with delete */}
       {showDocs && (
         <div style={{ background: '#1e1e2a', border: '1px solid #3a3a55', borderRadius: '8px', padding: '10px', marginTop: '10px' }}>
-          {docs.length === 0 && <div style={{ color: '#8080a8', fontSize: '12px' }}>No documents saved yet.</div>}
+          {docSaveError && <div style={{ color: '#f87171', fontSize: '11px', marginBottom: '6px' }}>⚠️ Couldn't save to document list: {docSaveError}</div>}
+          {docs.length === 0 && !docSaveError && <div style={{ color: '#8080a8', fontSize: '12px' }}>No documents saved yet.</div>}
           {docs.map(doc => (
             <div key={doc.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '7px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
               <FileText size={13} style={{ color: '#93c5fd', flexShrink: 0, marginTop: '2px' }} />
@@ -746,8 +769,7 @@ const DocumentStorage = ({ borrower }) => {
   const [docs, setDocs] = useState([]);
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
-    setDocs(data || []);
+    setDocs(await fetchDocuments(borrower.id));
   }, [borrower.id]);
 
   React.useEffect(() => { loadDocs(); }, [loadDocs]);
