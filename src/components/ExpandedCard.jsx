@@ -245,6 +245,14 @@ const fileToBase64 = (file) => new Promise((res, rej) => {
   reader.readAsDataURL(file);
 });
 
+// Rebuild a Blob from stored base64 (for re-uploading a queued file to storage)
+const base64ToBlob = (b64, mime) => {
+  const bytes = atob(b64 || '');
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime || 'application/pdf' });
+};
+
 // Build a credit_report scores object from AI-extracted fields (FICO + optional VantageScore)
 const buildCreditScores = (extracted) => {
   const fico = {};
@@ -413,104 +421,156 @@ const applyExtractedData = async (borrower, extracted, ops) => {
 // ---- Document Drop Zone ----
 const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
   const [dragging, setDragging] = useState(false);
-  const [queue, setQueue] = useState([]); // pending files not yet processed
+  const [queueRows, setQueueRows] = useState([]); // persisted doc_queue rows (survives refresh)
   const [processing, setProcessing] = useState(false);
-  const [progress, setProgress] = useState([]); // per-file status
+  const [paused, setPaused] = useState(false);
   const [docs, setDocs] = useState([]);
   const [showDocs, setShowDocs] = useState(!compact);
   const inputRef = useRef();
+  const pausedRef = useRef(false);
+  const runningRef = useRef(false);
 
   const loadDocs = useCallback(async () => {
     const { data } = await supabase.from('Documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
     setDocs(data || []);
   }, [borrower.id]);
 
-  React.useEffect(() => { loadDocs(); }, [loadDocs]);
+  // Load the queue list (without the heavy base64 `data` column)
+  const loadQueue = useCallback(async () => {
+    const { data } = await supabase.from('doc_queue')
+      .select('id, file_name, mime_type, status, summary, field_count, error, created_at')
+      .eq('borrower_id', borrower.id).order('created_at', { ascending: true });
+    setQueueRows(data || []);
+    return data || [];
+  }, [borrower.id]);
 
-  const addFilesToQueue = (files) => {
+  React.useEffect(() => {
+    loadDocs();
+    // Recover any doc left mid-read by an interrupted session, then show the queue
+    supabase.from('doc_queue').update({ status: 'waiting' })
+      .eq('borrower_id', borrower.id).eq('status', 'reading')
+      .then(() => loadQueue());
+  }, [loadDocs, loadQueue, borrower.id]);
+
+  // Drop files -> persist each to the doc_queue table (survives refresh), then start.
+  const addFilesToQueue = async (files) => {
     const newFiles = Array.from(files).filter(f =>
       f.type === 'application/pdf' || f.type.startsWith('image/')
     );
-    setQueue(q => [...q, ...newFiles]);
+    for (const f of newFiles) {
+      try {
+        const base64 = await fileToBase64(f);
+        await supabase.from('doc_queue').insert([{
+          borrower_id: borrower.id,
+          file_name: f.name,
+          mime_type: f.type || 'application/pdf',
+          data: base64,
+          status: 'waiting',
+        }]);
+      } catch (e) {
+        console.error('Queue insert failed for', f.name, e);
+      }
+    }
+    await loadQueue();
+    runProcessor();
   };
 
-  const removeFromQueue = (idx) => setQueue(q => q.filter((_, i) => i !== idx));
+  const removeQueueRow = async (id) => {
+    await supabase.from('doc_queue').delete().eq('id', id);
+    await loadQueue();
+  };
 
-  const processQueue = async () => {
-    if (queue.length === 0) return;
+  const retryQueueRow = async (id) => {
+    await supabase.from('doc_queue').update({ status: 'waiting', error: null }).eq('id', id);
+    await loadQueue();
+    runProcessor();
+  };
+
+  const pauseProcessing = () => { pausedRef.current = true; setPaused(true); };
+  const resumeProcessing = () => { runProcessor(); };
+
+  // Process waiting docs one at a time. Re-reads the queue table each loop so it
+  // resumes correctly after a refresh / from another session. Stops when paused or empty.
+  const runProcessor = async () => {
+    if (runningRef.current) return;
+    runningRef.current = true;
+    pausedRef.current = false;
+    setPaused(false);
     setProcessing(true);
-    setProgress(queue.map(f => ({ name: f.name, status: 'pending' })));
 
-    for (let i = 0; i < queue.length; i++) {
-      const file = queue[i];
-      setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'uploading' } : x));
+    try {
+      // Recover any row stuck mid-read (e.g. from a prior interrupted run)
+      await supabase.from('doc_queue').update({ status: 'waiting' })
+        .eq('borrower_id', borrower.id).eq('status', 'reading');
 
-      try {
-          const base64 = await new Promise((res, rej) => {
-            const reader = new FileReader();
-            reader.onload = ev => res(ev.target.result.split(',')[1]);
-            reader.onerror = rej;
-            reader.readAsDataURL(file);
-          });
+      while (!pausedRef.current) {
+        const { data: rows } = await supabase.from('doc_queue')
+          .select('*').eq('borrower_id', borrower.id).eq('status', 'waiting')
+          .order('created_at', { ascending: true }).limit(1);
+        const row = rows && rows[0];
+        if (!row) break;
 
-          const mimeType = file.type || 'application/pdf';
+        await supabase.from('doc_queue').update({ status: 'reading' }).eq('id', row.id);
+        await loadQueue();
 
-          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'analyzing' } : x));
-          let aiSummary = '';
-          let extracted = {};
-          // Up to 3 attempts; if we hit the Anthropic per-minute rate limit, wait for
-          // the window to reset and retry so big multi-doc drops don't drop a file.
-          for (let attempt = 0; attempt < 3; attempt++) {
-            try {
-              const result = await claudeService.analyzeDocument(base64, mimeType, file.name);
-              aiSummary = result.summary || '';
-              extracted = result.extracted || {};
-            } catch (e) {
-              aiSummary = 'AI analysis unavailable';
-            }
-            if (/rate limit|exceed your organization|429/i.test(aiSummary) && attempt < 2) {
-              setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'analyzing', summary: 'Rate limit reached — waiting 60s, will retry…' } : x));
-              await new Promise(r => setTimeout(r, 60000));
-              continue;
-            }
-            break;
-          }
-
-          let filePath = '';
+        let aiSummary = '';
+        let extracted = {};
+        for (let attempt = 0; attempt < 3; attempt++) {
           try {
-            const path = `${borrower.id}/${Date.now()}_${file.name}`;
-            const { error: upErr } = await supabase.storage.from('Documents').upload(path, file);
-            if (!upErr) {
-              const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(path);
-              filePath = urlData.publicUrl;
-            }
-          } catch (e) { /* storage not configured */ }
-
-          await supabase.from('Documents').insert([{
-            borrower_id: borrower.id, name: file.name,
-            file_path: filePath || file.name, file_type: file.type,
-            file_size: file.size, ai_summary: aiSummary,
-          }]);
-
-          // Note: AI summary is saved on the Documents record (ai_summary) and shown
-          // in the Documents list. We intentionally do NOT append it to borrower.notes
-          // anymore — that was flooding Notes with summary/error text.
-
-          // Populate every applicable tab from the extracted data (shared logic)
-          await applyExtractedData(borrower, extracted, ops);
-
-          const fieldCount = extracted ? Object.keys(extracted).length : 0;
-          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary, fieldCount } : x));
-        } catch (e) {
-          setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'error', error: e.message } : x));
+            const result = await claudeService.analyzeDocument(row.data, row.mime_type, row.file_name);
+            aiSummary = result.summary || '';
+            extracted = result.extracted || {};
+          } catch (e) {
+            aiSummary = 'AI analysis unavailable';
+          }
+          if (/rate limit|exceed your organization|429/i.test(aiSummary) && attempt < 2) {
+            await supabase.from('doc_queue').update({ summary: 'Rate limit — waiting 60s, will retry…' }).eq('id', row.id);
+            await loadQueue();
+            await new Promise(r => setTimeout(r, 60000));
+            if (pausedRef.current) break;
+            continue;
+          }
+          break;
         }
-    }
 
-    setProcessing(false);
-    setQueue([]);
-    setShowDocs(true); // reveal the link list for every doc on this borrower
-    loadDocs();
-    if (onDocAdded) onDocAdded();
+        const errored = aiSummary.startsWith('Error') || aiSummary === 'AI analysis unavailable';
+        if (errored) {
+          await supabase.from('doc_queue').update({ status: 'error', error: aiSummary }).eq('id', row.id);
+          await loadQueue();
+          continue;
+        }
+
+        // Save a Documents record (best-effort storage upload so the link works)
+        let filePath = '';
+        try {
+          const blob = base64ToBlob(row.data, row.mime_type);
+          const path = `${borrower.id}/${Date.now()}_${row.file_name}`;
+          const { error: upErr } = await supabase.storage.from('Documents').upload(path, blob);
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(path);
+            filePath = urlData.publicUrl;
+          }
+        } catch (e) { /* storage not configured */ }
+
+        await supabase.from('Documents').insert([{
+          borrower_id: borrower.id, name: row.file_name,
+          file_path: filePath || row.file_name, file_type: row.mime_type,
+          ai_summary: aiSummary,
+        }]);
+
+        await applyExtractedData(borrower, extracted, ops);
+
+        // Done -> remove from the queue to keep it lean
+        await supabase.from('doc_queue').delete().eq('id', row.id);
+        await loadQueue();
+        loadDocs();
+        if (onDocAdded) onDocAdded();
+      }
+    } finally {
+      runningRef.current = false;
+      setProcessing(false);
+      setShowDocs(true);
+    }
   };
 
   const onDrop = (e) => {
@@ -519,8 +579,9 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
     addFilesToQueue(e.dataTransfer.files);
   };
 
-  const statusColor = (s) => s === 'done' ? '#22c55e' : s === 'error' ? '#f87171' : s === 'analyzing' ? '#b07eff' : '#fbbf24';
-  const statusLabel = (s) => s === 'done' ? '✅ Done' : s === 'error' ? '❌ Error' : s === 'analyzing' ? '🤖 Analyzing…' : s === 'uploading' ? '⬆️ Uploading…' : '⏳ Pending';
+  const statusColor = (s) => s === 'reading' ? '#b07eff' : s === 'error' ? '#f87171' : s === 'done' ? '#22c55e' : '#fbbf24';
+  const statusLabel = (s) => s === 'reading' ? '🤖 Reading…' : s === 'error' ? '❌ Error' : s === 'done' ? '✅ Done' : '⏳ Waiting';
+  const waitingCount = queueRows.filter(r => r.status === 'waiting').length;
 
   return (
     <div>
@@ -550,78 +611,44 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
       <input ref={inputRef} type="file" accept=".pdf,image/*" multiple style={{ display: 'none' }}
         onChange={e => { addFilesToQueue(e.target.files); e.target.value = ''; }} />
 
-      {/* Pending queue */}
-      {queue.length > 0 && !processing && (
+      {/* Persistent document queue — survives refresh; pause / resume / delete / retry */}
+      {queueRows.length > 0 && (
         <div style={{ background: '#1e1e2a', border: '1px solid #3a3a55', borderRadius: '8px', padding: '12px', marginTop: '10px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f0ff', marginBottom: '8px' }}>
-            📋 Ready to process ({queue.length} file{queue.length > 1 ? 's' : ''})
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f0ff' }}>
+              📋 Document queue ({queueRows.length})
+            </div>
+            <div style={{ marginLeft: 'auto' }}>
+              {processing ? (
+                <button type="button" onClick={pauseProcessing}
+                  style={{ padding: '4px 12px', borderRadius: '5px', background: '#fbbf24', color: '#000', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}>
+                  ⏸ Pause
+                </button>
+              ) : waitingCount > 0 ? (
+                <button type="button" onClick={resumeProcessing}
+                  style={{ padding: '4px 12px', borderRadius: '5px', background: '#8b4cf7', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}>
+                  ▶ {paused ? 'Resume' : 'Process'} ({waitingCount})
+                </button>
+              ) : null}
+            </div>
           </div>
-          {queue.map((f, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
+          {queueRows.map(r => (
+            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
               <FileText size={13} style={{ color: '#93c5fd', flexShrink: 0 }} />
-              <span style={{ flex: 1, color: '#b8b8d8' }}>{f.name}</span>
-              <span style={{ color: '#8080a8', fontSize: '11px' }}>{(f.size / 1024).toFixed(0)} KB</span>
-              <button type="button" onClick={() => removeFromQueue(i)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: '16px', lineHeight: 1 }}>×</button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: '#b8b8d8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.file_name}</div>
+                {r.status === 'error' && r.error && <div style={{ color: '#f87171', fontSize: '10px' }}>{r.error}</div>}
+                {r.status === 'reading' && r.summary && <div style={{ color: '#fbbf24', fontSize: '10px' }}>{r.summary}</div>}
+              </div>
+              <span style={{ color: statusColor(r.status), fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>{statusLabel(r.status)}</span>
+              {r.status === 'error' && (
+                <button type="button" onClick={() => retryQueueRow(r.id)} title="Retry"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#93c5fd', fontSize: '13px', flexShrink: 0 }}>↻</button>
+              )}
+              <button type="button" onClick={() => removeQueueRow(r.id)} title="Remove from queue"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: '16px', lineHeight: 1, flexShrink: 0 }}>×</button>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={processQueue}
-            style={{
-              marginTop: '10px', width: '100%', padding: '9px', borderRadius: '6px',
-              background: '#8b4cf7', color: '#fff', border: 'none', cursor: 'pointer',
-              fontSize: '13px', fontWeight: '700', letterSpacing: '0.02em',
-            }}
-          >
-            🤖 Process {queue.length} Document{queue.length > 1 ? 's' : ''} with AI
-          </button>
-        </div>
-      )}
-
-      {/* Processing progress */}
-      {processing && progress.length > 0 && (
-        <div style={{ background: '#1e1e2a', border: '1px solid #3a3a55', borderRadius: '8px', padding: '12px', marginTop: '10px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f0ff', marginBottom: '8px' }}>🤖 Processing documents…</div>
-          {progress.map((p, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
-              <FileText size={13} style={{ color: '#93c5fd', flexShrink: 0, marginTop: '2px' }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ color: '#f0f0ff', fontWeight: '600' }}>{p.name}</div>
-                {p.summary && <div style={{ color: '#b8b8d8', fontSize: '11px', marginTop: '2px', lineHeight: 1.4 }}>{p.summary}</div>}
-              </div>
-              <span style={{ color: statusColor(p.status), fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>{statusLabel(p.status)}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Completed results — per file, shows field count + any error */}
-      {!processing && progress.length > 0 && (
-        <div style={{ marginTop: '8px', padding: '8px 12px', background: '#15151f', border: '1px solid #3a3a55', borderRadius: '6px' }}>
-          {progress.map((p, i) => {
-            const errored = (p.summary || '').startsWith('Error') || p.summary === 'AI analysis unavailable';
-            const noFields = !errored && (p.fieldCount || 0) === 0;
-            return (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '4px 0', fontSize: '11px' }}>
-                <span style={{ flexShrink: 0 }}>{errored ? '❌' : noFields ? '⚠️' : '✅'}</span>
-                <div style={{ flex: 1, color: '#d8d8e8', lineHeight: 1.4 }}>
-                  <span style={{ fontWeight: '600' }}>{p.name.length > 34 ? p.name.slice(0, 34) + '…' : p.name}</span>
-                  {errored ? (
-                    <span style={{ color: '#f87171' }}> — {p.summary}</span>
-                  ) : noFields ? (
-                    <span style={{ color: '#fbbf24' }}> — read OK but found 0 fields to fill</span>
-                  ) : (
-                    <span style={{ color: '#22c55e' }}> — {p.fieldCount} field{p.fieldCount > 1 ? 's' : ''} filled</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-          <button type="button" onClick={() => setProgress([])}
-            style={{ marginTop: '6px', padding: '2px 10px', background: 'transparent', border: '1px solid #6a6a80', color: '#a0a0b8', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '700' }}>
-            Clear
-          </button>
         </div>
       )}
 
@@ -2051,7 +2078,7 @@ const SubHubSection = ({ borrower, onUpdate, ops }) => {
         { key: 'coe_date', label: 'COE Date', value: borrower.coe_date },
         { key: 'buyers_agent', label: 'Buyers Agent', value: borrower.contacts?.find(c => c.role === 'buyers_agent')?.name },
         { key: 'listing_agent', label: 'Listing Agent', value: borrower.contacts?.find(c => c.role === 'listing_agent')?.name },
-        { key: 'title_escrow', label: 'Title/Escrow', value: borrower.contacts?.find(c => c.role === 'title_escrow')?.name },
+        { key: 'title_escrow', label: 'Title/Escrow', value: borrower.contacts?.find(c => c.role === 'title_escrow')?.company || borrower.contacts?.find(c => c.role === 'title_escrow')?.name },
       );
     }
 
