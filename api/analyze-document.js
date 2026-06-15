@@ -22,8 +22,8 @@ const EXTRACT_TOOL = {
 
       // Borrowers / parties
       borrower_name: { type: 'string', description: 'Primary borrower, formatted "LASTNAME, First"' },
-      co_borrowers: { type: 'array', items: { type: 'string' }, description: 'Co-borrower full names' },
-      non_borrowing_spouse: { type: 'string', description: 'Non-borrowing spouse name (for title)' },
+      co_borrowers: { type: 'array', items: { type: 'string' }, description: 'Co-borrower full names — ONLY people who are actual borrowers on the loan/application. Do NOT include a spouse who is on title but not borrowing.' },
+      non_borrowing_spouse: { type: 'string', description: 'A spouse who is on title or the contract but is NOT a borrower on the loan. Put such a person here, NOT in co_borrowers.' },
       property_address: { type: 'string', description: 'Full subject property address' },
       wholesale_loan_number: { type: 'string', description: 'Lender / wholesale loan number' },
 
@@ -73,11 +73,11 @@ const EXTRACT_TOOL = {
       title_company: { type: 'string', description: 'Title / escrow / settlement company name' },
       title_company_phone: { type: 'string' },
       title_company_email: { type: 'string' },
-      lender_ae_name: { type: 'string', description: 'Lender Account Executive (AE) name' },
+      lender_ae_name: { type: 'string', description: 'ONLY the wholesale/lender Account Executive (AE) at the mortgage lender. Do NOT use real-estate agents, settlement/title agents, buyers, or sellers. Omit unless an actual lender AE is named.' },
       lender_ae_phone: { type: 'string' },
       lender_ae_email: { type: 'string' },
       lender_ae_company: { type: 'string' },
-      underwriter_name: { type: 'string', description: 'Underwriter name' },
+      underwriter_name: { type: 'string', description: 'ONLY the loan underwriter at the lender. Do NOT use agents, processors, buyers, or sellers. Omit unless someone is explicitly identified as the underwriter.' },
       underwriter_phone: { type: 'string' },
       underwriter_email: { type: 'string' },
 
