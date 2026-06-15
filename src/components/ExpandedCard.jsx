@@ -737,23 +737,18 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
           {docSaveError && <div style={{ color: '#f87171', fontSize: '11px', marginBottom: '6px' }}>⚠️ Couldn't save to document list: {docSaveError}</div>}
           {docs.length === 0 && !docSaveError && <div style={{ color: '#8080a8', fontSize: '12px' }}>No documents saved yet.</div>}
           {docs.map(doc => (
-            <div key={doc.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '7px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
-              <FileText size={13} style={{ color: '#93c5fd', flexShrink: 0, marginTop: '2px' }} />
-              <div style={{ flex: 1 }}>
-                <a href={doc.file_path} target="_blank" rel="noopener noreferrer"
-                  style={{ color: '#b07eff', textDecoration: 'none', fontWeight: '600', fontSize: '12px' }}>
-                  {doc.name}
-                </a>
-                {doc.ai_summary && (
-                  <div style={{ color: '#b8b8d8', marginTop: '3px', lineHeight: 1.5, fontSize: '11px' }}>{doc.ai_summary}</div>
-                )}
-              </div>
-              <span style={{ color: '#8080a8', flexShrink: 0, fontSize: '11px', fontFamily: 'monospace' }}>{formatDate(doc.created_at)}</span>
+            <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: '1px solid #3a3a55', fontSize: '12px' }}>
+              <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+              <a href={doc.file_path} target="_blank" rel="noopener noreferrer" title={doc.ai_summary || doc.name}
+                style={{ flex: 1, color: '#60a5fa', textDecoration: 'none', fontWeight: '600', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {doc.name}
+              </a>
+              <span style={{ color: '#8080a8', flexShrink: 0, fontSize: '10px', fontFamily: 'monospace' }}>{formatDate(doc.created_at)}</span>
               <button type="button" onClick={async () => {
                 if (!window.confirm(`Delete "${doc.name}"?`)) return;
                 await supabase.from('documents').delete().eq('id', doc.id);
                 loadDocs();
-              }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }} title="Delete">
+              }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px', flexShrink: 0 }} title="Delete">
                 <X size={14} />
               </button>
             </div>
@@ -3289,21 +3284,24 @@ const IncomeSection = ({ borrower, onUpdate }) => {
   return (
     <div>
       {incomes.length > 0 && (
-        <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-            Qualifying Income (calculated)
-          </div>
-          {incomeCalc.map((x, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '12px', padding: '3px 0', color: '#1e293b' }}>
-              <span>{x.inc.person || 'Borrower'}{x.inc.employer ? ` — ${x.inc.employer}` : ''} <span style={{ color: '#64748b', fontSize: '10px' }}>({x.method})</span></span>
-              <span style={{ fontWeight: '700' }}>${Math.round(x.monthly).toLocaleString()}/mo</span>
+        <div style={{ background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', border: '2px solid #10b981', borderRadius: '10px', padding: '14px', marginBottom: '14px', boxShadow: '0 2px 8px rgba(16,185,129,0.18)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
+            <div>
+              <div style={{ fontSize: '10px', fontWeight: '800', color: '#047857', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total Monthly Qualifying</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>estimate — verify vs guidelines</div>
             </div>
-          ))}
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #6ee7b7', marginTop: '6px', paddingTop: '6px', fontSize: '13px', fontWeight: '800', color: '#065f46' }}>
-            <span>Total Monthly Qualifying</span>
-            <span>${Math.round(totalMonthly).toLocaleString()}/mo</span>
+            <div style={{ fontSize: '32px', fontWeight: '900', color: '#047857', lineHeight: 1 }}>
+              ${Math.round(totalMonthly).toLocaleString()}<span style={{ fontSize: '14px', fontWeight: '700' }}>/mo</span>
+            </div>
           </div>
-          <div style={{ fontSize: '9px', color: '#64748b', marginTop: '6px' }}>Estimate — verify against full underwriting guidelines.</div>
+          <div style={{ borderTop: '1px solid #6ee7b7', paddingTop: '8px' }}>
+            {incomeCalc.map((x, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '12px', padding: '3px 0', color: '#1e293b' }}>
+                <span>{x.inc.person || 'Borrower'}{x.inc.employer ? ` — ${x.inc.employer}` : ''} <span style={{ color: '#64748b', fontSize: '10px' }}>({x.method})</span></span>
+                <span style={{ fontWeight: '700' }}>${Math.round(x.monthly).toLocaleString()}/mo</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
