@@ -475,11 +475,11 @@ const applyExtractedData = async (borrower, extracted, ops) => {
     }
   }
 
-  // Incomes
+  // Incomes (resilient — won't hard-fail if the column is missing)
   if (Array.isArray(extracted.incomes) && extracted.incomes.length) {
     const existingIncomes = borrower.incomes || [];
     const newIncomes = extracted.incomes.map((inc, idx) => ({ ...inc, id: `${Date.now()}_${idx}` }));
-    await supabase.from('borrowers').update({ incomes: [...existingIncomes, ...newIncomes] }).eq('id', borrower.id);
+    await safeUpdateBorrower(borrower.id, { incomes: [...existingIncomes, ...newIncomes] });
   }
 };
 
