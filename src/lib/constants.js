@@ -97,6 +97,8 @@ export const CONTACT_ROLES = [
   { value: 'listing_agent', label: "Listing Agent" },
   { value: 'title_escrow',  label: 'Title & Escrow' },
   { value: 'lender',        label: 'Lender' },
+  { value: 'lender_ae',     label: 'Lender AE' },
+  { value: 'underwriter',   label: 'Underwriter' },
   { value: 'processor',     label: 'Processor' },
 ];
 

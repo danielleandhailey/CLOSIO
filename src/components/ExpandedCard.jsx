@@ -270,6 +270,19 @@ const midScore = (scoreObj) => {
   return vals[Math.floor((vals.length - 1) / 2)];
 };
 
+// Update the borrower, but if the DB rejects an unknown column, retry field-by-field
+// so one bad/missing column never blocks the rest from saving.
+const safeUpdateBorrower = async (borrowerId, updates) => {
+  if (!updates || Object.keys(updates).length === 0) return;
+  const { error } = await supabase.from('borrowers').update(updates).eq('id', borrowerId);
+  if (!error) return;
+  console.warn('Batch borrower update failed, retrying per-field:', error.message);
+  for (const [key, val] of Object.entries(updates)) {
+    const { error: e2 } = await supabase.from('borrowers').update({ [key]: val }).eq('id', borrowerId);
+    if (e2) console.warn(`Skipped field "${key}":`, e2.message);
+  }
+};
+
 // Central populate: write everything the AI extracted onto the borrower + contacts/contingencies/incomes.
 // Shared by every drop zone so they all behave identically.
 const applyExtractedData = async (borrower, extracted, ops) => {
@@ -288,6 +301,7 @@ const applyExtractedData = async (borrower, extracted, ops) => {
   if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
   if (extracted.loan_amount) updates.loan_amount = extracted.loan_amount;
   if (extracted.loan_type) updates.loan_type = extracted.loan_type;
+  if (extracted.loan_purpose) updates.loan_purpose = extracted.loan_purpose;
   if (extracted.rate) updates.rate = extracted.rate;
   if (extracted.coe_date) updates.coe_date = extracted.coe_date;
   if (extracted.dti) updates.dti = extracted.dti;
@@ -317,7 +331,7 @@ const applyExtractedData = async (borrower, extracted, ops) => {
   }
 
   if (Object.keys(updates).length > 0) {
-    await supabase.from('borrowers').update(updates).eq('id', borrower.id);
+    await safeUpdateBorrower(borrower.id, updates);
   }
 
   // Contacts
@@ -342,6 +356,21 @@ const applyExtractedData = async (borrower, extracted, ops) => {
       company: extracted.title_company,
       phone: extracted.title_company_phone || '',
       email: extracted.title_company_email || '',
+    });
+  }
+  if (extracted.lender_ae_name) {
+    await ops.upsertContact(borrower.id, 'lender_ae', {
+      name: extracted.lender_ae_name,
+      phone: extracted.lender_ae_phone || '',
+      email: extracted.lender_ae_email || '',
+      company: extracted.lender_ae_company || '',
+    });
+  }
+  if (extracted.underwriter_name) {
+    await ops.upsertContact(borrower.id, 'underwriter', {
+      name: extracted.underwriter_name,
+      phone: extracted.underwriter_phone || '',
+      email: extracted.underwriter_email || '',
     });
   }
 

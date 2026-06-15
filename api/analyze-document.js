@@ -39,14 +39,15 @@ const EXTRACT_TOOL = {
       public_records: { type: 'number', description: 'Count of public records' },
 
       // Loan terms
-      purchase_price: { type: 'number' },
-      loan_amount: { type: 'number' },
-      loan_type: { type: 'string' },
-      rate: { type: 'number', description: 'Interest rate as a percent number, e.g. 6.875' },
+      purchase_price: { type: 'number', description: 'Sale / purchase price in dollars' },
+      loan_amount: { type: 'number', description: 'Total loan / note amount in dollars. On a Closing Disclosure or Loan Estimate this is "Loan Amount" in the Loan Terms box.' },
+      loan_type: { type: 'string', description: 'Loan PROGRAM only: Conventional, FHA, VA, USDA, Jumbo, Non-QM, HELOC, or Reverse. NOT the purpose.' },
+      loan_purpose: { type: 'string', description: 'Loan purpose: Purchase, Refinance, or Cash-Out Refinance.' },
+      rate: { type: 'number', description: 'Interest rate as a percent number, e.g. 6.875. On a CD/LE this is "Interest Rate" in the Loan Terms box.' },
       ltv: { type: 'number' },
       dti: { type: 'number' },
-      coe_date: { type: 'string', description: 'Close of escrow / closing date in YYYY-MM-DD format' },
-      seller_cc: { type: 'number', description: 'Seller credits / concessions in dollars' },
+      coe_date: { type: 'string', description: 'Closing date / close of escrow / disbursement date, YYYY-MM-DD. On a Closing Disclosure use the Closing Date.' },
+      seller_cc: { type: 'number', description: 'Seller credits / concessions / seller-paid costs in dollars' },
       earnest_money: { type: 'number' },
       occupancy: { type: 'string', description: 'e.g. Primary, Second Home, Investment' },
       income_type: { type: 'string' },
@@ -67,9 +68,16 @@ const EXTRACT_TOOL = {
       listing_agent_phone: { type: 'string' },
       listing_agent_email: { type: 'string' },
       listing_agent_company: { type: 'string' },
-      title_company: { type: 'string' },
+      title_company: { type: 'string', description: 'Title / escrow / settlement company name' },
       title_company_phone: { type: 'string' },
       title_company_email: { type: 'string' },
+      lender_ae_name: { type: 'string', description: 'Lender Account Executive (AE) name' },
+      lender_ae_phone: { type: 'string' },
+      lender_ae_email: { type: 'string' },
+      lender_ae_company: { type: 'string' },
+      underwriter_name: { type: 'string', description: 'Underwriter name' },
+      underwriter_phone: { type: 'string' },
+      underwriter_email: { type: 'string' },
 
       // Income / assets
       gross_income: { type: 'number' },
@@ -159,8 +167,11 @@ export default async function handler(req, res) {
                 type: 'text',
                 text:
                   `This is a mortgage-related document or image (filename: ${fileName || 'unknown'}). ` +
-                  'Read it and call extract_mortgage_data with every field you can find. ' +
-                  'Only include fields actually present in the document.',
+                  'It may be a Closing Disclosure (CD), Loan Estimate (LE), purchase agreement, AUS findings, ' +
+                  'credit report, paystub, W-2, or appraisal. Read it carefully and call extract_mortgage_data ' +
+                  'with every field you can find. On a CD or LE, be sure to capture the Loan Amount, Interest Rate, ' +
+                  'and Closing Date from the Loan Terms and Costs at Closing sections. ' +
+                  'Only include fields actually present in the document — do not guess.',
               },
             ],
           },
