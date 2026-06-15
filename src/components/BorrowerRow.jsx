@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3, X, Check } from 'lucide-react';
 import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS, STIP_CATEGORIES } from '../lib/constants';
-import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName } from '../lib/utils';
+import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName, isNewLead } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
@@ -1281,7 +1281,7 @@ const BorrowerRow = ({
         </span>
 
         {/* Badges after expand button */}
-        {borrower.is_new && (
+        {isNewLead(borrower) && (
           <span style={{
             marginLeft: '8px', padding: '1px 6px', background: '#f9a8d4', color: '#000',
             fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
@@ -1302,7 +1302,7 @@ const BorrowerRow = ({
           )}
           </span>
         )}
-        {borrower.is_updated && !borrower.is_new && (
+        {borrower.is_updated && !isNewLead(borrower) && (
           <span style={{
             marginLeft: '8px', padding: '1px 6px', background: '#22c55e', color: '#fff',
             fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
@@ -1312,7 +1312,7 @@ const BorrowerRow = ({
           onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { is_updated: false, updated_fields: null }); }}
           >UPD: {borrower.updated_fields?.length ? borrower.updated_fields.join(', ') : ''}</span>
         )}
-        {borrower.bonzo_last_sync && !borrower.is_new && (
+        {borrower.bonzo_last_sync && !isNewLead(borrower) && (
           <span style={{ marginLeft: '6px', color: '#64748b', fontSize: '10px', fontWeight: '600' }}
           title={`Synced from Bonzo: ${format(parseISO(borrower.bonzo_last_sync), 'M/d h:mma')}`}
           >{format(parseISO(borrower.bonzo_last_sync), 'M/d')}</span>

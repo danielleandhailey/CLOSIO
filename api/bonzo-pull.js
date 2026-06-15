@@ -122,7 +122,7 @@ export default async function handler(req, res) {
 
     console.log(`Fetched ${prospects.length} prospects from Bonzo`);
 
-    const results = { created: 0, updated: 0, skipped: 0, errors: [] };
+    const results = { created: 0, updated: 0, unchanged: 0, skipped: 0, errors: [] };
 
     // Log first prospect to see structure
     if (prospects.length > 0) {
@@ -206,39 +206,44 @@ export default async function handler(req, res) {
             lead_id: p.lead_id || p.external_id || existingBorrower.lead_id,
           };
 
-          // Track if anything meaningful changed
+          // Track which categories actually changed (for the UPD badge)
           let hasChanges = false;
+          const changedFields = [];
 
-          // Sync loan_purpose if Bonzo has it
           if (loanPurpose && loanPurpose !== existingBorrower.loan_purpose) {
             updateData.loan_purpose = loanPurpose;
-            hasChanges = true;
+            hasChanges = true; changedFields.push('Loan Purpose');
           }
 
-          // Sync stage from Bonzo if mapped and different
           if (stageMapping && stageMapping.stage && stageMapping.stage !== existingBorrower.stage) {
             updateData.stage = stageMapping.stage;
             if (stageMapping.substage) updateData.substage = stageMapping.substage;
-            hasChanges = true;
+            hasChanges = true; changedFields.push('Stage');
           }
 
-          // Sync loan_type (pipeline type) if different
           const loanType = stageMapping?.loanType || mortgage.loan_type || p.loan_type;
           if (loanType && loanType !== existingBorrower.loan_type) {
             updateData.loan_type = loanType;
-            hasChanges = true;
+            hasChanges = true; changedFields.push('Loan Type');
           }
 
-          // Only set is_updated if something meaningful changed AND not a new lead
-          if (hasChanges && !existingBorrower.is_new) {
+          // Only flag/count as Updated when something actually changed
+          if (hasChanges) {
             updateData.is_updated = true;
+            updateData.updated_fields = changedFields;
           }
 
-          await supabase
+          let { error: updErr } = await supabase
             .from('borrowers')
             .update(updateData)
             .eq('id', existingBorrower.id);
-          results.updated++;
+          if (updErr && updateData.updated_fields) {
+            // updated_fields column may not exist yet — retry without it
+            const { updated_fields, ...rest } = updateData;
+            await supabase.from('borrowers').update(rest).eq('id', existingBorrower.id);
+          }
+
+          if (hasChanges) results.updated++; else results.unchanged++;
           continue;
         }
 

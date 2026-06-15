@@ -5,7 +5,7 @@ import ExpandedCard from '../components/ExpandedCard';
 import AddBorrowerModal from '../components/AddBorrowerModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { STAGES, STAGES_BY_TYPE, STAGE_COLORS, SORT_OPTIONS } from '../lib/constants';
-import { sortBorrowers } from '../lib/utils';
+import { sortBorrowers, isNewLead } from '../lib/utils';
 
 const PipelinePage = ({ borrowers, ops }) => {
   const [expandedIds, setExpandedIds] = useState(new Set());
@@ -82,7 +82,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         counts[b.stage]++;
       }
     });
-    counts['NEW'] = borrowers.filter(b => b.is_new).length;
+    counts['NEW'] = borrowers.filter(isNewLead).length;
     return counts;
   }, [borrowers]);
 
@@ -106,7 +106,7 @@ const PipelinePage = ({ borrowers, ops }) => {
     // Filter by stage (special handling for Stips Needed and Updated)
     if (filterStage !== 'All') {
       if (filterStage === 'NEW') {
-        list = list.filter(b => b.is_new);
+        list = list.filter(isNewLead);
       } else if (filterStage === 'Stips Needed') {
         list = list.filter(b => b.stage === 'Stips Needed' || (b.stips_needed && b.stips_needed > 0));
       } else if (filterStage === 'Updated') {
