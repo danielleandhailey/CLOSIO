@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { getBonzoToken } from '../lib/bonzoToken';
 
 const BONZO_API_URL = 'https://app.getbonzo.com/api/v3';
-const BONZO_TOKEN = process.env.BONZO_API_TOKEN;
 
 // Supabase connection
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -74,8 +74,9 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const BONZO_TOKEN = await getBonzoToken();
   if (!BONZO_TOKEN) {
-    return res.status(500).json({ error: 'Bonzo API token not configured' });
+    return res.status(500).json({ error: 'Bonzo API token not configured — add it on the CLOSIO Settings page.' });
   }
 
   if (!supabase) {

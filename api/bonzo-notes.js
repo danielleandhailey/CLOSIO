@@ -1,5 +1,6 @@
+import { getBonzoToken } from '../lib/bonzoToken';
+
 const BONZO_API_URL = 'https://app.getbonzo.com/api/v3';
-const BONZO_TOKEN = process.env.BONZO_API_TOKEN;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,8 +9,9 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const BONZO_TOKEN = await getBonzoToken();
   if (!BONZO_TOKEN) {
-    return res.status(500).json({ error: 'Bonzo API token not configured' });
+    return res.status(500).json({ error: 'Bonzo API token not configured — add it on the CLOSIO Settings page.' });
   }
 
   // GET - Pull notes from Bonzo

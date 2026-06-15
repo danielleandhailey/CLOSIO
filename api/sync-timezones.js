@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { getBonzoToken } from '../lib/bonzoToken';
 
 const BONZO_API_URL = 'https://app.getbonzo.com/api/v3';
-const BONZO_TOKEN = process.env.BONZO_API_TOKEN;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
@@ -15,6 +15,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const BONZO_TOKEN = await getBonzoToken();
   if (!BONZO_TOKEN || !supabase) {
     return res.status(500).json({ error: 'Missing config' });
   }
