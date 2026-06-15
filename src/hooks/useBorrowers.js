@@ -125,7 +125,22 @@ export const useBorrowers = () => {
         .single());
     }
 
-    if (error) throw error;
+    // Still failing? A column may not exist — save field-by-field, skipping any
+    // that fail, so one missing column never breaks (or appears to "lose") a record.
+    if (error) {
+      const { field_dates, ...rest } = payload;
+      let anyOk = false;
+      for (const [k, v] of Object.entries(rest)) {
+        const { error: e2 } = await supabase
+          .from('borrowers')
+          .update({ [k]: v, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (!e2) anyOk = true;
+        else console.warn(`Skipped borrower field "${k}":`, e2.message);
+      }
+      if (!anyOk) throw error;
+    }
+
     await fetchBorrowers();
     return data;
   };
