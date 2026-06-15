@@ -1283,7 +1283,7 @@ const BorrowerRow = ({
         {/* Badges after expand button */}
         {borrower.is_new && (
           <span style={{
-            marginLeft: '8px', padding: '1px 6px', background: '#0ea5e9', color: '#fff',
+            marginLeft: '8px', padding: '1px 6px', background: '#f9a8d4', color: '#000',
             fontSize: '9px', fontWeight: '700', borderRadius: '3px', textTransform: 'uppercase',
             letterSpacing: '0.5px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
           }}
