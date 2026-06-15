@@ -319,7 +319,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         >
           All <span style={{ marginLeft: '3px', fontWeight: '700' }}>{borrowers.length}</span>
         </button>
-        <div style={{ width: '2px', alignSelf: 'stretch', background: '#3a3a55', borderRadius: '2px', margin: '0 20px', flexShrink: 0 }} />
+        <div style={{ width: '2px', alignSelf: 'stretch', background: '#3a3a55', borderRadius: '2px', margin: '0 16px 0 110px', flexShrink: 0 }} />
         {orderedStages.map(s => {
           const c = STAGE_COLORS[s];
           const count = stageCounts[s] || 0;
