@@ -303,6 +303,7 @@ const applyExtractedData = async (borrower, extracted, ops) => {
   if (extracted.loan_type) updates.loan_type = extracted.loan_type;
   if (extracted.loan_purpose) updates.loan_purpose = extracted.loan_purpose;
   if (extracted.rate) updates.rate = extracted.rate;
+  if (extracted.apr) updates.apr = extracted.apr;
   if (extracted.coe_date) updates.coe_date = extracted.coe_date;
   if (extracted.dti) updates.dti = extracted.dti;
   if (extracted.ltv) updates.ltv = extracted.ltv;
@@ -2036,6 +2037,7 @@ const SubHubSection = ({ borrower, onUpdate, ops }) => {
       { key: 'name', label: 'Borrower Name', value: borrower.name },
       { key: 'loan_amount', label: 'Loan Amount', value: borrower.loan_amount },
       { key: 'rate', label: 'Interest Rate', value: borrower.rate },
+      { key: 'apr', label: 'APR', value: borrower.apr },
       { key: 'loan_type', label: 'Loan Type', value: borrower.loan_type },
       { key: 'credit_auth_date', label: 'Credit Auth Date', value: borrower.credit_auth_date },
       { key: 'credit_score_mid', label: 'Mid Credit Score', value: borrower.credit_score_mid },

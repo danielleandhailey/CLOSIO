@@ -45,6 +45,7 @@ const EXTRACT_TOOL = {
       loan_type: { type: 'string', description: 'Loan PROGRAM only: Conventional, FHA, VA, USDA, Jumbo, Non-QM, HELOC, or Reverse. NOT the purpose.' },
       loan_purpose: { type: 'string', description: 'Loan purpose: Purchase, Refinance, or Cash-Out Refinance.' },
       rate: { type: 'number', description: 'Interest rate as a percent number, e.g. 6.875. On a CD/LE this is "Interest Rate" in the Loan Terms box.' },
+      apr: { type: 'number', description: 'Annual Percentage Rate (APR) as a percent number. On a Closing Disclosure it is in the "Loan Calculations" section (page 5).' },
       ltv: { type: 'number' },
       dti: { type: 'number' },
       coe_date: { type: 'string', description: 'Closing date / close of escrow / disbursement date, YYYY-MM-DD. On a Closing Disclosure use the Closing Date.' },
