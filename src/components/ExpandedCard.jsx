@@ -330,8 +330,27 @@ const applyExtractedData = async (borrower, extracted, ops) => {
     updates.credit_score_mid = extracted.credit_score_mid;
   }
 
+  // Date-gate: each field carries an "as of" date. A document value only wins if
+  // the document's own date is newer-or-equal to the date stored for that field.
+  // (Manual entries are stamped "today" in updateBorrower, so older docs can't clobber them.)
   if (Object.keys(updates).length > 0) {
-    await safeUpdateBorrower(borrower.id, updates);
+    const today = new Date().toISOString().slice(0, 10);
+    const raw = (extracted.document_date || '').slice(0, 10);
+    const docDate = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : today;
+    const fieldDates = borrower.field_dates || {};
+    const gated = {};
+    const newDates = {};
+    for (const [k, v] of Object.entries(updates)) {
+      const prev = fieldDates[k];
+      if (!prev || docDate >= prev) {
+        gated[k] = v;
+        newDates[k] = docDate;
+      }
+    }
+    if (Object.keys(gated).length > 0) {
+      gated.field_dates = { ...fieldDates, ...newDates };
+      await safeUpdateBorrower(borrower.id, gated);
+    }
   }
 
   // Contacts

@@ -90,12 +90,41 @@ export const useBorrowers = () => {
   };
 
   const updateBorrower = async (id, updates) => {
-    const { data, error } = await supabase
+    let payload = { ...updates };
+
+    // Stamp each manually-edited field with today's date so a dropped document can
+    // only overwrite it when the document is newer-dated (smart recency). Skip
+    // bookkeeping keys and any call that already manages field_dates itself.
+    if (updates.field_dates === undefined) {
+      const NON_FIELD_KEYS = new Set(['updated_at', 'last_touched', 'stage', 'field_dates', 'notes']);
+      const stampKeys = Object.keys(updates).filter(k => !NON_FIELD_KEYS.has(k));
+      if (stampKeys.length) {
+        const today = new Date().toISOString().slice(0, 10);
+        const current = borrowers.find(b => b.id === id)?.field_dates || {};
+        const stamps = {};
+        stampKeys.forEach(k => { stamps[k] = today; });
+        payload.field_dates = { ...current, ...stamps };
+      }
+    }
+
+    let { data, error } = await supabase
       .from('borrowers')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...payload, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
+
+    // field_dates column may not exist on older databases — retry without it.
+    if (error && payload.field_dates !== undefined) {
+      const { field_dates, ...rest } = payload;
+      ({ data, error } = await supabase
+        .from('borrowers')
+        .update({ ...rest, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single());
+    }
+
     if (error) throw error;
     await fetchBorrowers();
     return data;

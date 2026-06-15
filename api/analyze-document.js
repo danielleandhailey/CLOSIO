@@ -18,6 +18,7 @@ const EXTRACT_TOOL = {
     type: 'object',
     properties: {
       summary: { type: 'string', description: '2-3 sentence summary of the document type and key findings.' },
+      document_date: { type: 'string', description: 'The date this document is dated / issued / prepared / effective, in YYYY-MM-DD format. Use the most prominent date on the document (e.g. a Closing Disclosure issue/closing date, an appraisal effective date, a credit report pull date). If truly none, omit.' },
 
       // Borrowers / parties
       borrower_name: { type: 'string', description: 'Primary borrower, formatted "LASTNAME, First"' },
