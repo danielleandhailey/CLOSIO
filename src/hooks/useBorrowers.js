@@ -306,12 +306,60 @@ export const useBorrowers = () => {
     console.log('✅ Initial data seeded');
   };
 
+  // Merge duplicates: keep winnerId, fill its blank fields from the losers,
+  // move child records (docs, tasks, contacts, etc.) onto the winner, delete losers.
+  const mergeBorrowers = async (winnerId, loserIds) => {
+    const winner = borrowers.find(b => b.id === winnerId);
+    const losers = (loserIds || []).map(id => borrowers.find(b => b.id === id)).filter(Boolean);
+    if (!winner || !losers.length) return;
+
+    const SKIP = new Set(['id', 'created_at', 'updated_at', 'user_id',
+      'borrower_tags', 'tasks', 'contingencies', 'contacts', 'stipulations']);
+    const isEmpty = (v) => v === null || v === undefined || v === '' ||
+      (Array.isArray(v) && v.length === 0) ||
+      (typeof v === 'object' && !Array.isArray(v) && v && Object.keys(v).length === 0);
+
+    // Fill any blank winner field from a loser that has it
+    const updates = {};
+    for (const loser of losers) {
+      for (const [k, v] of Object.entries(loser)) {
+        if (SKIP.has(k) || isEmpty(v)) continue;
+        if (isEmpty(winner[k]) && isEmpty(updates[k])) updates[k] = v;
+      }
+    }
+    // Combine income arrays across all records
+    const allIncomes = [winner, ...losers].flatMap(b => Array.isArray(b.incomes) ? b.incomes : []);
+    if (allIncomes.length) updates.incomes = allIncomes;
+
+    // Move child records from each loser to the winner
+    const childTables = ['documents', 'tasks', 'contacts', 'contingencies', 'stipulations', 'borrower_tags', 'stage_history', 'notes_history'];
+    for (const loser of losers) {
+      for (const t of childTables) {
+        try { await supabase.from(t).update({ borrower_id: winnerId }).eq('borrower_id', loser.id); } catch (e) { /* table may not exist */ }
+      }
+    }
+
+    // Apply merged fields (resilient: per-field if a column is missing)
+    if (Object.keys(updates).length) {
+      const { error } = await supabase.from('borrowers').update(updates).eq('id', winnerId);
+      if (error) {
+        for (const [k, v] of Object.entries(updates)) {
+          await supabase.from('borrowers').update({ [k]: v }).eq('id', winnerId);
+        }
+      }
+    }
+
+    await supabase.from('borrowers').delete().in('id', loserIds);
+    await fetchBorrowers();
+  };
+
   return {
     borrowers,
     loading,
     error,
     refetch: fetchBorrowers,
     addBorrower,
+    mergeBorrowers,
     updateBorrower,
     deleteBorrower,
     touchBorrower,

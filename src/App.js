@@ -11,6 +11,7 @@ import RateTreadPage from './pages/RateTreadPage';
 import MatrixPage from './pages/MatrixPage';
 import AIChatBubble from './components/AIChatBubble';
 import TeamChatBubble from './components/TeamChatBubble';
+import DedupModal from './components/DedupModal';
 import './styles/global.css';
 
 // Theme toggle — stores per user in localStorage, persists across refreshes
@@ -138,6 +139,7 @@ const LendersDropdown = () => {
 const AppInner = () => {
   const { user, profile, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('Pipeline');
+  const [showDedup, setShowDedup] = useState(false);
   const [dark, setDark] = useTheme(user?.id);
 
   const borrowerHook = useBorrowers();
@@ -380,6 +382,14 @@ const AppInner = () => {
           <button
             type="button"
             className="btn btn-ghost btn-sm"
+            title="Find & merge duplicate borrowers"
+            onClick={() => setShowDedup(true)}
+          >
+            🧹 Dedupe
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
             onClick={signOut}
           >
             Sign Out
@@ -416,6 +426,9 @@ const AppInner = () => {
         <>
           <AIChatBubble borrowers={borrowers} onNavigate={setActiveTab} />
           <TeamChatBubble />
+          {showDedup && (
+            <DedupModal borrowers={borrowers} onMerge={ops.mergeBorrowers} onClose={() => setShowDedup(false)} />
+          )}
         </>
       )}
     </div>
