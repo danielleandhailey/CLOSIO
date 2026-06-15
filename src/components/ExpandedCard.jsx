@@ -431,7 +431,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
   const runningRef = useRef(false);
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('Documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
     setDocs(data || []);
   }, [borrower.id]);
 
@@ -552,7 +552,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
           }
         } catch (e) { /* storage not configured */ }
 
-        await supabase.from('Documents').insert([{
+        await supabase.from('documents').insert([{
           borrower_id: borrower.id, name: row.file_name,
           file_path: filePath || row.file_name, file_type: row.mime_type,
           ai_summary: aiSummary,
@@ -671,7 +671,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
               <span style={{ color: '#8080a8', flexShrink: 0, fontSize: '11px', fontFamily: 'monospace' }}>{formatDate(doc.created_at)}</span>
               <button type="button" onClick={async () => {
                 if (!window.confirm(`Delete "${doc.name}"?`)) return;
-                await supabase.from('Documents').delete().eq('id', doc.id);
+                await supabase.from('documents').delete().eq('id', doc.id);
                 loadDocs();
               }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }} title="Delete">
                 <X size={14} />
@@ -689,7 +689,7 @@ const DocumentStorage = ({ borrower }) => {
   const [docs, setDocs] = useState([]);
 
   const loadDocs = useCallback(async () => {
-    const { data } = await supabase.from('Documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('documents').select('*').eq('borrower_id', borrower.id).order('created_at', { ascending: false });
     setDocs(data || []);
   }, [borrower.id]);
 
@@ -697,7 +697,7 @@ const DocumentStorage = ({ borrower }) => {
 
   const deleteDoc = async (doc) => {
     if (!window.confirm(`Delete "${doc.name}"?`)) return;
-    await supabase.from('Documents').delete().eq('id', doc.id);
+    await supabase.from('documents').delete().eq('id', doc.id);
     if (doc.file_path && doc.file_path.includes('supabase')) {
       const path = doc.file_path.split('/documents/')[1];
       if (path) await supabase.storage.from('Documents').remove([path]);
