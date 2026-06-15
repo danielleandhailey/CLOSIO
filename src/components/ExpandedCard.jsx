@@ -2604,16 +2604,15 @@ const CommunicationSection = ({ borrower }) => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
+  const [linkedId, setLinkedId] = useState(borrower.bonzo_id || null);
+  const [linking, setLinking] = useState(false);
 
-  const fetchBonzoComms = async () => {
-    if (!borrower.bonzo_id) {
-      setError('No Bonzo ID linked');
-      return;
-    }
+  const fetchBonzoComms = async (id = linkedId) => {
+    if (!id) { setError('No Bonzo ID linked'); return; }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/bonzo-comms?prospectId=${borrower.bonzo_id}`);
+      const res = await fetch(`/api/bonzo-comms?prospectId=${id}`);
       const data = await res.json();
       if (data.error) {
         setError(data.error);
@@ -2630,15 +2629,35 @@ const CommunicationSection = ({ borrower }) => {
     }
   };
 
+  const linkBonzo = async () => {
+    setLinking(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ borrowerId: borrower.id, phone: borrower.phone || '', email: borrower.email || '', name: borrower.name || '' });
+      const res = await fetch(`/api/bonzo-link?${params.toString()}`);
+      const data = await res.json();
+      if (data.success && data.prospectId) {
+        setLinkedId(data.prospectId);
+        fetchBonzoComms(data.prospectId);
+      } else {
+        setError(data.error || 'Could not find this borrower in Bonzo.');
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLinking(false);
+    }
+  };
+
   // Auto-pull conversations when the tab opens
   React.useEffect(() => {
-    if (borrower.bonzo_id) fetchBonzoComms();
+    if (linkedId) fetchBonzoComms(linkedId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [borrower.bonzo_id]);
+  }, [linkedId]);
 
   return (
     <div style={{ fontSize: '12px', color: '#334155' }}>
-      {borrower.bonzo_id ? (
+      {linkedId ? (
         <>
           <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
@@ -2682,8 +2701,13 @@ const CommunicationSection = ({ borrower }) => {
           )}
         </>
       ) : (
-        <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
-          No Bonzo ID linked. Sync from Bonzo first.
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <div style={{ color: '#94a3b8', marginBottom: '12px' }}>Not linked to Bonzo yet.</div>
+          <button type="button" onClick={linkBonzo} disabled={linking}
+            style={{ padding: '8px 16px', background: linking ? '#9ca3af' : '#ec4899', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: linking ? 'default' : 'pointer' }}>
+            {linking ? 'Searching Bonzo…' : '🔗 Find in Bonzo'}
+          </button>
+          {error && <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '10px' }}>{error}</div>}
         </div>
       )}
     </div>
