@@ -1,16 +1,9 @@
 import { format, isToday, isBefore, differenceInDays, parseISO } from 'date-fns';
 import { PRESET_TAGS } from './constants';
 
-// A lead is "NEW" only if it literally just arrived (within 2 days) and wasn't
-// dismissed. Uses the Bonzo creation date, falling back to CLOSIO created_at.
-export const isNewLead = (b) => {
-  if (!b || b.is_new === false) return false;
-  const d = b.bonzo_created_at || b.created_at;
-  if (!d) return false;
-  const t = new Date(d).getTime();
-  if (isNaN(t)) return false;
-  return (Date.now() - t) < 2 * 24 * 60 * 60 * 1000;
-};
+// A lead is "NEW" only while it's a brand-new working file you haven't opened yet.
+// Set on creation by the Bonzo pull; cleared when you open the file (no timer).
+export const isNewLead = (b) => !!(b && b.is_new === true);
 
 // ---- Date helpers ----
 export const formatDate = (d) => {

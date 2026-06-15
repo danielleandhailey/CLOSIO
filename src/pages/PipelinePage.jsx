@@ -129,7 +129,12 @@ const PipelinePage = ({ borrowers, ops }) => {
         (b.borrower_tags || []).some(t => t.tag.toLowerCase().includes(q))
       );
     }
-    return sortBorrowers(list, sortBy, STAGES);
+    const sorted = sortBorrowers(list, sortBy, STAGES);
+    // Under the NEW filter, float HOT (responded) files to the top
+    if (filterStage === 'NEW') {
+      return sorted.slice().sort((a, b) => (b.stage === 'HOT' ? 1 : 0) - (a.stage === 'HOT' ? 1 : 0));
+    }
+    return sorted;
   }, [borrowers, filterType, filterStage, sortBy, search]);
 
   const handleSelect = useCallback((id, checked) => {
@@ -142,17 +147,21 @@ const PipelinePage = ({ borrowers, ops }) => {
 
   const handleExpand = useCallback((id, openTab = null) => {
     setDefaultTab(openTab);
+    const isOpening = !expandedIds.has(id);
+    // Opening a brand-new file acknowledges it — clear its NEW badge
+    if (isOpening) {
+      const b = borrowers.find(x => x.id === id);
+      if (b && b.is_new) ops.updateBorrower(id, { is_new: false }).catch(() => {});
+    }
     setExpandedIds(prev => {
-      // If clicking on same one, toggle it off
       if (prev.has(id)) {
         const n = new Set(prev);
         n.delete(id);
         return n;
       }
-      // Otherwise close all others and open this one (auto-close previous)
       return new Set([id]);
     });
-  }, []);
+  }, [borrowers, ops, expandedIds]);
 
   const handleClose = useCallback((id) => {
     setExpandedIds(prev => {

@@ -21,6 +21,7 @@ export const STAGES = [
   'Not Interested',
   'W/Competitor',
   'Went Dark',
+  'Prospect',
 ];
 
 // Stages by loan type - Shopping removed for Refi
@@ -52,6 +53,7 @@ export const STAGE_COLORS = {
   'W/Competitor': { bg: '#c2410c', text: '#fff', light: '#ffedd5' },
   'Went With Competitor': { bg: '#c2410c', text: '#fff', light: '#ffedd5' },
   'Went Dark':            { bg: '#1f2937', text: '#fff', light: '#374151' },
+  'Prospect':             { bg: '#475569', text: '#cbd5e1', light: '#e2e8f0' },
 };
 
 // Preset tags — add new ones here with one line
