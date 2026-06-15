@@ -416,7 +416,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState([]); // per-file status
   const [docs, setDocs] = useState([]);
-  const [showDocs, setShowDocs] = useState(false);
+  const [showDocs, setShowDocs] = useState(!compact);
   const inputRef = useRef();
 
   const loadDocs = useCallback(async () => {
@@ -457,12 +457,22 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
           setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'analyzing' } : x));
           let aiSummary = '';
           let extracted = {};
-          try {
-            const result = await claudeService.analyzeDocument(base64, mimeType, file.name);
-            aiSummary = result.summary;
-            extracted = result.extracted;
-          } catch (e) {
-            aiSummary = 'AI analysis unavailable';
+          // Up to 3 attempts; if we hit the Anthropic per-minute rate limit, wait for
+          // the window to reset and retry so big multi-doc drops don't drop a file.
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const result = await claudeService.analyzeDocument(base64, mimeType, file.name);
+              aiSummary = result.summary || '';
+              extracted = result.extracted || {};
+            } catch (e) {
+              aiSummary = 'AI analysis unavailable';
+            }
+            if (/rate limit|exceed your organization|429/i.test(aiSummary) && attempt < 2) {
+              setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'analyzing', summary: 'Rate limit reached — waiting 60s, will retry…' } : x));
+              await new Promise(r => setTimeout(r, 60000));
+              continue;
+            }
+            break;
           }
 
           let filePath = '';
@@ -497,6 +507,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
 
     setProcessing(false);
     setQueue([]);
+    setShowDocs(true); // reveal the link list for every doc on this borrower
     loadDocs();
     if (onDocAdded) onDocAdded();
   };
