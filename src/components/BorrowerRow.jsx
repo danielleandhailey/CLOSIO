@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3, X, Check } from 'lucide-react';
 import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS, STIP_CATEGORIES } from '../lib/constants';
 import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName, isNewLead } from '../lib/utils';
+import CommunicationPanel from './CommunicationPanel';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
@@ -1177,6 +1178,7 @@ const BorrowerRow = ({
   onAddStip, onMarkStipReceived, onRemoveStip,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
+  const [showConvo, setShowConvo] = useState(false);
   const [dropHighlight, setDropHighlight] = useState(false);
   const [showStipsModal, setShowStipsModal] = useState(false);
   const tags = borrower.borrower_tags || [];
@@ -1428,13 +1430,27 @@ const BorrowerRow = ({
           );
         })()}
 
-        {/* CONVO - quick access to communications (right side, by Drop) */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'comms'); }}
-          title="View communications"
-          style={{ flexShrink: 0, marginRight: '10px', background: 'none', border: 'none', color: '#ec4899', fontSize: '11px', fontWeight: '800', letterSpacing: '0.06em', cursor: 'pointer' }}
-        >CONVO</button>
+        {/* CONVO - opens a conversation popup right on the row (not the file) */}
+        <div style={{ position: 'relative', flexShrink: 0, marginRight: '10px' }} onClick={e => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => setShowConvo(s => !s)}
+            title="View communications"
+            style={{ background: 'none', border: 'none', color: '#ec4899', fontSize: '11px', fontWeight: '800', letterSpacing: '0.06em', cursor: 'pointer' }}
+          >CONVO</button>
+          {showConvo && (
+            <>
+              <div onClick={() => setShowConvo(false)} style={{ position: 'fixed', inset: 0, zIndex: 90 }} />
+              <div style={{ position: 'absolute', top: '24px', right: 0, zIndex: 100, width: '440px', maxHeight: '480px', overflowY: 'auto', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', boxShadow: '0 10px 28px rgba(0,0,0,0.35)', padding: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 800, color: '#ec4899', fontSize: '13px' }}>💬 {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}</span>
+                  <button type="button" onClick={() => setShowConvo(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', lineHeight: 1 }}>×</button>
+                </div>
+                <CommunicationPanel borrower={borrower} />
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Doc Drop Zone - right side */}
         <div>

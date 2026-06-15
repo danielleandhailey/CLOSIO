@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
   try {
     // Fetch messages for this prospect
-    const response = await fetch(`${BONZO_API_URL}/prospects/${prospectId}/messages`, {
+    const response = await fetch(`${BONZO_API_URL}/prospects/${prospectId}/messages?per_page=100&sort=-created_at`, {
       headers: {
         'Authorization': `Bearer ${BONZO_TOKEN}`,
         'Accept': 'application/json',
