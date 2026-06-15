@@ -616,11 +616,11 @@ body[data-theme="light"] .btn-icon:hover {
 
 .loan-field label {
   display: block;
-  font-size: 10px;
-  color: var(--text3);
-  font-weight: 600;
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   margin-bottom: 3px;
 }
 
@@ -629,9 +629,10 @@ body[data-theme="light"] .btn-icon:hover {
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 4px 8px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   font-family: var(--font);
   outline: none;
   height: 28px;

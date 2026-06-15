@@ -771,7 +771,7 @@ const ContingenciesSection = ({ borrower, ops }) => {
       {contingencies.map(c => (
         <div key={c.id} className="contingency-item">
           <input type="checkbox" checked={c.completed} onChange={() => ops.toggleContingency(c.id, !c.completed)} />
-          <span style={{ flex: 1, textDecoration: c.completed ? 'line-through' : 'none', color: c.completed ? '#6a6a80' : '#e8e8f0' }}>
+          <span style={{ flex: 1, fontSize: '13px', fontWeight: '500', textDecoration: c.completed ? 'line-through' : 'none', color: c.completed ? '#94a3b8' : '#1e293b' }}>
             {c.name}
           </span>
           {c.due_date && (
