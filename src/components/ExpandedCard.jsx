@@ -2618,7 +2618,10 @@ const CommunicationSection = ({ borrower }) => {
       if (data.error) {
         setError(data.error);
       } else {
-        setMessages(data.messages || []);
+        const sorted = (data.messages || []).slice().sort(
+          (a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0)
+        );
+        setMessages(sorted);
       }
     } catch (e) {
       setError(e.message);
@@ -2626,6 +2629,12 @@ const CommunicationSection = ({ borrower }) => {
       setLoading(false);
     }
   };
+
+  // Auto-pull conversations when the tab opens
+  React.useEffect(() => {
+    if (borrower.bonzo_id) fetchBonzoComms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [borrower.bonzo_id]);
 
   return (
     <div style={{ fontSize: '12px', color: '#334155' }}>
