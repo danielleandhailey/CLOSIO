@@ -99,7 +99,10 @@ export default async function handler(req, res) {
       if (!response.ok) {
         const errText = await response.text();
         console.error('Bonzo API error:', response.status, errText);
-        return res.status(response.status).json({ error: `Bonzo API error: ${response.status}` });
+        const msg = response.status === 401
+          ? 'Bonzo connection expired or invalid — generate a fresh Bonzo API token and update BONZO_API_TOKEN in Vercel.'
+          : `Bonzo API error: ${response.status}`;
+        return res.status(response.status).json({ error: msg });
       }
 
       const bonzoData = await response.json();
