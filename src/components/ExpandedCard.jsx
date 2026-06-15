@@ -3512,7 +3512,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('comms') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💬 Communication</div>
-            <CommunicationSection borrower={borrower} />
+            <CommunicationSection borrower={borrower} onLinked={ops?.refetch} />
             {closeBtn('comms')}
           </div>
         )}

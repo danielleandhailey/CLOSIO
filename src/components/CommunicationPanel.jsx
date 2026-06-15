@@ -6,7 +6,7 @@ const stripHtml = (html) => {
 };
 
 // Bonzo conversation view — used both in the borrower card tab and the row CONVO popup.
-const CommunicationPanel = ({ borrower }) => {
+const CommunicationPanel = ({ borrower, onLinked }) => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
@@ -45,6 +45,7 @@ const CommunicationPanel = ({ borrower }) => {
       if (data.success && data.prospectId) {
         setLinkedId(data.prospectId);
         fetchBonzoComms(data.prospectId);
+        if (onLinked) onLinked(); // refresh the borrower so other tabs (Bonzo Notes) see the link
       } else {
         setError(data.error || 'Could not find this borrower in Bonzo.');
       }

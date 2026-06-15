@@ -121,7 +121,7 @@ const PipelinePage = ({ borrowers, ops }) => {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(b =>
-        b.name.toLowerCase().includes(q) ||
+        (b.name || '').toLowerCase().includes(q) ||
         (b.lender || '').toLowerCase().includes(q) ||
         (b.loan_type || '').toLowerCase().includes(q) ||
         (b.phone || '').toLowerCase().includes(q) ||
