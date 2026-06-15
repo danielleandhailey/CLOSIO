@@ -271,6 +271,42 @@ const buildCreditScores = (extracted) => {
   return out;
 };
 
+// ---- Underwriter qualifying-income calc (W-2 / paystub first) ----
+const PERIODS_PER_YEAR = { weekly: 52, biweekly: 26, semimonthly: 24, monthly: 12, annual: 1, annually: 1, yearly: 1 };
+
+const ytdMonthsElapsed = (dateStr) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return d.getMonth() + (d.getDate() / 30.44); // months from Jan 1 through the pay date
+};
+
+// Returns { monthly, method } — qualifying monthly income for one income entry
+const calcMonthlyIncome = (inc) => {
+  const freqKey = (inc.pay_frequency || '').toLowerCase().replace(/[\s-]/g, '');
+  const ppy = PERIODS_PER_YEAR[freqKey];
+  const cat = (inc.category || inc.income_type || '').toLowerCase();
+  const isVariable = /overtime|bonus|commission|variable/.test(cat);
+  const ytdMonths = ytdMonthsElapsed(inc.ytd_as_of_date);
+
+  if (isVariable && inc.ytd_gross && ytdMonths) {
+    return { monthly: inc.ytd_gross / ytdMonths, method: 'YTD average' };
+  }
+  if (inc.amount_per_period && ppy) {
+    return { monthly: (inc.amount_per_period * ppy) / 12, method: `${inc.pay_frequency} base` };
+  }
+  if (inc.hourly_rate && inc.hours_per_period && ppy) {
+    return { monthly: (inc.hourly_rate * inc.hours_per_period * ppy) / 12, method: 'hourly base' };
+  }
+  if (inc.gross_monthly) {
+    return { monthly: Number(inc.gross_monthly), method: 'stated monthly' };
+  }
+  if (inc.ytd_gross && ytdMonths) {
+    return { monthly: inc.ytd_gross / ytdMonths, method: 'YTD average' };
+  }
+  return { monthly: 0, method: 'n/a' };
+};
+
 // Mortgage mid score: middle of 3, lower of 2, the one of 1
 const midScore = (scoreObj) => {
   const vals = Object.values(scoreObj || {}).filter(Boolean).sort((a, b) => a - b);
@@ -3204,8 +3240,29 @@ const IncomeSection = ({ borrower, onUpdate }) => {
   const fieldStyle = { padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', width: '100%' };
   const labelStyle = { fontSize: '10px', color: '#64748b', marginBottom: '2px' };
 
+  const incomeCalc = incomes.map(inc => ({ inc, ...calcMonthlyIncome(inc) }));
+  const totalMonthly = incomeCalc.reduce((s, x) => s + (x.monthly || 0), 0);
+
   return (
     <div>
+      {incomes.length > 0 && (
+        <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+            Qualifying Income (calculated)
+          </div>
+          {incomeCalc.map((x, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '12px', padding: '3px 0', color: '#1e293b' }}>
+              <span>{x.inc.person || 'Borrower'}{x.inc.employer ? ` — ${x.inc.employer}` : ''} <span style={{ color: '#64748b', fontSize: '10px' }}>({x.method})</span></span>
+              <span style={{ fontWeight: '700' }}>${Math.round(x.monthly).toLocaleString()}/mo</span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #6ee7b7', marginTop: '6px', paddingTop: '6px', fontSize: '13px', fontWeight: '800', color: '#065f46' }}>
+            <span>Total Monthly Qualifying</span>
+            <span>${Math.round(totalMonthly).toLocaleString()}/mo</span>
+          </div>
+          <div style={{ fontSize: '9px', color: '#64748b', marginTop: '6px' }}>Estimate — verify against full underwriting guidelines.</div>
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>INCOME ENTRIES</span>
         <button type="button" onClick={() => setAdding(a => !a)}
