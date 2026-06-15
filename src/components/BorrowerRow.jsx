@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3, X, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3, X, Check, MessageSquare } from 'lucide-react';
 import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS, STIP_CATEGORIES } from '../lib/constants';
 import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
@@ -1453,6 +1453,10 @@ const BorrowerRow = ({
 
         {/* Actions - clearer icons */}
         <div className="card-actions">
+          <button type="button" className="btn-icon" onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'comms'); }} title="Communication" style={{ color: '#38bdf8' }}>
+            <MessageSquare size={14} />
+          </button>
+
           <button type="button" className="btn-icon" onClick={() => onTouch(borrower.id)} title="Mark Touched">
             <Clock size={14} />
           </button>
