@@ -3206,18 +3206,6 @@ const IncomeSection = ({ borrower, onUpdate }) => {
 
   return (
     <div>
-      {/* Drop Zone for Income Docs */}
-      <div
-        style={{
-          padding: '16px', borderRadius: '8px', marginBottom: '12px',
-          background: '#f0fdf4', border: '2px dashed #22c55e', textAlign: 'center',
-        }}
-      >
-        <Upload size={20} style={{ color: '#22c55e', marginBottom: '6px' }} />
-        <div style={{ fontSize: '11px', color: '#166534', fontWeight: '600' }}>Drop VOE, Paystub, or Tax Return here</div>
-        <div style={{ fontSize: '10px', color: '#64748b' }}>to auto-populate income fields</div>
-      </div>
-
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>INCOME ENTRIES</span>
         <button type="button" onClick={() => setAdding(a => !a)}
