@@ -147,9 +147,9 @@ const PipelinePage = ({ borrowers, ops }) => {
 
   const handleExpand = useCallback((id, openTab = null) => {
     setDefaultTab(openTab);
-    const isOpening = !expandedIds.has(id);
-    // Opening a brand-new file acknowledges it — clear its NEW badge
-    if (isOpening) {
+    const isClosing = expandedIds.has(id);
+    // Clear NEW only when CLOSING (done working it) so it doesn't vanish on open
+    if (isClosing) {
       const b = borrowers.find(x => x.id === id);
       if (b && b.is_new) ops.updateBorrower(id, { is_new: false }).catch(() => {});
     }
@@ -164,12 +164,14 @@ const PipelinePage = ({ borrowers, ops }) => {
   }, [borrowers, ops, expandedIds]);
 
   const handleClose = useCallback((id) => {
+    const b = borrowers.find(x => x.id === id);
+    if (b && b.is_new) ops.updateBorrower(id, { is_new: false }).catch(() => {});
     setExpandedIds(prev => {
       const n = new Set(prev);
       n.delete(id);
       return n;
     });
-  }, []);
+  }, [borrowers, ops]);
 
   const handleDelete = useCallback(async (id) => {
     if (!window.confirm('Delete this borrower? This cannot be undone.')) return;
