@@ -1349,18 +1349,6 @@ const BorrowerRow = ({
         {/* Small spacer after NEED */}
         <div style={{ width: '4px', flexShrink: 0 }} />
 
-        {/* CONVO - quick access to communications (left edge of notes) */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'comms'); }}
-          title="View communications"
-          style={{
-            flexShrink: 0, marginRight: '8px', padding: '2px 7px', borderRadius: '4px',
-            background: 'rgba(34,211,238,0.12)', border: '1px solid #22d3ee', color: '#22d3ee',
-            fontSize: '9px', fontWeight: '800', letterSpacing: '0.05em', cursor: 'pointer',
-          }}
-        >CONVO</button>
-
         {/* Notes Display - notes only (no docs, no timestamps) */}
         {(() => {
           const rawNotes = borrower.notes || '';
@@ -1439,6 +1427,14 @@ const BorrowerRow = ({
             </div>
           );
         })()}
+
+        {/* CONVO - quick access to communications (right side, by Drop) */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'comms'); }}
+          title="View communications"
+          style={{ flexShrink: 0, marginRight: '10px', background: 'none', border: 'none', color: '#38bdf8', fontSize: '11px', fontWeight: '800', letterSpacing: '0.06em', cursor: 'pointer' }}
+        >CONVO</button>
 
         {/* Doc Drop Zone - right side */}
         <div>
