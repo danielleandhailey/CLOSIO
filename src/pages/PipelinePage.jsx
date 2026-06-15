@@ -82,6 +82,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         counts[b.stage]++;
       }
     });
+    counts['NEW'] = borrowers.filter(b => b.is_new).length;
     return counts;
   }, [borrowers]);
 
@@ -104,7 +105,9 @@ const PipelinePage = ({ borrowers, ops }) => {
     }
     // Filter by stage (special handling for Stips Needed and Updated)
     if (filterStage !== 'All') {
-      if (filterStage === 'Stips Needed') {
+      if (filterStage === 'NEW') {
+        list = list.filter(b => b.is_new);
+      } else if (filterStage === 'Stips Needed') {
         list = list.filter(b => b.stage === 'Stips Needed' || (b.stips_needed && b.stips_needed > 0));
       } else if (filterStage === 'Updated') {
         list = list.filter(b => b.is_updated);
@@ -320,6 +323,14 @@ const PipelinePage = ({ borrowers, ops }) => {
           All <span style={{ marginLeft: '3px', fontWeight: '700' }}>{borrowers.length}</span>
         </button>
         <div style={{ width: '2px', alignSelf: 'stretch', background: '#3a3a55', borderRadius: '2px', margin: '0 16px 0 110px', flexShrink: 0 }} />
+        <button
+          type="button"
+          className={`stage-pill ${filterStage === 'NEW' ? 'active' : ''}`}
+          style={{ background: '#f9a8d4', color: '#000', opacity: (stageCounts['NEW'] || 0) === 0 ? 0.4 : 1 }}
+          onClick={() => { setFilterStage(prev => prev === 'NEW' ? 'All' : 'NEW'); setSearch(''); }}
+        >
+          NEW <span style={{ marginLeft: '3px', fontWeight: '700' }}>{stageCounts['NEW'] || 0}</span>
+        </button>
         {orderedStages.map(s => {
           const c = STAGE_COLORS[s];
           const count = stageCounts[s] || 0;

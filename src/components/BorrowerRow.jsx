@@ -1433,7 +1433,7 @@ const BorrowerRow = ({
           type="button"
           onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'comms'); }}
           title="View communications"
-          style={{ flexShrink: 0, marginRight: '10px', background: 'none', border: 'none', color: '#38bdf8', fontSize: '11px', fontWeight: '800', letterSpacing: '0.06em', cursor: 'pointer' }}
+          style={{ flexShrink: 0, marginRight: '10px', background: 'none', border: 'none', color: '#ec4899', fontSize: '11px', fontWeight: '800', letterSpacing: '0.06em', cursor: 'pointer' }}
         >CONVO</button>
 
         {/* Doc Drop Zone - right side */}
