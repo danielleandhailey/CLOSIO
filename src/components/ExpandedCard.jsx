@@ -237,8 +237,132 @@ const TasksSection = ({ borrower, ops }) => {
   );
 };
 
+// Convert a File to base64 (strips the data: prefix)
+const fileToBase64 = (file) => new Promise((res, rej) => {
+  const reader = new FileReader();
+  reader.onload = ev => res(ev.target.result.split(',')[1]);
+  reader.onerror = rej;
+  reader.readAsDataURL(file);
+});
+
+// Build a credit_report scores object from AI-extracted fields (FICO + optional VantageScore)
+const buildCreditScores = (extracted) => {
+  const fico = {};
+  if (extracted.fico_equifax) fico.equifax = extracted.fico_equifax;
+  if (extracted.fico_experian) fico.experian = extracted.fico_experian;
+  if (extracted.fico_transunion) fico.transunion = extracted.fico_transunion;
+  const vantage = {};
+  if (extracted.vantage_equifax) vantage.equifax = extracted.vantage_equifax;
+  if (extracted.vantage_experian) vantage.experian = extracted.vantage_experian;
+  if (extracted.vantage_transunion) vantage.transunion = extracted.vantage_transunion;
+  const out = {};
+  if (Object.keys(fico).length) out.scores = fico;
+  if (Object.keys(vantage).length) out.vantage_scores = vantage;
+  if (extracted.negative_marks != null) out.negative_marks = extracted.negative_marks;
+  if (extracted.public_records != null) out.public_records = extracted.public_records;
+  return out;
+};
+
+// Mortgage mid score: middle of 3, lower of 2, the one of 1
+const midScore = (scoreObj) => {
+  const vals = Object.values(scoreObj || {}).filter(Boolean).sort((a, b) => a - b);
+  if (!vals.length) return null;
+  return vals[Math.floor((vals.length - 1) / 2)];
+};
+
+// Central populate: write everything the AI extracted onto the borrower + contacts/contingencies/incomes.
+// Shared by every drop zone so they all behave identically.
+const applyExtractedData = async (borrower, extracted, ops) => {
+  if (!extracted || Object.keys(extracted).length === 0) return;
+  const updates = {};
+
+  // Borrowers
+  if (extracted.borrower_name) updates.name = extracted.borrower_name;
+  if (Array.isArray(extracted.co_borrowers) && extracted.co_borrowers.length) {
+    updates.co_borrowers = extracted.co_borrowers;
+    updates.co_borrower = extracted.co_borrowers[0];
+  }
+  if (extracted.non_borrowing_spouse) updates.non_borrowing_spouse = extracted.non_borrowing_spouse;
+
+  // Loan terms / Sub Hub underlying fields
+  if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
+  if (extracted.loan_amount) updates.loan_amount = extracted.loan_amount;
+  if (extracted.loan_type) updates.loan_type = extracted.loan_type;
+  if (extracted.rate) updates.rate = extracted.rate;
+  if (extracted.coe_date) updates.coe_date = extracted.coe_date;
+  if (extracted.dti) updates.dti = extracted.dti;
+  if (extracted.ltv) updates.ltv = extracted.ltv;
+  if (extracted.earnest_money) updates.earnest_money = extracted.earnest_money;
+  if (extracted.seller_cc) updates.seller_cc = extracted.seller_cc;
+  if (extracted.property_type) updates.property_type = extracted.property_type;
+  if (extracted.property_address) updates.property_address = extracted.property_address;
+  if (extracted.occupancy) updates.occupancy = extracted.occupancy;
+  if (extracted.wholesale_loan_number) updates.wholesale_loan_number = extracted.wholesale_loan_number;
+
+  // Appraisal
+  if (extracted.appraisal_value) updates.appraisal_value = extracted.appraisal_value;
+  if (extracted.appraisal_type) updates.appraisal_type = extracted.appraisal_type;
+  if (extracted.appraisal_subject_to) updates.appraisal_subject_to = extracted.appraisal_subject_to;
+  if (extracted.appraisal_reinspection !== undefined) updates.appraisal_reinspection = extracted.appraisal_reinspection;
+
+  // Credit report (FICO + optional VantageScore)
+  if (extracted.credit_auth_date) updates.credit_auth_date = extracted.credit_auth_date;
+  const creditScores = buildCreditScores(extracted);
+  if (Object.keys(creditScores).length) {
+    updates.credit_report = { ...(borrower.credit_report || {}), ...creditScores };
+    const mid = extracted.credit_score_mid || midScore(creditScores.scores) || midScore(creditScores.vantage_scores);
+    if (mid) updates.credit_score_mid = mid;
+  } else if (extracted.credit_score_mid) {
+    updates.credit_score_mid = extracted.credit_score_mid;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await supabase.from('borrowers').update(updates).eq('id', borrower.id);
+  }
+
+  // Contacts
+  if (extracted.buyer_agent_name) {
+    await ops.upsertContact(borrower.id, 'buyers_agent', {
+      name: extracted.buyer_agent_name,
+      phone: extracted.buyer_agent_phone || '',
+      email: extracted.buyer_agent_email || '',
+      company: extracted.buyer_agent_company || '',
+    });
+  }
+  if (extracted.listing_agent_name) {
+    await ops.upsertContact(borrower.id, 'listing_agent', {
+      name: extracted.listing_agent_name,
+      phone: extracted.listing_agent_phone || '',
+      email: extracted.listing_agent_email || '',
+      company: extracted.listing_agent_company || '',
+    });
+  }
+  if (extracted.title_company) {
+    await ops.upsertContact(borrower.id, 'title_escrow', {
+      company: extracted.title_company,
+      phone: extracted.title_company_phone || '',
+      email: extracted.title_company_email || '',
+    });
+  }
+
+  // Contingencies
+  if (Array.isArray(extracted.contingencies)) {
+    for (const c of extracted.contingencies) {
+      const flagPrefix = c.fully_executed === false ? '🚩 ' : '';
+      await ops.addContingency(borrower.id, flagPrefix + c.name, c.due_date || null);
+    }
+  }
+
+  // Incomes
+  if (Array.isArray(extracted.incomes) && extracted.incomes.length) {
+    const existingIncomes = borrower.incomes || [];
+    const newIncomes = extracted.incomes.map((inc, idx) => ({ ...inc, id: `${Date.now()}_${idx}` }));
+    await supabase.from('borrowers').update({ incomes: [...existingIncomes, ...newIncomes] }).eq('id', borrower.id);
+  }
+};
+
 // ---- Document Drop Zone ----
-const DocDropZone = ({ borrower, onDocAdded, ops }) => {
+const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
   const [dragging, setDragging] = useState(false);
   const [queue, setQueue] = useState([]); // pending files not yet processed
   const [processing, setProcessing] = useState(false);
@@ -309,72 +433,12 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
             file_size: file.size, ai_summary: aiSummary,
           }]);
 
-          if (aiSummary && aiSummary !== 'AI analysis unavailable') {
-            const currentNotes = borrower.notes || '';
-            const newNote = `\n\n📄 ${file.name} (${new Date().toLocaleDateString()}):\n${aiSummary}`;
-            await supabase.from('borrowers').update({ notes: currentNotes + newNote }).eq('id', borrower.id);
-          }
+          // Note: AI summary is saved on the Documents record (ai_summary) and shown
+          // in the Documents list. We intentionally do NOT append it to borrower.notes
+          // anymore — that was flooding Notes with summary/error text.
 
-          console.log('=== AI EXTRACTED DATA ===');
-          console.log(JSON.stringify(extracted, null, 2));
-          console.log('buyer_agent_name:', extracted.buyer_agent_name);
-          console.log('contingencies:', extracted.contingencies);
-          const updates = {};
-          if (extracted.purchase_price) updates.purchase_price = extracted.purchase_price;
-          if (extracted.coe_date) updates.coe_date = extracted.coe_date;
-          if (extracted.dti) updates.dti = extracted.dti;
-          if (extracted.ltv) updates.ltv = extracted.ltv;
-          if (extracted.earnest_money) updates.earnest_money = extracted.earnest_money;
-          if (extracted.seller_cc) updates.seller_cc = extracted.seller_cc;
-          if (extracted.appraisal_value) updates.appraisal_value = extracted.appraisal_value;
-          if (extracted.appraisal_type) updates.appraisal_type = extracted.appraisal_type;
-          if (extracted.appraisal_subject_to) updates.appraisal_subject_to = extracted.appraisal_subject_to;
-          if (extracted.appraisal_reinspection !== undefined) updates.appraisal_reinspection = extracted.appraisal_reinspection;
-          if (extracted.property_type) updates.property_type = extracted.property_type;
-          if (extracted.occupancy) updates.occupancy = extracted.occupancy;
-          if (Object.keys(updates).length > 0) {
-            await supabase.from('borrowers').update(updates).eq('id', borrower.id);
-          }
-
-          // Auto-add contacts from PA
-          if (extracted.buyer_agent_name) {
-            await ops.upsertContact(borrower.id, 'buyers_agent', {
-              name: extracted.buyer_agent_name,
-              phone: extracted.buyer_agent_phone || '',
-              email: extracted.buyer_agent_email || '',
-              company: extracted.buyer_agent_company || ''
-            });
-          }
-          if (extracted.listing_agent_name) {
-            await ops.upsertContact(borrower.id, 'listing_agent', {
-              name: extracted.listing_agent_name,
-              phone: extracted.listing_agent_phone || '',
-              email: extracted.listing_agent_email || '',
-              company: extracted.listing_agent_company || ''
-            });
-          }
-          if (extracted.title_company) {
-            await ops.upsertContact(borrower.id, 'title_escrow', {
-              company: extracted.title_company,
-              phone: extracted.title_company_phone || '',
-              email: extracted.title_company_email || ''
-            });
-          }
-
-          // Auto-add contingencies from PA
-          if (extracted.contingencies && Array.isArray(extracted.contingencies)) {
-            for (const c of extracted.contingencies) {
-              const flagPrefix = c.fully_executed === false ? '🚩 ' : '';
-              await ops.addContingency(borrower.id, flagPrefix + c.name, c.due_date || null);
-            }
-          }
-
-          // Auto-add incomes from VOE/paystub/tax returns
-          if (extracted.incomes && Array.isArray(extracted.incomes)) {
-            const existingIncomes = borrower.incomes || [];
-            const newIncomes = extracted.incomes.map(inc => ({ ...inc, id: Date.now() + Math.random() }));
-            await supabase.from('borrowers').update({ incomes: [...existingIncomes, ...newIncomes] }).eq('id', borrower.id);
-          }
+          // Populate every applicable tab from the extracted data (shared logic)
+          await applyExtractedData(borrower, extracted, ops);
 
           setProgress(p => p.map((x, j) => j === i ? { ...x, status: 'done', summary: aiSummary } : x));
         } catch (e) {
@@ -400,10 +464,12 @@ const DocDropZone = ({ borrower, onDocAdded, ops }) => {
   return (
     <div>
       <div className="section-heading">
-        📎 Documents
-        <button type="button" className="btn-xs btn-ghost" onClick={() => setShowDocs(s => !s)} style={{ marginLeft: 'auto' }}>
-          {showDocs ? 'Hide' : `Show saved (${docs.length})`}
-        </button>
+        {label || '📎 Documents'}
+        {!compact && (
+          <button type="button" className="btn-xs btn-ghost" onClick={() => setShowDocs(s => !s)} style={{ marginLeft: 'auto' }}>
+            {showDocs ? 'Hide' : `Show saved (${docs.length})`}
+          </button>
+        )}
       </div>
 
       {/* Drop zone */}
@@ -1880,7 +1946,7 @@ const CalcSection = ({ borrower }) => {
 };
 
 // ---- Sub Hub Section (Submit to Processing) ----
-const SubHubSection = ({ borrower, onUpdate }) => {
+const SubHubSection = ({ borrower, onUpdate, ops }) => {
   const [dragOver, setDragOver] = useState(false);
   const [parseResult, setParseResult] = useState(null);
 
@@ -1938,14 +2004,16 @@ const SubHubSection = ({ borrower, onUpdate }) => {
     const file = e.dataTransfer.files[0];
     if (!file) return;
 
-    const text = await file.text();
-    const { parseDocument } = await import('../lib/docParser');
-    const result = parseDocument(text, file.name);
-    setParseResult(result);
-
-    // Auto-update borrower with extracted data
-    if (Object.keys(result.extracted).length > 0) {
-      onUpdate(borrower.id, result.extracted);
+    setParseResult({ status: 'analyzing' });
+    try {
+      const base64 = await fileToBase64(file);
+      const { extracted } = await claudeService.analyzeDocument(base64, file.type || 'application/pdf', file.name);
+      await applyExtractedData(borrower, extracted || {}, ops);
+      setParseResult({ count: Object.keys(extracted || {}).length });
+      if (ops?.refetch) ops.refetch();
+    } catch (err) {
+      console.error('Sub Hub doc read failed:', err);
+      setParseResult({ error: err.message });
     }
   };
 
@@ -1987,9 +2055,14 @@ const SubHubSection = ({ borrower, onUpdate }) => {
       </div>
 
       {parseResult && (
-        <div style={{ background: '#dcfce7', padding: '8px', borderRadius: '6px' }}>
-          <div style={{ fontWeight: '600', color: '#166534' }}>Extracted from {parseResult.docType || 'document'}:</div>
-          <div style={{ fontSize: '10px', color: '#166534' }}>{Object.keys(parseResult.extracted).length} fields updated</div>
+        <div style={{ background: parseResult.error ? '#fee2e2' : '#dcfce7', padding: '8px', borderRadius: '6px' }}>
+          {parseResult.status === 'analyzing' ? (
+            <div style={{ fontWeight: '600', color: '#166534' }}>🤖 Reading document…</div>
+          ) : parseResult.error ? (
+            <div style={{ fontWeight: '600', color: '#991b1b' }}>Error: {parseResult.error}</div>
+          ) : (
+            <div style={{ fontWeight: '600', color: '#166534' }}>✅ Document read — {parseResult.count || 0} fields filled</div>
+          )}
         </div>
       )}
 
@@ -2829,26 +2902,43 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     try {
       // Upload to Supabase storage (public Documents bucket)
       const fileName = `credit_${borrower.id}_${Date.now()}.pdf`;
-      const { data, error } = await supabase.storage.from('Documents').upload(fileName, file);
+      const { error } = await supabase.storage.from('Documents').upload(fileName, file);
       if (error) throw error;
 
       // Get public URL
       const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(fileName);
 
-      // Save credit report info
-      await onUpdate(borrower.id, {
-        credit_report: {
-          file_path: fileName,
-          file_url: urlData.publicUrl,
-          file_name: file.name,
-          uploaded_at: new Date().toISOString(),
-          scores: creditData.scores || {},
-          total_liabilities: creditData.total_liabilities || null,
-          negative_marks: creditData.negative_marks || 0,
-          public_records: creditData.public_records || 0,
-          discrepancies: creditData.discrepancies || [],
-        }
-      });
+      // Read the report with AI (FICO + optional VantageScore, marks, records)
+      let extracted = {};
+      try {
+        const base64 = await fileToBase64(file);
+        const result = await claudeService.analyzeDocument(base64, file.type || 'application/pdf', file.name);
+        extracted = result.extracted || {};
+      } catch (e) {
+        console.error('Credit AI read failed:', e);
+      }
+
+      const creditScores = buildCreditScores(extracted);
+      const merged = {
+        file_path: fileName,
+        file_url: urlData.publicUrl,
+        file_name: file.name,
+        uploaded_at: new Date().toISOString(),
+        total_liabilities: creditData.total_liabilities || null,
+        discrepancies: creditData.discrepancies || [],
+        scores: creditScores.scores || creditData.scores || {},
+        vantage_scores: creditScores.vantage_scores || creditData.vantage_scores || {},
+        negative_marks: creditScores.negative_marks != null ? creditScores.negative_marks : (creditData.negative_marks || 0),
+        public_records: creditScores.public_records != null ? creditScores.public_records : (creditData.public_records || 0),
+      };
+
+      const update = { credit_report: merged };
+      if (extracted.borrower_name) update.name = extracted.borrower_name;
+      if (extracted.credit_auth_date) update.credit_auth_date = extracted.credit_auth_date;
+      const mid = extracted.credit_score_mid || midScore(merged.scores) || midScore(merged.vantage_scores);
+      if (mid) update.credit_score_mid = mid;
+
+      await onUpdate(borrower.id, update);
     } catch (err) {
       console.error('Upload error:', err);
       alert('Failed to upload: ' + err.message);
@@ -2915,10 +3005,18 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
           {/* Summary Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
             <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
-              <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>Scores</div>
+              <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>FICO (EQ/EX/TU)</div>
               <div style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
                 {creditData.scores?.equifax || '—'} / {creditData.scores?.experian || '—'} / {creditData.scores?.transunion || '—'}
               </div>
+              {creditData.vantage_scores && Object.values(creditData.vantage_scores).some(Boolean) && (
+                <>
+                  <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginTop: '5px' }}>Vantage (EQ/EX/TU)</div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#7c3aed' }}>
+                    {creditData.vantage_scores?.equifax || '—'} / {creditData.vantage_scores?.experian || '—'} / {creditData.vantage_scores?.transunion || '—'}
+                  </div>
+                </>
+              )}
             </div>
             <div style={{ background: creditData.negative_marks > 0 ? '#fee2e2' : '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
               <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>Negative Marks</div>
@@ -3272,7 +3370,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
       {/* Content Boxes */}
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
         {openTabs.has('notes') && (
-          <div style={{ ...boxStyle, minHeight: '500px', height: '550px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ ...boxStyle, minHeight: '320px', height: 'min(550px, 72vh)', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
             </div>
@@ -3333,6 +3431,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('borrowers') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>👤 Borrowers</div>
+            <div style={{ marginBottom: '16px' }}>
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop 1003 / AUS to auto-fill" />
+            </div>
             <BorrowersSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('borrowers')}
           </div>
@@ -3341,6 +3442,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('terms') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💰 Loan Terms</div>
+            <div style={{ marginBottom: '16px' }}>
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop docs to auto-fill loan terms" />
+            </div>
             <LoanTermsGrid borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('terms')}
           </div>
@@ -3349,6 +3453,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('income') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💵 Income / Employment</div>
+            <div style={{ marginBottom: '16px' }}>
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop paystub / W-2 / tax returns" />
+            </div>
             <IncomeSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('income')}
           </div>
@@ -3362,6 +3469,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
                 style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>
                 {contactsExpanded ? 'Collapse' : 'View Card'}
               </button>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Purchase Agreement to fill contacts" />
             </div>
             {contactsExpanded ? (
               <ContactsCard borrower={borrower} ops={ops} />
@@ -3377,6 +3487,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('pa') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📋 Purchase Agreement</div>
+            <div style={{ marginBottom: '16px' }}>
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Purchase Agreement" />
+            </div>
             <PASection borrower={borrower} ops={ops} />
             {closeBtn('pa')}
           </div>
@@ -3385,6 +3498,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('contingencies') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>⚠️ Contingencies</div>
+            <div style={{ marginBottom: '16px' }}>
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Purchase Agreement for contingencies" />
+            </div>
             <ContingenciesSection borrower={borrower} ops={ops} />
             {closeBtn('contingencies')}
           </div>
@@ -3393,7 +3509,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('credit') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📊 Credit Report</div>
-            <CreditReportSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            <CreditReportSection borrower={borrower} onUpdate={ops.updateBorrower} ops={ops} />
             {closeBtn('credit')}
           </div>
         )}
@@ -3402,6 +3518,9 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>
               🏠 Appraisal {borrower.appraisal_type && <span style={{ fontWeight: '400', color: '#1e293b' }}>— {borrower.appraisal_type}</span>}
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Appraisal" />
             </div>
             <AppraisalSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('appraisal')}
@@ -3435,7 +3554,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('subhub') && (
           <div style={{ ...boxStyle, border: '2px solid #3b82f6' }}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>SUB HUB - Submit to Processing</div>
-            <SubHubSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            <SubHubSection borrower={borrower} onUpdate={ops.updateBorrower} ops={ops} />
             {closeBtn('subhub')}
           </div>
         )}

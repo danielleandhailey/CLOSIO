@@ -1,6 +1,4 @@
-const CLAUDE_MODEL = 'claude-opus-4-5';
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const CLAUDE_MODEL = 'claude-opus-4-8';
 
 // Use Vercel serverless for chat (small payloads)
 const callClaude = async (body) => {
@@ -12,14 +10,11 @@ const callClaude = async (body) => {
   return response.json();
 };
 
-// Use Supabase Edge Function for documents (large payloads)
-const analyzeWithSupabase = async (base64Data, mimeType, fileName) => {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/hyper-handler`, {
+// Use Vercel serverless for documents — structured tool-use, always-valid JSON.
+const analyzeWithVercel = async (base64Data, mimeType, fileName) => {
+  const response = await fetch('/api/analyze-document', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ base64Data, mimeType, fileName }),
   });
   return response.json();
@@ -80,16 +75,16 @@ If asked to open a tab, respond with "NAVIGATE:TabName" (e.g., "NAVIGATE:Rate Re
 
   // Analyze uploaded document and extract mortgage data
   async analyzeDocument(base64Data, mimeType, fileName) {
-    // Use Supabase Edge Function (no size limit)
+    // Use Vercel serverless endpoint (structured tool-use → always-valid JSON)
     try {
-      const result = await analyzeWithSupabase(base64Data, mimeType, fileName);
-      console.log('Supabase analyze result:', result);
+      const result = await analyzeWithVercel(base64Data, mimeType, fileName);
+      console.log('Analyze result:', result);
       if (result.error) {
         return { summary: `Error: ${result.error.message || result.error}`, extracted: {} };
       }
-      return result;
+      return { summary: result.summary || 'Document analyzed.', extracted: result.extracted || {} };
     } catch (e) {
-      console.error('Supabase analyze error:', e);
+      console.error('Document analyze error:', e);
       return { summary: 'Error analyzing document.', extracted: {} };
     }
   },
