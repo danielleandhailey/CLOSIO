@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Plus, Zap } from 'lucide-react';
 import BorrowerRow from '../components/BorrowerRow';
 import ExpandedCard from '../components/ExpandedCard';
@@ -17,6 +17,30 @@ const PipelinePage = ({ borrowers, ops }) => {
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBorrower, setEditingBorrower] = useState(null);
+
+  // Drag-to-reorder stage pills; order is saved per browser and persists across reopens
+  const [stageOrder, setStageOrder] = useState(() => {
+    try { const s = localStorage.getItem('closio_stage_order'); if (s) return JSON.parse(s); } catch (e) { /* ignore */ }
+    return STAGES;
+  });
+  const dragStage = useRef(null);
+  const orderedStages = useMemo(() => {
+    const base = STAGES_BY_TYPE[filterType] || STAGES;
+    const idx = (s) => { const i = stageOrder.indexOf(s); return i < 0 ? 999 : i; };
+    return [...base].sort((a, b) => idx(a) - idx(b));
+  }, [filterType, stageOrder]);
+  const handleStageDrop = (target) => {
+    const from = dragStage.current;
+    dragStage.current = null;
+    if (!from || from === target) return;
+    const cur = [...orderedStages];
+    const fromI = cur.indexOf(from), toI = cur.indexOf(target);
+    if (fromI < 0 || toI < 0) return;
+    cur.splice(toI, 0, cur.splice(fromI, 1)[0]);
+    const full = [...new Set([...cur, ...stageOrder, ...STAGES])];
+    setStageOrder(full);
+    try { localStorage.setItem('closio_stage_order', JSON.stringify(full)); } catch (e) { /* ignore */ }
+  };
 
   // Auto Bonzo sync at startup and every 15 minutes
   useEffect(() => {
@@ -295,7 +319,7 @@ const PipelinePage = ({ borrowers, ops }) => {
         >
           All <span style={{ marginLeft: '3px', fontWeight: '700' }}>{borrowers.length}</span>
         </button>
-        {(STAGES_BY_TYPE[filterType] || STAGES).map(s => {
+        {orderedStages.map(s => {
           const c = STAGE_COLORS[s];
           const count = stageCounts[s] || 0;
           return (
@@ -303,7 +327,11 @@ const PipelinePage = ({ borrowers, ops }) => {
               key={s}
               type="button"
               className={`stage-pill ${filterStage === s ? 'active' : ''}`}
-              style={{ background: c.bg, color: c.text, opacity: count === 0 ? 0.4 : 1 }}
+              style={{ background: c.bg, color: c.text, opacity: count === 0 ? 0.4 : 1, cursor: 'grab' }}
+              draggable
+              onDragStart={() => { dragStage.current = s; }}
+              onDragOver={e => e.preventDefault()}
+              onDrop={() => handleStageDrop(s)}
               onClick={() => { setFilterStage(prev => prev === s ? 'All' : s); setSearch(''); }}
             >
               {s} <span style={{ marginLeft: '3px', fontWeight: '700' }}>{count}</span>
