@@ -1279,7 +1279,13 @@ const BorrowerRow = ({
           style={{ cursor: 'pointer' }}
           title="Click to open file"
         >
-          {formatBorrowerName(borrower.name, borrower.co_borrower, borrower.co_borrowers)}
+          {formatBorrowerName(borrower.name)}
+          {(() => {
+            const cos = borrower.co_borrowers?.length ? borrower.co_borrowers : (borrower.co_borrower ? [borrower.co_borrower] : []);
+            if (!cos.length) return null;
+            const coText = cos.length === 1 ? formatBorrowerName(cos[0]) : `+${cos.length}`;
+            return <span style={{ display: 'block', fontWeight: 400, fontSize: '11px', color: '#94a3b8', marginTop: '1px' }}>{coText}</span>;
+          })()}
         </span>
 
         {/* Badges after expand button */}

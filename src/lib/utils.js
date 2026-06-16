@@ -165,18 +165,16 @@ export const getFirstName = (name) => {
 // Format name as "LASTNAME, First" with co-borrower(s)
 export const formatBorrowerName = (name, coBorrower, coBorrowers) => {
   if (!name) return '';
-  let lastName, firstName;
+  let display;
   if (name.includes(',')) {
-    [lastName, firstName] = name.split(',').map(s => s.trim());
+    const [lastName, firstName] = name.split(',').map(s => s.trim());
+    display = `${lastName}, ${firstName}`;
   } else {
-    const parts = name.trim().split(' ');
-    firstName = parts.slice(0, -1).join(' ');
-    lastName = parts[parts.length - 1];
+    display = name.trim(); // no comma — show as typed, never guess/flip last vs first
   }
-  let display = `${lastName}, ${firstName}`;
   const allCoBorrowers = coBorrowers?.length ? coBorrowers : (coBorrower ? [coBorrower] : []);
   if (allCoBorrowers.length === 1) display += ` & ${allCoBorrowers[0]}`;
-  else if (allCoBorrowers.length > 1) display += ` + ${allCoBorrowers.length} co-borrowers`;
+  else if (allCoBorrowers.length > 1) display += ` +${allCoBorrowers.length}`;
   return display;
 };
 
