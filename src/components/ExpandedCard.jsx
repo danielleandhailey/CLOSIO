@@ -3123,7 +3123,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <div style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>📄 {person.label}</div>
           {(rep.file_path || rep.file_url) && (
-            <button onClick={() => openReport(rep)} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>View</button>
+            <button onClick={() => openReport(rep)} style={{ background: '#1e3a5f', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>View</button>
           )}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1.9fr 1fr 1fr', gap: '8px', alignItems: 'stretch' }}>
@@ -3133,7 +3133,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
             {hasV && (
               <>
                 <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginTop: '6px' }}>Vantage (EQ/EX/TU)</div>
-                <div style={{ fontSize: '16px', fontWeight: '700', color: '#7c3aed' }}>{v.equifax || '—'} / {v.experian || '—'} / {v.transunion || '—'}</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: '#1e3a5f' }}>{v.equifax || '—'} / {v.experian || '—'} / {v.transunion || '—'}</div>
               </>
             )}
           </div>
@@ -3255,8 +3255,8 @@ const DocumentLibrary = ({ borrower }) => {
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
-        style={{ background: 'none', border: '1px solid #3b82f6', color: '#3b82f6', borderRadius: '5px', padding: '3px 10px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
-        📚 Library
+        style={{ background: 'none', border: 'none', color: '#1e3a5f', padding: 0, fontSize: '11px', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>
+        Library
       </button>
       {open && (
         <>
@@ -3269,10 +3269,10 @@ const DocumentLibrary = ({ borrower }) => {
             {docs.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', padding: '10px 0' }}>No saved documents.</div>}
             {docs.map(doc => (
               <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 0', borderTop: '1px solid #f1f5f9', fontSize: '12px' }}>
-                <FileText size={15} style={{ color: '#3b82f6', flexShrink: 0 }} />
+                <FileText size={15} style={{ color: '#1e3a5f', flexShrink: 0 }} />
                 <div style={{ flex: 1, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</div>
                 <span style={{ color: '#94a3b8', fontSize: '10px', fontFamily: 'monospace' }}>{doc.created_at ? formatDate(doc.created_at) : ''}</span>
-                <button onClick={() => view(doc)} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>View</button>
+                <button onClick={() => view(doc)} style={{ background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>View</button>
               </div>
             ))}
           </div>
@@ -3874,12 +3874,13 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📊 Credit Report</div>
             <CreditUpgradeSection borrower={borrower} onUpdate={ops.updateBorrower} />
             <CreditReportSection borrower={borrower} onUpdate={ops.updateBorrower} ops={ops} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: 'auto', paddingTop: '12px' }}>
-              <DocumentLibrary borrower={borrower} />
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto', paddingTop: '12px' }}>
+              <div style={{ flex: 1 }}><DocumentLibrary borrower={borrower} /></div>
               <button type="button" onClick={() => closeTab('credit')}
                 style={{ background: '#64748b', color: '#fff', border: 'none', padding: '4px 16px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
                 Close
               </button>
+              <div style={{ flex: 1 }} />
             </div>
           </div>
         )}
