@@ -368,6 +368,66 @@ const calcMonthlyIncome = (inc) => {
   return { monthly: 0, method: 'n/a' };
 };
 
+const moneyFmt = (n) => `$${Math.round(Number(n) || 0).toLocaleString()}`;
+
+// Normalize an income type so base/employment/W2/salary/hourly all key as "base"
+// while OT/bonus/commission stay distinct (they qualify differently).
+const incTypeNorm = (t) => {
+  const s = (t || '').toLowerCase();
+  if (/overtime|\bot\b/.test(s)) return 'overtime';
+  if (/bonus/.test(s)) return 'bonus';
+  if (/commission/.test(s)) return 'commission';
+  return 'base';
+};
+const incKey = (i) => `${(i.person || '').toLowerCase().trim()}|${(i.employer || '').toLowerCase().trim()}|${incTypeNorm(i.income_type || i.category)}`;
+
+// Consolidate income lines by person+employer+type so multiple paystubs of the
+// SAME job collapse into ONE source. The newest stub (by YTD as-of date) drives
+// the numbers; every stub is recorded under `sources` for the click-to-expand.
+const consolidateIncomes = (list, newDocName) => {
+  const out = [];
+  (list || []).forEach(raw => {
+    const inc = { ...raw };
+    const key = incKey(inc);
+    const ownSrc = inc.sources || ((inc.amount_per_period || inc.ytd_gross || inc.gross_monthly)
+      ? [{ doc_name: inc.source_doc || newDocName || '', period: inc.ytd_as_of_date || inc.pay_period || '', amount_per_period: inc.amount_per_period, ytd_gross: inc.ytd_gross, ytd_as_of_date: inc.ytd_as_of_date, gross_monthly: inc.gross_monthly }]
+      : []);
+    const idx = out.findIndex(e => incKey(e) === key);
+    if (idx >= 0) {
+      const ex = out[idx];
+      const newer = !ex.ytd_as_of_date || (inc.ytd_as_of_date && String(inc.ytd_as_of_date) >= String(ex.ytd_as_of_date));
+      const sources = [...(ex.sources || []), ...ownSrc];
+      out[idx] = newer ? { ...ex, ...inc, id: ex.id, sources } : { ...ex, sources };
+    } else {
+      out.push({ ...inc, id: inc.id || `${Date.now()}_${out.length}`, sources: ownSrc });
+    }
+  });
+  return out;
+};
+
+// Underwriter-style calc: returns each method (current rate / YTD average) with
+// its math, and the qualifying figure = the most conservative (lowest) method.
+const calcIncomeDetail = (inc) => {
+  const freqKey = (inc.pay_frequency || '').toLowerCase().replace(/[\s-]/g, '');
+  const ppy = PERIODS_PER_YEAR[freqKey];
+  const ytdMonths = ytdMonthsElapsed(inc.ytd_as_of_date);
+  const methods = [];
+  if (inc.amount_per_period && ppy) {
+    methods.push({ label: 'Current rate', monthly: (inc.amount_per_period * ppy) / 12, detail: `${moneyFmt(inc.amount_per_period)} × ${ppy} ÷ 12` });
+  } else if (inc.hourly_rate && inc.hours_per_period && ppy) {
+    methods.push({ label: 'Hourly rate', monthly: (inc.hourly_rate * inc.hours_per_period * ppy) / 12, detail: `$${inc.hourly_rate}/hr × ${inc.hours_per_period} × ${ppy} ÷ 12` });
+  }
+  if (inc.ytd_gross && ytdMonths) {
+    methods.push({ label: 'YTD average', monthly: inc.ytd_gross / ytdMonths, detail: `${moneyFmt(inc.ytd_gross)} ÷ ${ytdMonths.toFixed(1)} mo` });
+  }
+  if (!methods.length && inc.gross_monthly) {
+    methods.push({ label: 'Stated monthly', monthly: Number(inc.gross_monthly), detail: 'as entered' });
+  }
+  const qualifying = methods.length ? Math.min(...methods.map(m => m.monthly)) : 0;
+  const picked = methods.find(m => m.monthly === qualifying) || methods[0] || { label: 'n/a', monthly: 0, detail: '' };
+  return { methods, qualifying, picked };
+};
+
 // Mortgage mid score: middle of 3, lower of 2, the one of 1
 const midScore = (scoreObj) => {
   const vals = Object.values(scoreObj || {}).filter(Boolean).sort((a, b) => a - b);
@@ -507,11 +567,13 @@ const applyExtractedData = async (borrower, extracted, ops) => {
     }
   }
 
-  // Incomes (resilient — won't hard-fail if the column is missing)
+  // Incomes — consolidate by person+employer+type so multiple paystubs of the
+  // same job collapse into one source instead of stacking (resilient on column).
   if (Array.isArray(extracted.incomes) && extracted.incomes.length) {
-    const existingIncomes = borrower.incomes || [];
-    const newIncomes = extracted.incomes.map((inc, idx) => ({ ...inc, id: `${Date.now()}_${idx}` }));
-    await safeUpdateBorrower(borrower.id, { incomes: [...existingIncomes, ...newIncomes] });
+    const docName = extracted.document_name || extracted.document_date || '';
+    const combined = [...(borrower.incomes || []), ...extracted.incomes];
+    const merged = consolidateIncomes(combined, docName);
+    await safeUpdateBorrower(borrower.id, { incomes: merged });
   }
 };
 
@@ -3852,6 +3914,7 @@ const AUSSection = ({ borrower, onUpdate }) => {
 const IncomeSection = ({ borrower, onUpdate }) => {
   const incomes = borrower.incomes || [];
   const [adding, setAdding] = useState(false);
+  const [expanded, setExpanded] = useState(new Set());
   const [form, setForm] = useState({ person: 'Borrower', employment_type: 'Employment', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
 
   const personOptions = ['Borrower'];
@@ -3861,7 +3924,7 @@ const IncomeSection = ({ borrower, onUpdate }) => {
 
   const saveIncome = async () => {
     try {
-      const updated = [...incomes, { ...form, id: Date.now() }];
+      const updated = consolidateIncomes([...incomes, { ...form, id: `${Date.now()}` }]);
       await onUpdate(borrower.id, { incomes: updated });
       setForm({ person: 'Borrower', employment_type: 'Employment', income_type: '', employer: '', gross_monthly: '', pay_frequency: 'Monthly' });
       setAdding(false);
@@ -3871,60 +3934,102 @@ const IncomeSection = ({ borrower, onUpdate }) => {
     }
   };
 
-  const removeIncome = async (id) => {
-    const updated = incomes.filter(i => i.id !== id);
+  // Remove every stored entry for this source (matched by person+employer+type)
+  const removeSource = async (src) => {
+    const key = incKey(src);
+    const updated = incomes.filter(i => incKey(i) !== key);
     await onUpdate(borrower.id, { incomes: updated });
   };
+  const toggle = (id) => setExpanded(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const fieldStyle = { padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', width: '100%' };
   const labelStyle = { fontSize: '10px', color: '#64748b', marginBottom: '2px' };
 
-  const incomeCalc = incomes.map(inc => ({ inc, ...calcMonthlyIncome(inc) }));
-  const totalMonthly = incomeCalc.reduce((s, x) => s + (x.monthly || 0), 0);
+  // Consolidate (collapses duplicate paystubs), then group by borrower.
+  const consolidated = consolidateIncomes(incomes);
+  const groups = {};
+  consolidated.forEach(i => { const p = i.person || 'Borrower'; (groups[p] = groups[p] || []).push(i); });
+  const personList = Object.keys(groups);
+  const personTotal = (p) => groups[p].reduce((s, i) => s + calcIncomeDetail(i).qualifying, 0);
+  const grandTotal = personList.reduce((s, p) => s + personTotal(p), 0);
 
   return (
     <div>
-      {incomes.length > 0 && (
+      {consolidated.length > 0 && (
         <div style={{ background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', border: '2px solid #10b981', borderRadius: '10px', padding: '14px', marginBottom: '14px', boxShadow: '0 2px 8px rgba(16,185,129,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
             <div>
               <div style={{ fontSize: '10px', fontWeight: '800', color: '#047857', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total Monthly Qualifying</div>
-              <div style={{ fontSize: '9px', color: '#64748b' }}>estimate — verify vs guidelines</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>conservative (underwriter) estimate — verify vs guidelines</div>
             </div>
             <div style={{ fontSize: '32px', fontWeight: '900', color: '#047857', lineHeight: 1 }}>
-              ${Math.round(totalMonthly).toLocaleString()}<span style={{ fontSize: '14px', fontWeight: '700' }}>/mo</span>
+              {moneyFmt(grandTotal)}<span style={{ fontSize: '14px', fontWeight: '700' }}>/mo</span>
             </div>
           </div>
-          <div style={{ borderTop: '1px solid #6ee7b7', paddingTop: '8px' }}>
-            {incomeCalc.map((x, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '12px', padding: '3px 0', color: '#1e293b' }}>
-                <span>{x.inc.person || 'Borrower'}{x.inc.employer ? ` — ${x.inc.employer}` : ''} <span style={{ color: '#64748b', fontSize: '10px' }}>({x.method})</span></span>
-                <span style={{ fontWeight: '700' }}>${Math.round(x.monthly).toLocaleString()}/mo</span>
+          <div style={{ borderTop: '1px solid #6ee7b7', paddingTop: '8px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {personList.map(p => (
+              <div key={p} style={{ flex: 1, minWidth: '140px', background: '#fff', border: '1px solid #6ee7b7', borderRadius: '8px', padding: '8px 10px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#065f46' }}>{toFirstLast(p)}</div>
+                <div style={{ fontSize: '18px', fontWeight: 900, color: '#047857' }}>{moneyFmt(personTotal(p))}<span style={{ fontSize: '11px', fontWeight: 700 }}>/mo</span></div>
               </div>
             ))}
           </div>
         </div>
       )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>INCOME ENTRIES</span>
+        <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>INCOME BY BORROWER</span>
         <button type="button" onClick={() => setAdding(a => !a)}
           style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
           + Add Income
         </button>
       </div>
 
-      {incomes.map(inc => (
-        <div key={inc.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <div style={{ fontWeight: '600', fontSize: '12px', color: '#0d9488' }}>{inc.person} — {inc.employment_type}</div>
-            <button onClick={() => removeIncome(inc.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={14} /></button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '12px' }}>
-            {inc.income_type && <div><span style={{ color: '#64748b' }}>Type:</span> {inc.income_type}</div>}
-            {inc.employer && <div><span style={{ color: '#64748b' }}>Employer:</span> {inc.employer}</div>}
-            {inc.gross_monthly && <div><span style={{ color: '#64748b' }}>Gross Monthly:</span> ${Number(inc.gross_monthly).toLocaleString()}</div>}
-            {inc.pay_frequency && <div><span style={{ color: '#64748b' }}>Pay Freq:</span> {inc.pay_frequency}</div>}
-          </div>
+      {personList.map(p => (
+        <div key={p} style={{ marginBottom: '12px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: '#1e3a5f', marginBottom: '6px' }}>{toFirstLast(p)} <span style={{ color: '#64748b', fontWeight: 600 }}>· {moneyFmt(personTotal(p))}/mo</span></div>
+          {groups[p].map(src => {
+            const d = calcIncomeDetail(src);
+            const open = expanded.has(src.id);
+            return (
+              <div key={src.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
+                <div onClick={() => toggle(src.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', cursor: 'pointer' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>{src.employer || 'Income'}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>{src.income_type || src.category || 'Base'} · {src.pay_frequency || '—'}{(src.sources || []).length > 1 ? ` · ${src.sources.length} stubs` : ''}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800, fontSize: '14px', color: '#047857' }}>{moneyFmt(d.qualifying)}/mo</div>
+                    <div style={{ fontSize: '10px', color: '#64748b' }}>{d.picked.label}</div>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); removeSource(src); }} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', flexShrink: 0 }}><X size={14} /></button>
+                  <span style={{ color: '#94a3b8', fontSize: '11px', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
+                </div>
+                {open && (
+                  <div style={{ borderTop: '1px solid #f1f5f9', padding: '10px', background: '#f8fafc', fontSize: '12px' }}>
+                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: '4px' }}>Calculation</div>
+                    {d.methods.map((m, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', color: m.label === d.picked.label ? '#047857' : '#64748b', fontWeight: m.label === d.picked.label ? 700 : 400 }}>
+                        <span>{m.label}{m.label === d.picked.label ? ' ✓ used' : ''}</span>
+                        <span>{m.detail} = {moneyFmt(m.monthly)}/mo</span>
+                      </div>
+                    ))}
+                    <div style={{ fontSize: '10px', color: '#92400e', marginTop: '4px' }}>Uses the more conservative (lower) method. Verify employment dates + whether OT/bonus is consistent.</div>
+                    {(src.sources || []).length > 0 && (
+                      <>
+                        <div style={{ fontWeight: 700, color: '#475569', margin: '8px 0 4px' }}>Paystubs used</div>
+                        {src.sources.map((s, i) => (
+                          <div key={i} style={{ color: '#475569', padding: '1px 0' }}>
+                            • {s.doc_name || 'Paystub'}{s.period ? ` (period ${s.period})` : ''}{s.amount_per_period ? ` · ${moneyFmt(s.amount_per_period)}/period` : ''}{s.ytd_gross ? ` · YTD ${moneyFmt(s.ytd_gross)}` : ''}
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ))}
 
