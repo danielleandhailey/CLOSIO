@@ -370,23 +370,30 @@ const appendLog = (existing, text) => {
 };
 
 // Quick Note Input - inline on row
-const QuickNoteInput = ({ borrower, onAddNote }) => {
+const QuickNoteInput = ({ borrower, onAddNote, onUpdate }) => {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
+  const [priority, setPriority] = useState(false);
+  const [flagName, setFlagName] = useState(true);
+  const [flagNote, setFlagNote] = useState(true);
   const inputRef = useRef();
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  const reset = () => { setNote(''); setPriority(false); setFlagName(true); setFlagNote(true); setOpen(false); };
+
   const save = async () => {
     if (!note.trim()) return;
     const dateStamp = format(new Date(), 'M/d/yy');
-    const newNote = `[${dateStamp}] ${note.trim()}`;
+    // A flagged note is marked with a leading 🚩 so the row shows it bold red
+    const body = (priority && flagNote) ? `🚩 ${note.trim()}` : note.trim();
+    const newNote = `[${dateStamp}] ${body}`;
     const existing = borrower.notes || '';
     await onAddNote(borrower.id, existing ? `${newNote}\n${existing}` : newNote);
-    setNote('');
-    setOpen(false);
+    if (priority && flagName && onUpdate) { try { await onUpdate(borrower.id, { flagged: true }); } catch (e) { /* ignore */ } }
+    reset();
   };
 
   if (!open) {
@@ -403,18 +410,34 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
   }
 
   return (
-    <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', marginRight: '12px' }}>
+    <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', marginRight: '12px', alignItems: 'center' }}>
       <input
         ref={inputRef}
         type="text"
         value={note}
         onChange={e => setNote(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setOpen(false); }}
+        onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') reset(); }}
         placeholder="Quick note..."
         style={{ width: '180px', padding: '3px 6px', fontSize: '11px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text)' }}
       />
+      <button
+        type="button"
+        onClick={() => setPriority(p => !p)}
+        title="Mark as priority"
+        style={{ padding: '3px 6px', fontSize: '11px', lineHeight: 1, background: priority ? '#dc2626' : 'none', border: `1px solid ${priority ? '#dc2626' : '#64748b'}`, borderRadius: '4px', cursor: 'pointer', filter: priority ? 'none' : 'grayscale(1)' }}
+      >🚩</button>
+      {priority && (
+        <span style={{ display: 'flex', gap: '6px', fontSize: '10px', color: '#cbd5e1', alignItems: 'center' }}>
+          <label style={{ display: 'flex', gap: '2px', cursor: 'pointer', alignItems: 'center' }}>
+            <input type="checkbox" checked={flagName} onChange={e => setFlagName(e.target.checked)} />name
+          </label>
+          <label style={{ display: 'flex', gap: '2px', cursor: 'pointer', alignItems: 'center' }}>
+            <input type="checkbox" checked={flagNote} onChange={e => setFlagNote(e.target.checked)} />note
+          </label>
+        </span>
+      )}
       <button onClick={save} style={{ padding: '3px 8px', fontSize: '10px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Save</button>
-      <button onClick={() => setOpen(false)} style={{ padding: '3px 6px', fontSize: '10px', background: 'none', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>×</button>
+      <button onClick={reset} style={{ padding: '3px 6px', fontSize: '10px', background: 'none', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>×</button>
     </div>
   );
 };
@@ -1294,7 +1317,7 @@ const BorrowerRow = ({
           style={{ cursor: 'pointer', ...(borrower.flagged ? { color: '#dc2626', fontWeight: 800 } : {}) }}
           title="Click to open file"
         >
-          {borrower.flagged && '🚩 '}{formatBorrowerName(borrower.name)}
+          {formatBorrowerName(borrower.name)}
           {(() => {
             const cos = borrower.co_borrowers?.length ? borrower.co_borrowers : (borrower.co_borrower ? [borrower.co_borrower] : []);
             if (!cos.length) return null;
@@ -1433,16 +1456,17 @@ const BorrowerRow = ({
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
                 const noteText = match ? match[2] : line;
+                const isPriority = noteText.trim().startsWith('🚩');
                 const truncatedText = truncateAtWord(noteText, 80);
                 return (
                   <span
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ cursor: 'pointer', fontSize: '13px', color: '#cbd5e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#dc2626' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={noteText}
                   >
                     <span style={{ color: '#64748b', marginRight: '2px' }}>x</span>
-                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
+                    {dateStr && <span style={{ color: isPriority ? '#dc2626' : '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
                     {truncatedText}
                   </span>
                 );
@@ -1489,7 +1513,7 @@ const BorrowerRow = ({
         </div>
 
         {/* Quick Note inline */}
-        <QuickNoteInput borrower={borrower} onAddNote={onAddNote} />
+        <QuickNoteInput borrower={borrower} onAddNote={onAddNote} onUpdate={onUpdate} />
 
         {/* Touch stamp - right side */}
         <span className={`touch-stamp ${touched ? 'touched' : ''}`} style={{ marginRight: '8px' }}>
