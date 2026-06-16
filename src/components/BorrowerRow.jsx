@@ -370,29 +370,26 @@ const appendLog = (existing, text) => {
 };
 
 // Quick Note Input - inline on row
-const QuickNoteInput = ({ borrower, onAddNote, onUpdate }) => {
+const QuickNoteInput = ({ borrower, onAddNote }) => {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
   const [priority, setPriority] = useState(false);
-  const [flagName, setFlagName] = useState(true);
-  const [flagNote, setFlagNote] = useState(true);
   const inputRef = useRef();
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  const reset = () => { setNote(''); setPriority(false); setFlagName(true); setFlagNote(true); setOpen(false); };
+  const reset = () => { setNote(''); setPriority(false); setOpen(false); };
 
   const save = async () => {
     if (!note.trim()) return;
     const dateStamp = format(new Date(), 'M/d/yy');
-    // A flagged note is marked with a leading 🚩 so the row shows it bold red
-    const body = (priority && flagNote) ? `🚩 ${note.trim()}` : note.trim();
+    // A priority note is marked with a leading 🚩 (stripped on display) so the row shows it bold red
+    const body = priority ? `🚩 ${note.trim()}` : note.trim();
     const newNote = `[${dateStamp}] ${body}`;
     const existing = borrower.notes || '';
     await onAddNote(borrower.id, existing ? `${newNote}\n${existing}` : newNote);
-    if (priority && flagName && onUpdate) { try { await onUpdate(borrower.id, { flagged: true }); } catch (e) { /* ignore */ } }
     reset();
   };
 
@@ -423,19 +420,9 @@ const QuickNoteInput = ({ borrower, onAddNote, onUpdate }) => {
       <button
         type="button"
         onClick={() => setPriority(p => !p)}
-        title="Mark as priority"
+        title="Priority note (turns the note red)"
         style={{ padding: '3px 6px', fontSize: '11px', lineHeight: 1, background: priority ? '#dc2626' : 'none', border: `1px solid ${priority ? '#dc2626' : '#64748b'}`, borderRadius: '4px', cursor: 'pointer', filter: priority ? 'none' : 'grayscale(1)' }}
       >🚩</button>
-      {priority && (
-        <span style={{ display: 'flex', gap: '6px', fontSize: '10px', color: '#cbd5e1', alignItems: 'center' }}>
-          <label style={{ display: 'flex', gap: '2px', cursor: 'pointer', alignItems: 'center' }}>
-            <input type="checkbox" checked={flagName} onChange={e => setFlagName(e.target.checked)} />name
-          </label>
-          <label style={{ display: 'flex', gap: '2px', cursor: 'pointer', alignItems: 'center' }}>
-            <input type="checkbox" checked={flagNote} onChange={e => setFlagNote(e.target.checked)} />note
-          </label>
-        </span>
-      )}
       <button onClick={save} style={{ padding: '3px 8px', fontSize: '10px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Save</button>
       <button onClick={reset} style={{ padding: '3px 6px', fontSize: '10px', background: 'none', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>×</button>
     </div>
@@ -1455,8 +1442,9 @@ const BorrowerRow = ({
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
-                const noteText = match ? match[2] : line;
-                const isPriority = noteText.trim().startsWith('🚩');
+                const rawText = match ? match[2] : line;
+                const isPriority = rawText.trim().startsWith('🚩');
+                const noteText = isPriority ? rawText.replace(/^\s*🚩\s*/, '') : rawText;
                 const truncatedText = truncateAtWord(noteText, 80);
                 return (
                   <span
@@ -1466,7 +1454,7 @@ const BorrowerRow = ({
                     title={noteText}
                   >
                     <span style={{ color: '#64748b', marginRight: '2px' }}>x</span>
-                    {dateStr && <span style={{ color: isPriority ? '#dc2626' : '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
+                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
                     {truncatedText}
                   </span>
                 );
