@@ -3220,6 +3220,106 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
   );
 };
 
+// ---- Credit Upgrade Plan (pop-up on the Credit Report tab) ----
+const CreditUpgradeSection = ({ borrower, onUpdate }) => {
+  const cr = borrower.credit_report || {};
+  const upgrade = cr.upgrade || {};
+  const plan = upgrade.plan || [];
+  const [open, setOpen] = useState(false);
+  const [target, setTarget] = useState(upgrade.target_score || '');
+  const [newStep, setNewStep] = useState('');
+  const [uploadingId, setUploadingId] = useState(null);
+  const proofRef = useRef();
+  const pendingRef = useRef(null);
+
+  const primary = cr.people?.primary || (cr.scores ? cr : null);
+  const cur = (primary && primary.scores) || {};
+
+  const save = (patch) => onUpdate(borrower.id, { credit_report: { ...cr, upgrade: { ...upgrade, ...patch } } });
+  const updateStep = (id, p) => save({ plan: plan.map(s => s.id === id ? { ...s, ...p } : s) });
+  const addStep = () => { if (!newStep.trim()) return; save({ plan: [...plan, { id: `${Date.now()}`, text: newStep.trim(), cost: '', impact: '', done: false }] }); setNewStep(''); };
+  const removeStep = (id) => save({ plan: plan.filter(s => s.id !== id) });
+
+  const uploadProof = async (file, id) => {
+    if (!file) return;
+    setUploadingId(id);
+    const fileName = `proof_${borrower.id}_${id}_${Date.now()}.pdf`;
+    const { error } = await supabase.storage.from('Documents').upload(fileName, file);
+    let proof = { proof_name: file.name };
+    if (!error) { const { data } = supabase.storage.from('Documents').getPublicUrl(fileName); proof = { proof_name: file.name, proof_path: fileName, proof_url: data.publicUrl }; }
+    updateStep(id, proof);
+    setUploadingId(null);
+  };
+  const viewProof = async (s) => {
+    if (s.proof_path) { const { data } = await supabase.storage.from('Documents').createSignedUrl(s.proof_path, 3600); if (data?.signedUrl) window.open(data.signedUrl, '_blank'); }
+    else if (s.proof_url) window.open(s.proof_url, '_blank');
+  };
+
+  const labelSm = { fontSize: '10px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '3px' };
+  const miniInput = { width: '70px', padding: '3px 6px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '11px' };
+  const linkBtn = { background: 'none', border: '1px solid #c4b5fd', color: '#7c3aed', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontWeight: 600, cursor: 'pointer' };
+  const doneCount = plan.filter(s => s.done).length;
+
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}
+        style={{ width: '100%', marginBottom: '12px', padding: '8px', borderRadius: '6px', background: '#7c3aed', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
+        📈 Credit Upgrade Plan{plan.length ? ` (${doneCount}/${plan.length} done)` : ''}
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 2000 }} />
+          <div style={{ position: 'fixed', top: '6%', left: '50%', transform: 'translateX(-50%)', width: 'min(620px, 94vw)', maxHeight: '86vh', overflowY: 'auto', background: '#fff', borderRadius: '12px', zIndex: 2001, padding: '18px' }}>
+            <input ref={proofRef} type="file" accept=".pdf,image/*" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; if (f) uploadProof(f, pendingRef.current); if (proofRef.current) proofRef.current.value = ''; }} />
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
+              <div style={{ fontWeight: 800, color: '#7c3aed', fontSize: '15px' }}>📈 Credit Upgrade Plan</div>
+              <button onClick={() => setOpen(false)} style={{ marginLeft: 'auto', background: '#64748b', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 14px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}>Close</button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '14px', flexWrap: 'wrap' }}>
+              <div>
+                <div style={labelSm}>Target Score</div>
+                <input value={target} onChange={e => setTarget(e.target.value)} onBlur={() => { if (target !== (upgrade.target_score || '')) save({ target_score: target }); }}
+                  placeholder="620" style={{ width: '90px', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '5px', fontSize: '13px' }} />
+              </div>
+              <div>
+                <div style={labelSm}>Current (EQ/EX/TU)</div>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', paddingTop: '4px' }}>{cur.equifax || '—'} / {cur.experian || '—'} / {cur.transunion || '—'}</div>
+              </div>
+            </div>
+
+            <div style={labelSm}>Game Plan</div>
+            {plan.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', padding: '8px 0' }}>No steps yet — add the game plan below.</div>}
+            {plan.map((s, i) => (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 0', borderTop: i ? '1px solid #f1f5f9' : 'none' }}>
+                <input type="checkbox" checked={!!s.done} onChange={e => updateStep(s.id, { done: e.target.checked })} style={{ marginTop: '3px' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', color: '#1e293b', textDecoration: s.done ? 'line-through' : 'none' }}>{i + 1}. {s.text}</div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input value={s.cost || ''} onChange={e => updateStep(s.id, { cost: e.target.value })} placeholder="cost $" style={miniInput} />
+                    <input value={s.impact || ''} onChange={e => updateStep(s.id, { impact: e.target.value })} placeholder="+pts" style={miniInput} />
+                    {s.proof_name
+                      ? <button onClick={() => viewProof(s)} style={linkBtn}>📎 proof</button>
+                      : <button onClick={() => { pendingRef.current = s.id; proofRef.current?.click(); }} style={linkBtn}>{uploadingId === s.id ? '…' : 'upload proof'}</button>}
+                  </div>
+                </div>
+                <button onClick={() => removeStep(s.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={14} /></button>
+              </div>
+            ))}
+
+            <div style={{ display: 'flex', gap: '6px', marginTop: '12px' }}>
+              <input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()}
+                placeholder="Add a step (e.g. Pay charge-off Merrick CC to $0)" style={{ flex: 1, padding: '7px 9px', border: '1px solid #cbd5e1', borderRadius: '5px', fontSize: '12px' }} />
+              <button onClick={addStep} style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '5px', padding: '7px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>Add</button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+};
+
 // ---- Income/Employment Section ----
 const IncomeSection = ({ borrower, onUpdate }) => {
   const incomes = borrower.incomes || [];
@@ -3670,6 +3770,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         {openTabs.has('credit') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📊 Credit Report</div>
+            <CreditUpgradeSection borrower={borrower} onUpdate={ops.updateBorrower} />
             <CreditReportSection borrower={borrower} onUpdate={ops.updateBorrower} ops={ops} />
             {closeBtn('credit')}
           </div>
