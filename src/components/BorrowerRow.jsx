@@ -1441,9 +1441,13 @@ const BorrowerRow = ({
 
           return (
             <div
-              style={{ flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginRight: '12px' }}
+              style={{
+                flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden',
+                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+                whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.35',
+              }}
             >
-              {noteLines.slice(0, 8).map((line, idx) => {
+              {noteLines.slice(0, 12).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
