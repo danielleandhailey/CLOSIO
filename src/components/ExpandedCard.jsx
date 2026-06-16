@@ -20,11 +20,26 @@ const NotesSection = ({ borrower, ops, onClose }) => {
     setNewNote('');
   };
 
-  const handleSaveClose = async () => {
-    if (newNote.trim()) {
-      await ops.addNote(borrower.id, newNote.trim());
-    }
-    onClose?.();
+  // Save the notes list back, splitting on the current field so we never clobber.
+  const saveLines = async (lines) => {
+    await ops.updateBorrower(borrower.id, { notes: lines.join('\n') });
+  };
+  const deleteLine = async (target) => {
+    const lines = (borrower.notes || '').split('\n').filter(l => l.trim());
+    await saveLines(lines.filter(l => l !== target));
+  };
+  // Toggle the red priority flag on a single note (add/remove its 🚩 marker)
+  const toggleFlag = async (target) => {
+    const lines = (borrower.notes || '').split('\n').filter(l => l.trim());
+    const updated = lines.map(l => {
+      if (l !== target) return l;
+      const m = l.match(/^(\[\d{1,2}\/\d{1,2}\/\d{2}\]\s*)([\s\S]*)$/);
+      if (!m) return l.trim().startsWith('🚩') ? l.replace(/^\s*🚩\s*/, '') : `🚩 ${l}`;
+      const body = m[2];
+      const nb = body.trim().startsWith('🚩') ? body.replace(/^\s*🚩\s*/, '') : `🚩 ${body}`;
+      return `${m[1]}${nb}`;
+    });
+    await saveLines(updated);
   };
 
   return (
@@ -46,15 +61,31 @@ const NotesSection = ({ borrower, ops, onClose }) => {
       </div>
       <div style={{ flex: 1, overflowY: 'auto', background: '#0f172a', borderRadius: '6px', padding: '12px' }}>
         {noteLines.length > 0 ? noteLines.map((line, i) => {
-          const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
+          const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*([\s\S]*)$/);
           const dateStr = match ? match[1] : '';
-          const noteText = match ? match[2] : line;
+          const rawText = match ? match[2] : line;
+          const isPriority = rawText.trim().startsWith('🚩');
+          const noteText = isPriority ? rawText.replace(/^\s*🚩\s*/, '') : rawText;
           return (
-            <div key={i} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: i < noteLines.length - 1 ? '1px solid #334155' : 'none' }}>
-              {dateStr && (
-                <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '600', marginBottom: '4px' }}>{dateStr}</div>
-              )}
-              <div style={{ fontSize: '14px', color: '#fff', lineHeight: 1.5 }}>{noteText}</div>
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px', paddingBottom: '10px', borderBottom: i < noteLines.length - 1 ? '1px solid #334155' : 'none' }}>
+              <div style={{ flex: 1 }}>
+                {dateStr && (
+                  <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '600', marginBottom: '4px' }}>{dateStr}</div>
+                )}
+                <div style={{ fontSize: '14px', color: isPriority ? '#f87171' : '#fff', fontWeight: isPriority ? 700 : 400, lineHeight: 1.5 }}>{noteText}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleFlag(line)}
+                title={isPriority ? 'Un-flag (remove red)' : 'Flag as priority (red)'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', lineHeight: 1, filter: isPriority ? 'none' : 'grayscale(1)', opacity: isPriority ? 1 : 0.45, flexShrink: 0 }}
+              >🚩</button>
+              <button
+                type="button"
+                onClick={() => deleteLine(line)}
+                title="Delete note"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', flexShrink: 0, padding: 0 }}
+              ><X size={15} /></button>
             </div>
           );
         }) : (
