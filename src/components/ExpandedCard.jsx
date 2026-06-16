@@ -3911,6 +3911,86 @@ const AUSSection = ({ borrower, onUpdate }) => {
 };
 
 // ---- Income/Employment Section ----
+// Batch income drop: stage all of one borrower's paystubs + W-2s, then GO
+// (Add to existing income, or Replace it). Each doc's source name is tagged so
+// the income card's "paystubs used" shows the real file names.
+const IncomeDropZone = ({ borrower, onUpdate }) => {
+  const [files, setFiles] = useState([]);
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef();
+
+  const addFiles = (fl) => setFiles(f => [...f, ...Array.from(fl || [])]);
+  const removeFile = (i) => setFiles(f => f.filter((_, idx) => idx !== i));
+
+  const run = async (mode) => {
+    if (!files.length || processing) return;
+    setProcessing(true);
+    const collected = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setProgress(`Reading ${i + 1}/${files.length}: ${file.name}`);
+      try {
+        const b64 = await fileToBase64(file);
+        const r = await fetch('/api/analyze-document', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64Data: b64, mimeType: file.type, fileName: file.name }),
+        });
+        const d = await r.json();
+        const incs = (d.extracted && Array.isArray(d.extracted.incomes)) ? d.extracted.incomes : [];
+        incs.forEach(inc => collected.push({ ...inc, source_doc: file.name }));
+      } catch (e) { /* skip this file */ }
+    }
+    if (!collected.length) {
+      alert("Couldn't read any income from those documents. Make sure they're paystubs/W-2s.");
+      setProcessing(false); setProgress(''); return;
+    }
+    const base = mode === 'replace' ? [] : (borrower.incomes || []);
+    const merged = consolidateIncomes([...base, ...collected]);
+    try { await onUpdate(borrower.id, { incomes: merged }); } catch (e) { alert('Save failed: ' + e.message); }
+    setFiles([]); setProcessing(false); setProgress('');
+  };
+
+  return (
+    <div style={{ marginBottom: '16px' }}>
+      <input ref={inputRef} type="file" accept=".pdf,image/*" multiple style={{ display: 'none' }}
+        onChange={e => { addFiles(e.target.files); if (inputRef.current) inputRef.current.value = ''; }} />
+      <div
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={e => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer?.files); }}
+        onClick={() => inputRef.current?.click()}
+        style={{ padding: '16px', borderRadius: '8px', background: dragging ? '#e0f2fe' : '#f1f5f9', border: `2px dashed ${dragging ? '#3b82f6' : '#94a3b8'}`, textAlign: 'center', cursor: 'pointer' }}
+      >
+        <Upload size={20} style={{ color: '#64748b', marginBottom: '2px' }} />
+        <div style={{ fontSize: '12px', color: '#475569', fontWeight: 700 }}>Drop ALL of this borrower's paystubs + W-2s, then hit GO</div>
+        <div style={{ fontSize: '10px', color: '#94a3b8' }}>Add as many as you want before processing</div>
+      </div>
+
+      {files.length > 0 && (
+        <div style={{ marginTop: '8px' }}>
+          {files.map((f, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '4px 0', color: '#1e293b' }}>
+              <FileText size={13} style={{ color: '#3b82f6' }} />
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+              {!processing && <button onClick={() => removeFile(i)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={13} /></button>}
+            </div>
+          ))}
+          {processing ? (
+            <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 700, marginTop: '6px' }}>{progress || 'Working…'}</div>
+          ) : (
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <button onClick={() => run('add')} style={{ flex: 1, background: '#0d9488', color: '#fff', border: 'none', borderRadius: '6px', padding: '9px', fontWeight: 800, cursor: 'pointer', fontSize: '12px' }}>✨ GO — Add to income</button>
+              <button onClick={() => run('replace')} style={{ flex: 1, background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '6px', padding: '9px', fontWeight: 800, cursor: 'pointer', fontSize: '12px' }}>♻️ GO — Replace income</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const IncomeSection = ({ borrower, onUpdate }) => {
   const incomes = borrower.incomes || [];
   const [adding, setAdding] = useState(false);
@@ -4361,9 +4441,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
           <div style={tabBoxStyle('income')}>
             {maxBtn('income')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💵 Income / Employment</div>
-            <div style={{ marginBottom: '16px' }}>
-              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop paystub / W-2 / tax returns" />
-            </div>
+            <IncomeDropZone borrower={borrower} onUpdate={ops.updateBorrower} />
             <IncomeSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('income')}
           </div>
