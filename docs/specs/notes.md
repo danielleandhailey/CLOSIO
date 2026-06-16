@@ -33,6 +33,11 @@ Files: `closio/src/components/BorrowerRow.jsx` (QuickNoteInput + the notes displ
 - The grey **x** in front of each note deletes that one note. It re-reads the freshest notes from the DB
   first, removes only that exact line, and saves — so it can never clobber the other notes.
 
+## Flag / un-flag (red) a note
+- Click a note's **date** to toggle its red priority on/off (adds/removes the leading 🚩 marker on that
+  one note). Like delete, it re-reads fresh notes first so it can't clobber the others.
+- New notes can also be flagged red at creation via the 🚩 toggle in `+Note`.
+
 ## Open follow-ups (not yet done)
 - One-time cleanup of already-duplicated note data (e.g. Benson) — safe, tested-on-one-record SQL.
 - A note added via the file's **Quick Log** should also appear on the main notes screen.
