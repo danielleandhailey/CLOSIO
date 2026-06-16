@@ -373,23 +373,20 @@ const appendLog = (existing, text) => {
 const QuickNoteInput = ({ borrower, onAddNote }) => {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
-  const [priority, setPriority] = useState(false);
   const inputRef = useRef();
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  const reset = () => { setNote(''); setPriority(false); setOpen(false); };
-
   const save = async () => {
     if (!note.trim()) return;
-    // addNote() in the parent stamps the date and safely prepends to the existing
-    // notes (reading fresh from the DB), so we pass ONLY the new note body here.
-    // A priority note carries a leading 🚩 (stripped on display) so the row shows it bold red.
-    const body = priority ? `🚩 ${note.trim()}` : note.trim();
-    await onAddNote(borrower.id, body);
-    reset();
+    // addNote() in the parent stamps the date and prepends to existing notes,
+    // so pass ONLY the new note body here (never pre-stamp/pre-prepend — that
+    // double-stamps and duplicates the notes data).
+    await onAddNote(borrower.id, note.trim());
+    setNote('');
+    setOpen(false);
   };
 
   if (!open) {
@@ -406,24 +403,18 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
   }
 
   return (
-    <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', marginRight: '12px', alignItems: 'center' }}>
+    <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', marginRight: '12px' }}>
       <input
         ref={inputRef}
         type="text"
         value={note}
         onChange={e => setNote(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') reset(); }}
+        onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setOpen(false); }}
         placeholder="Quick note..."
         style={{ width: '180px', padding: '3px 6px', fontSize: '11px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text)' }}
       />
-      <button
-        type="button"
-        onClick={() => setPriority(p => !p)}
-        title="Priority note (turns the note red)"
-        style={{ padding: '3px 6px', fontSize: '11px', lineHeight: 1, background: priority ? '#dc2626' : 'none', border: `1px solid ${priority ? '#dc2626' : '#64748b'}`, borderRadius: '4px', cursor: 'pointer', filter: priority ? 'none' : 'grayscale(1)' }}
-      >🚩</button>
       <button onClick={save} style={{ padding: '3px 8px', fontSize: '10px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Save</button>
-      <button onClick={reset} style={{ padding: '3px 6px', fontSize: '10px', background: 'none', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>×</button>
+      <button onClick={() => setOpen(false)} style={{ padding: '3px 6px', fontSize: '10px', background: 'none', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>×</button>
     </div>
   );
 };
@@ -1419,54 +1410,34 @@ const BorrowerRow = ({
             return <div style={{ flex: 1 }} />;
           }
 
-          const deleteNote = async (e, lineToDelete) => {
-            e.stopPropagation();
-            // Re-read the freshest notes so we never clobber a note added moments ago
-            let current = borrower.notes || '';
-            try {
-              const { data } = await supabase.from('borrowers').select('notes').eq('id', borrower.id).single();
-              if (data && typeof data.notes === 'string') current = data.notes;
-            } catch (err) { /* fall back to prop */ }
-            const parts = current.split(/(?=\[\d{1,2}\/\d{1,2}\/\d{2}\])/);
-            const lines = [];
-            parts.forEach(part => {
-              const t = part.trim();
-              if (!t) return;
-              if (t.match(/^\[\d{1,2}\/\d{1,2}\/\d{2}\]/)) lines.push(t.replace(/\n/g, ' '));
-              else t.split('\n').forEach(l => { if (l.trim()) lines.push(l.trim()); });
-            });
-            const updatedLines = lines.filter(line => line !== lineToDelete);
-            await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
+          // Truncate at word boundary
+          const truncateAtWord = (text, maxLen) => {
+            if (text.length <= maxLen) return text;
+            const truncated = text.substring(0, maxLen);
+            const lastSpace = truncated.lastIndexOf(' ');
+            return (lastSpace > maxLen - 30 ? truncated.substring(0, lastSpace) : truncated) + '...';
           };
 
           return (
             <div
-              style={{
-                flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden',
-                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
-                whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.35',
-              }}
+              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '6px', flex: 1, overflow: 'hidden', marginLeft: '0' }}
             >
-              {noteLines.slice(0, 12).map((line, idx) => {
+              {noteLines.slice(0, 3).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
-                const rawText = match ? match[2] : line;
-                const isPriority = rawText.trim().startsWith('🚩');
-                const noteText = isPriority ? rawText.replace(/^\s*🚩\s*/, '') : rawText;
+                const noteText = match ? match[2] : line;
+                const truncatedText = truncateAtWord(noteText, 80);
                 return (
-                  <span key={idx} style={{ marginRight: '16px' }}>
-                    <span
-                      onClick={(e) => deleteNote(e, line)}
-                      style={{ color: '#ef4444', marginRight: '4px', cursor: 'pointer', fontWeight: 700 }}
-                      title="Delete this note"
-                    >×</span>
-                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px', fontSize: '13px' }}>{dateStr}</span>}
-                    <span
-                      onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                      style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#dc2626' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal' }}
-                      title={noteText}
-                    >{noteText}</span>
+                  <span
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
+                    style={{ cursor: 'pointer', fontSize: '13px', color: '#cbd5e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    title={noteText}
+                  >
+                    <span style={{ color: '#64748b', marginRight: '2px' }}>x</span>
+                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
+                    {truncatedText}
                   </span>
                 );
               })}
