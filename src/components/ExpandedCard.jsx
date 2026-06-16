@@ -1114,6 +1114,46 @@ const PASection = ({ borrower, ops }) => {
   );
 };
 
+// ---- Counters (counter-offers, stored inside purchase_agreement JSON) ----
+const CountersSection = ({ borrower, ops }) => {
+  const pa = borrower.purchase_agreement || {};
+  const counters = pa.counters || [];
+  const [form, setForm] = useState({ party: 'Seller', date: '', price: '', terms: '' });
+
+  const save = (list) => ops.onUpdate(borrower.id, { purchase_agreement: { ...pa, counters: list } });
+  const add = () => {
+    if (!form.price && !form.terms) return;
+    save([...counters, { ...form, id: Date.now() }]);
+    setForm({ party: 'Seller', date: '', price: '', terms: '' });
+  };
+  const remove = (id) => save(counters.filter(c => c.id !== id));
+
+  const inp = { background: '#fff', border: '1px solid #cbd5e1', padding: '6px 8px', borderRadius: '4px', fontSize: '12px', color: '#1e293b' };
+
+  return (
+    <div>
+      {counters.map((c, i) => (
+        <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 0', borderTop: i ? '1px solid #f1f5f9' : 'none', fontSize: '12px' }}>
+          <span style={{ fontWeight: 700, color: c.party === 'Buyer' ? '#1e3a5f' : '#475569', minWidth: '52px' }}>{c.party}</span>
+          <span style={{ color: '#94a3b8', minWidth: '78px' }}>{c.date || '—'}</span>
+          <span style={{ fontWeight: 700, color: '#1e293b', minWidth: '80px' }}>{c.price ? `$${c.price}` : ''}</span>
+          <span style={{ flex: 1, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.terms}</span>
+          <button onClick={() => remove(c.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={14} /></button>
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: '6px', marginTop: counters.length ? '10px' : '0', flexWrap: 'wrap', alignItems: 'center' }}>
+        <select value={form.party} onChange={e => setForm(f => ({ ...f, party: e.target.value }))} style={{ ...inp, width: '78px' }}>
+          <option>Seller</option><option>Buyer</option>
+        </select>
+        <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={{ ...inp, width: '130px' }} />
+        <input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="price" style={{ ...inp, width: '90px' }} />
+        <input value={form.terms} onChange={e => setForm(f => ({ ...f, terms: e.target.value }))} onKeyDown={e => e.key === 'Enter' && add()} placeholder="terms / notes" style={{ ...inp, flex: 1, minWidth: '120px' }} />
+        <button onClick={add} style={{ background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '5px', padding: '7px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>Add</button>
+      </div>
+    </div>
+  );
+};
+
 // ---- Needs List (kept for reference but tab removed) ----
 const StipulationsSection = ({ borrower, ops }) => {
   const [newItem, setNewItem] = useState('');
@@ -3686,13 +3726,12 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     { id: 'comms',    label: 'COMMUNICATION' },
     { id: 'docs',     label: 'DOCUMENTS' },
     { id: 'borrowers', label: 'BORROWERS' },
-    { id: 'terms',    label: 'LOAN TERMS' },
-    { id: 'needs',    label: 'NEEDS' },
-    { id: 'income',   label: 'INCOME' },
-    { id: 'contacts', label: 'CONTACTS' },
-    { id: 'pa',       label: 'PA' },
-    { id: 'contingencies', label: 'CONTINGENCIES' },
     { id: 'credit',   label: 'CREDIT REPORT' },
+    { id: 'income',   label: 'INCOME' },
+    { id: 'needs',    label: 'NEEDS' },
+    { id: 'terms',    label: 'LOAN TERMS' },
+    { id: 'contacts', label: 'CONTACTS' },
+    { id: 'contingencies', label: 'CONTINGENCIES' },
     { id: 'appraisal', label: 'APPRAISAL' },
     { id: 'preapproval', label: 'PREAPPROVAL' },
     { id: 'calc',     label: 'CALC' },
@@ -3716,14 +3755,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     <div className="expanded-card">
       {/* Tabs Row */}
       <div className="expanded-tabs">
-        {tabs.filter(t => {
-          // PA tab only for Purchase types
-          if (t.id === 'pa') {
-            const purpose = (borrower.loan_purpose || borrower.loan_type || '').toLowerCase();
-            return purpose.includes('purchase');
-          }
-          return true;
-        }).map(t => (
+        {tabs.map(t => (
           <button key={t.id} type="button" className={`expanded-tab ${openTabs.has(t.id) ? 'active' : ''}`} onClick={() => toggleTab(t.id)}>
             {t.label}
           </button>
@@ -3847,23 +3879,20 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
           </div>
         )}
 
-        {openTabs.has('pa') && (
-          <div style={boxStyle}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📋 Purchase Agreement</div>
-            <div style={{ marginBottom: '16px' }}>
-              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Purchase Agreement" />
-            </div>
-            <PASection borrower={borrower} ops={ops} />
-            {closeBtn('pa')}
-          </div>
-        )}
-
         {openTabs.has('contingencies') && (
           <div style={boxStyle}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>⚠️ Contingencies</div>
             <div style={{ marginBottom: '16px' }}>
-              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Purchase Agreement for contingencies" />
+              <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Purchase Agreement" />
             </div>
+
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#1e3a5f', marginBottom: '8px', textTransform: 'uppercase' }}>📋 Purchase Agreement</div>
+            <PASection borrower={borrower} ops={ops} />
+
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#1e3a5f', margin: '18px 0 8px', textTransform: 'uppercase' }}>🔄 Counters</div>
+            <CountersSection borrower={borrower} ops={ops} />
+
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#1e3a5f', margin: '18px 0 8px', textTransform: 'uppercase' }}>⚠️ Contingency Dates</div>
             <ContingenciesSection borrower={borrower} ops={ops} />
             {closeBtn('contingencies')}
           </div>
