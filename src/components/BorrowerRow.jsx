@@ -388,7 +388,12 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
     // A priority note is marked with a leading 🚩 (stripped on display) so the row shows it bold red
     const body = priority ? `🚩 ${note.trim()}` : note.trim();
     const newNote = `[${dateStamp}] ${body}`;
-    const existing = borrower.notes || '';
+    // Re-read freshest notes so a quickly-added second note never clobbers the first
+    let existing = borrower.notes || '';
+    try {
+      const { data } = await supabase.from('borrowers').select('notes').eq('id', borrower.id).single();
+      if (data && typeof data.notes === 'string') existing = data.notes;
+    } catch (e) { /* fall back to prop */ }
     await onAddNote(borrower.id, existing ? `${newNote}\n${existing}` : newNote);
     reset();
   };
@@ -1422,7 +1427,21 @@ const BorrowerRow = ({
 
           const deleteNote = async (e, lineToDelete) => {
             e.stopPropagation();
-            const updatedLines = allNotes.filter(line => line !== lineToDelete);
+            // Re-read the freshest notes so we never clobber a note added moments ago
+            let current = borrower.notes || '';
+            try {
+              const { data } = await supabase.from('borrowers').select('notes').eq('id', borrower.id).single();
+              if (data && typeof data.notes === 'string') current = data.notes;
+            } catch (err) { /* fall back to prop */ }
+            const parts = current.split(/(?=\[\d{1,2}\/\d{1,2}\/\d{2}\])/);
+            const lines = [];
+            parts.forEach(part => {
+              const t = part.trim();
+              if (!t) return;
+              if (t.match(/^\[\d{1,2}\/\d{1,2}\/\d{2}\]/)) lines.push(t.replace(/\n/g, ' '));
+              else t.split('\n').forEach(l => { if (l.trim()) lines.push(l.trim()); });
+            });
+            const updatedLines = lines.filter(line => line !== lineToDelete);
             await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
           };
 
@@ -1453,7 +1472,11 @@ const BorrowerRow = ({
                     style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#dc2626' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={noteText}
                   >
-                    <span style={{ color: '#64748b', marginRight: '2px' }}>x</span>
+                    <span
+                      onClick={(e) => deleteNote(e, line)}
+                      style={{ color: '#ef4444', marginRight: '4px', cursor: 'pointer', fontWeight: 700 }}
+                      title="Delete this note"
+                    >×</span>
                     {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
                     {truncatedText}
                   </span>
