@@ -37,6 +37,6 @@ File: `closio/src/components/ExpandedCard.jsx` — `IncomeSection`, helpers `con
 
 ## Build phases (track progress here)
 1. ✅ Consolidate by job, per-borrower groups, conservative (YTD-avg vs current) calc + expand.
-2. ⬜ Capture W-2 annual wages per year; calc uses 2-yr W-2 history (declining → use lower; OT/bonus 2-yr avg).
-3. ⬜ Batch drop per borrower + GO, with Add-to vs Replace.
+2. ✅ Batch drop per borrower + GO, with Add-to vs Replace (IncomeDropZone). Tags each doc's source name.
+3. ⬜ NEXT: Capture W-2 annual wages per year; calc uses 2-yr W-2 history (declining → use lower; OT/bonus 2-yr avg).
 4. ⬜ Smart questions / red-flag prompts (employed 2 yrs? second employer? part-time vs full-time? name mismatch?).
