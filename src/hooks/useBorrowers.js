@@ -19,7 +19,11 @@ export const useBorrowers = () => {
           contacts(*),
           stipulations(*)
         `)
-        .order('created_at', { ascending: true });
+        // created_at first, then id as a STABLE tiebreaker so records with the
+        // same/blank created_at never swap order between refetches (which made
+        // open files jump up/down every poll). Order is now deterministic.
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true });
 
       if (error) throw error;
 
