@@ -2974,16 +2974,33 @@ const extractCreditPeople = (extracted) => {
       scores: { equifax: p.fico_equifax, experian: p.fico_experian, transunion: p.fico_transunion },
       vantage_scores: { equifax: p.vantage_equifax, experian: p.vantage_experian, transunion: p.vantage_transunion },
       negative_marks: p.negative_marks, public_records: p.public_records,
+      negative_items: p.negative_items || [], public_record_items: p.public_record_items || [],
     }));
   }
   const cs = buildCreditScores(extracted);
-  return [{ name: extracted.borrower_name, scores: cs.scores || {}, vantage_scores: cs.vantage_scores || {}, negative_marks: cs.negative_marks, public_records: cs.public_records }];
+  return [{
+    name: extracted.borrower_name, scores: cs.scores || {}, vantage_scores: cs.vantage_scores || {},
+    negative_marks: cs.negative_marks, public_records: cs.public_records,
+    negative_items: extracted.negative_items || [], public_record_items: extracted.public_record_items || [],
+  }];
+};
+
+// "1yr 11mo" elapsed since a discharge/filed date
+const sinceDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  let months = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+  if (months < 0) return '';
+  const yrs = Math.floor(months / 12);
+  const mos = Math.floor(months % 12);
+  return `${yrs ? yrs + 'yr ' : ''}${mos}mo`.trim();
 };
 
 const CreditReportSection = ({ borrower, onUpdate }) => {
-  const [uploading, setUploading] = useState(null);   // personKey or 'joint'
+  const [uploading, setUploading] = useState(false);
   const [signedUrl, setSignedUrl] = useState(null);
-  const [pendingPerson, setPendingPerson] = useState(null);
+  const [openDetail, setOpenDetail] = useState({}); // `${key}:${kind}` -> bool
   const inputRef = useRef();
 
   const cr = borrower.credit_report || {};
@@ -2996,52 +3013,64 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
 
   const setJoint = (val) => onUpdate(borrower.id, { credit_report: { ...cr, joint: val } });
 
-  const uploadFile = async (file, target) => {
-    if (!file) return;
-    setUploading(target);
+  const tokens = (n) => (n || '').toLowerCase().match(/[a-z]{2,}/g) || [];
+  // Match a report's person name to a borrower on the file (shared name word), else next open slot
+  const matchPersonKey = (reportName, used) => {
+    const rt = tokens(reportName);
+    for (const person of people) {
+      if (used.has(person.key)) continue;
+      const pt = tokens(person.label);
+      if (rt.length && pt.length && rt.some(t => pt.includes(t))) return person.key;
+    }
+    const open = people.find(p => !used.has(p.key));
+    return open ? open.key : 'primary';
+  };
+
+  // Drop one or more reports at once — each is read and routed to the right person.
+  const uploadFiles = async (fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    setUploading(true);
     try {
-      const fileName = `credit_${borrower.id}_${Date.now()}.pdf`;
-      const { error } = await supabase.storage.from('Documents').upload(fileName, file);
-      let fileInfo = { file_name: file.name, uploaded_at: new Date().toISOString() };
-      if (!error) {
-        const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(fileName);
-        fileInfo = { ...fileInfo, file_path: fileName, file_url: urlData.publicUrl };
-      }
-
-      let extracted = {};
-      try {
-        const base64 = await fileToBase64(file);
-        const result = await claudeService.analyzeDocument(base64, file.type || 'application/pdf', file.name);
-        extracted = result.extracted || {};
-      } catch (e) { console.error('Credit AI read failed:', e); }
-
-      const ppl = extractCreditPeople(extracted);
       const newPeople = { ...peopleData };
-      if (target === 'joint') {
-        people.forEach((person, idx) => {
-          const e = ppl[idx] || ppl[0] || {};
-          newPeople[person.key] = { label: person.label, ...e, ...fileInfo };
-        });
-      } else {
-        const e = ppl[0] || {};
-        newPeople[target] = { label: people.find(p => p.key === target)?.label, ...e, ...fileInfo };
-      }
+      const used = new Set();
+      let lastExtracted = {};
+      for (const file of files) {
+        const fileName = `credit_${borrower.id}_${Date.now()}_${Math.round(Math.random() * 1e6)}.pdf`;
+        const { error } = await supabase.storage.from('Documents').upload(fileName, file);
+        let fileInfo = { file_name: file.name, uploaded_at: new Date().toISOString() };
+        if (!error) {
+          const { data: urlData } = supabase.storage.from('Documents').getPublicUrl(fileName);
+          fileInfo = { ...fileInfo, file_path: fileName, file_url: urlData.publicUrl };
+        }
+        let extracted = {};
+        try {
+          const base64 = await fileToBase64(file);
+          const result = await claudeService.analyzeDocument(base64, file.type || 'application/pdf', file.name);
+          extracted = result.extracted || {};
+        } catch (e) { console.error('Credit AI read failed:', e); }
+        lastExtracted = extracted;
 
+        const ppl = extractCreditPeople(extracted);
+        if (joint) {
+          people.forEach((person, idx) => { const e = ppl[idx] || ppl[0] || {}; newPeople[person.key] = { label: person.label, ...e, ...fileInfo }; });
+        } else {
+          const e = ppl[0] || {};
+          const key = matchPersonKey(e.name, used);
+          used.add(key);
+          newPeople[key] = { label: people.find(p => p.key === key)?.label, ...e, ...fileInfo };
+        }
+      }
       const update = { credit_report: { ...cr, joint, people: newPeople } };
       const primary = newPeople.primary;
-      if (primary) {
-        const mid = midScore(primary.scores) || midScore(primary.vantage_scores);
-        if (mid) update.credit_score_mid = mid;
-      }
-      if (extracted.credit_auth_date) update.credit_auth_date = extracted.credit_auth_date;
+      if (primary) { const mid = midScore(primary.scores) || midScore(primary.vantage_scores); if (mid) update.credit_score_mid = mid; }
+      if (lastExtracted.credit_auth_date) update.credit_auth_date = lastExtracted.credit_auth_date;
       await onUpdate(borrower.id, update);
     } catch (err) {
       alert('Failed to upload: ' + err.message);
     }
-    setUploading(null);
+    setUploading(false);
   };
-
-  const browse = (target) => { setPendingPerson(target); inputRef.current?.click(); };
 
   const openReport = async (rep) => {
     if (rep?.file_path) {
@@ -3050,15 +3079,23 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     } else if (rep?.file_url) setSignedUrl(rep.file_url);
   };
 
-  const dropZone = (target, label) => (
+  const dropZone = (label) => (
     <div
       onDragOver={e => e.preventDefault()}
-      onDrop={async e => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) await uploadFile(f, target); }}
-      onClick={() => browse(target)}
-      style={{ padding: '14px', borderRadius: '8px', marginBottom: '10px', background: '#fef3c7', border: '2px dashed #f59e0b', textAlign: 'center', cursor: 'pointer' }}
+      onDrop={async e => { e.preventDefault(); await uploadFiles(e.dataTransfer?.files); }}
+      onClick={() => inputRef.current?.click()}
+      style={{ padding: '16px', borderRadius: '8px', marginBottom: '12px', background: '#fef3c7', border: '2px dashed #f59e0b', textAlign: 'center', cursor: 'pointer' }}
     >
-      <FileText size={20} style={{ color: '#f59e0b', marginBottom: '4px' }} />
-      <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '700' }}>{uploading === target ? 'Reading…' : label}</div>
+      <FileText size={22} style={{ color: '#f59e0b', marginBottom: '4px' }} />
+      <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '700' }}>{uploading ? 'Reading…' : label}</div>
+    </div>
+  );
+
+  const redCell = (label, count, onClick) => (
+    <div onClick={count > 0 ? onClick : undefined}
+      style={{ background: count > 0 ? '#fee2e2' : '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center', cursor: count > 0 ? 'pointer' : 'default' }}>
+      <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: '14px', fontWeight: '700', color: count > 0 ? '#dc2626' : '#1e293b' }}>{count}{count > 0 ? ' ▾' : ''}</div>
     </div>
   );
 
@@ -3066,6 +3103,13 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     const s = rep.scores || {};
     const v = rep.vantage_scores || {};
     const hasV = Object.values(v).some(Boolean);
+    const negItems = rep.negative_items || [];
+    const pubItems = rep.public_record_items || [];
+    const negCount = rep.negative_marks || negItems.length || 0;
+    const pubCount = rep.public_records || pubItems.length || 0;
+    const negKey = `${person.key}:neg`, pubKey = `${person.key}:pub`;
+    const toggle = (k) => setOpenDetail(o => ({ ...o, [k]: !o[k] }));
+    const detailBox = { background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '6px', padding: '8px', marginTop: '8px', fontSize: '11px', color: '#7c2d12', lineHeight: 1.6 };
     return (
       <div key={person.key} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginBottom: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -3085,23 +3129,38 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
               </>
             )}
           </div>
-          <div style={{ background: rep.negative_marks > 0 ? '#fee2e2' : '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
-            <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>Negative Marks</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: rep.negative_marks > 0 ? '#dc2626' : '#1e293b' }}>{rep.negative_marks || 0}</div>
-          </div>
-          <div style={{ background: rep.public_records > 0 ? '#fee2e2' : '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
-            <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>Public Records</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: rep.public_records > 0 ? '#dc2626' : '#1e293b' }}>{rep.public_records || 0}</div>
-          </div>
+          {redCell('Negative Marks', negCount, () => toggle(negKey))}
+          {redCell('Public Records', pubCount, () => toggle(pubKey))}
         </div>
+
+        {openDetail[negKey] && (
+          <div style={detailBox}>
+            <div style={{ fontWeight: 700, marginBottom: '2px' }}>Negative items</div>
+            {negItems.length ? negItems.map((it, i) => (
+              <div key={i}>• {it.creditor || 'Account'}{it.type ? ` — ${it.type}` : ''}{it.status ? ` (${it.status})` : ''}{it.balance ? ` · $${Number(it.balance).toLocaleString()}` : ''}{it.date ? ` · ${it.date}` : ''}</div>
+            )) : <div>Not itemized by the report — click <strong>View</strong> to see them.</div>}
+          </div>
+        )}
+        {openDetail[pubKey] && (
+          <div style={detailBox}>
+            <div style={{ fontWeight: 700, marginBottom: '2px' }}>Public records</div>
+            {pubItems.length ? pubItems.map((it, i) => (
+              <div key={i}>
+                • <strong>{it.type || 'Record'}</strong>
+                {it.discharge_date ? ` — discharged ${it.discharge_date} (${sinceDate(it.discharge_date)} ago)` : it.filed_date ? ` — filed ${it.filed_date}` : ''}
+                {it.status ? ` · ${it.status}` : ''}
+              </div>
+            )) : <div>Not itemized by the report — click <strong>View</strong> to see them.</div>}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <div>
-      <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }}
-        onChange={async e => { const f = e.target.files?.[0]; if (f) await uploadFile(f, pendingPerson); if (inputRef.current) inputRef.current.value = ''; }} />
+      <input ref={inputRef} type="file" accept=".pdf" multiple style={{ display: 'none' }}
+        onChange={async e => { await uploadFiles(e.target.files); if (inputRef.current) inputRef.current.value = ''; }} />
 
       {coBorrowers.length > 0 && (
         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#475569', fontWeight: '600', marginBottom: '10px', cursor: 'pointer' }}>
@@ -3110,15 +3169,12 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         </label>
       )}
 
-      {/* Drop zones */}
-      {joint
-        ? dropZone('joint', 'Drop the JOINT credit report (both borrowers)')
-        : people.map(person => (
-            <React.Fragment key={person.key}>
-              {!(peopleData[person.key]?.scores && Object.values(peopleData[person.key].scores).some(Boolean)) &&
-                dropZone(person.key, `Drop ${person.label}'s credit report`)}
-            </React.Fragment>
-          ))}
+      {/* One drop box — drop one OR both reports; each is sorted to the right person by name */}
+      {dropZone(joint
+        ? 'Drop the JOINT credit report (both borrowers)'
+        : coBorrowers.length > 0
+          ? 'Drop credit report(s) — drop both at once, sorted by name'
+          : 'Drop Credit Report PDF or Click to Browse')}
 
       {/* Per-person score cards */}
       {people.map(person => {

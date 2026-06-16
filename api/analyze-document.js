@@ -38,6 +38,24 @@ const EXTRACT_TOOL = {
       vantage_transunion: { type: 'number', description: 'TransUnion VantageScore (only if present on report)' },
       negative_marks: { type: 'number', description: 'Count of negative marks / derogatory items' },
       public_records: { type: 'number', description: 'Count of public records' },
+      negative_items: {
+        type: 'array',
+        description: 'The actual derogatory/negative accounts on the report.',
+        items: { type: 'object', properties: {
+          creditor: { type: 'string' }, type: { type: 'string', description: 'e.g. Collection, Late Payment, Charge-off' },
+          status: { type: 'string' }, balance: { type: 'number' }, date: { type: 'string' },
+        } },
+      },
+      public_record_items: {
+        type: 'array',
+        description: 'Public records (bankruptcies, liens, judgments). For a bankruptcy, include the chapter in "type" and the discharge date.',
+        items: { type: 'object', properties: {
+          type: { type: 'string', description: 'e.g. Chapter 7 Bankruptcy, Chapter 13 Bankruptcy, Tax Lien, Judgment' },
+          filed_date: { type: 'string', description: 'YYYY-MM-DD' },
+          discharge_date: { type: 'string', description: 'Discharge/dismissed date, YYYY-MM-DD' },
+          status: { type: 'string' }, amount: { type: 'number' },
+        } },
+      },
       credit_people: {
         type: 'array',
         description: 'For a credit report covering MORE THAN ONE person (e.g. a joint married report with 6 scores), one entry per person with their own scores. For a single-person report this may be omitted.',
@@ -53,6 +71,12 @@ const EXTRACT_TOOL = {
             vantage_transunion: { type: 'number' },
             negative_marks: { type: 'number' },
             public_records: { type: 'number' },
+            negative_items: { type: 'array', items: { type: 'object', properties: {
+              creditor: { type: 'string' }, type: { type: 'string' }, status: { type: 'string' }, balance: { type: 'number' }, date: { type: 'string' },
+            } } },
+            public_record_items: { type: 'array', items: { type: 'object', properties: {
+              type: { type: 'string' }, filed_date: { type: 'string' }, discharge_date: { type: 'string' }, status: { type: 'string' }, amount: { type: 'number' },
+            } } },
           },
         },
       },
