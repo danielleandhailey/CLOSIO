@@ -159,7 +159,7 @@ const EXTRACT_TOOL = {
             income_type: { type: 'string' },
             employer: { type: 'string' },
             gross_monthly: { type: 'number' },
-            pay_frequency: { type: 'string', description: 'weekly, bi-weekly, semi-monthly, or monthly' },
+            pay_frequency: { type: 'string', description: 'weekly, bi-weekly, semi-monthly, or monthly. Determine from the pay-period dates: a pay period spanning ~14 days (2 weeks) is BI-WEEKLY (26/yr); fixed twice-a-month dates like the 1st & 15th or 15th & last day are SEMI-MONTHLY (24/yr); ~7 days is weekly. When the period is about two weeks, choose bi-weekly, not semi-monthly.' },
             amount_per_period: { type: 'number', description: 'Gross pay for ONE pay period (this paystub gross)' },
             ytd_gross: { type: 'number', description: 'Year-to-date gross earnings' },
             ytd_as_of_date: { type: 'string', description: 'Pay date / period end for the YTD figure, YYYY-MM-DD' },

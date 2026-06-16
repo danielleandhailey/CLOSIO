@@ -4028,6 +4028,13 @@ const IncomeSection = ({ borrower, onUpdate }) => {
     const updated = incomes.filter(i => incKey(i) !== key);
     await onUpdate(borrower.id, { incomes: updated });
   };
+  // Correct the pay frequency for a source (recalcs immediately) — e.g. fix a
+  // stub the AI mis-read as semi-monthly when it's bi-weekly.
+  const setFrequency = async (src, freq) => {
+    const key = incKey(src);
+    const updated = incomes.map(i => incKey(i) === key ? { ...i, pay_frequency: freq } : i);
+    await onUpdate(borrower.id, { incomes: updated });
+  };
   const toggle = (id) => setExpanded(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const fieldStyle = { padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', width: '100%' };
@@ -4084,7 +4091,23 @@ const IncomeSection = ({ borrower, onUpdate }) => {
                 <div onClick={() => toggle(src.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', cursor: 'pointer' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>{src.employer || 'Income'}</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>{src.income_type || src.category || 'Base'} · {src.pay_frequency || '—'}{(src.sources || []).length > 1 ? ` · ${src.sources.length} stubs` : ''}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                      <span>{src.income_type || src.category || 'Base'} ·</span>
+                      <select
+                        value={src.pay_frequency || ''}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => setFrequency(src, e.target.value)}
+                        title="Pay frequency (drives the current-rate calc)"
+                        style={{ fontSize: '11px', color: '#1e3a5f', fontWeight: 700, border: '1px solid #cbd5e1', borderRadius: '4px', padding: '1px 4px', background: '#fff' }}>
+                        <option value="">freq…</option>
+                        <option>Weekly</option>
+                        <option>Bi-Weekly</option>
+                        <option>Semi-Monthly</option>
+                        <option>Monthly</option>
+                        <option>Annual</option>
+                      </select>
+                      {(src.sources || []).length > 1 ? <span>· {src.sources.length} stubs</span> : null}
+                    </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontWeight: 800, fontSize: '14px', color: '#047857' }}>{moneyFmt(d.qualifying)}/mo</div>
