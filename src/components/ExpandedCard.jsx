@@ -3033,6 +3033,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     setUploading(true);
     try {
       const newPeople = { ...peopleData };
+      const history = [...(cr.history || [])];
       const used = new Set();
       let lastExtracted = {};
       for (const file of files) {
@@ -3052,16 +3053,19 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         lastExtracted = extracted;
 
         const ppl = extractCreditPeople(extracted);
+        let personLabel = 'Joint';
         if (joint) {
           people.forEach((person, idx) => { const e = ppl[idx] || ppl[0] || {}; newPeople[person.key] = { label: person.label, ...e, ...fileInfo }; });
         } else {
           const e = ppl[0] || {};
           const key = matchPersonKey(e.name, used);
           used.add(key);
-          newPeople[key] = { label: people.find(p => p.key === key)?.label, ...e, ...fileInfo };
+          personLabel = people.find(p => p.key === key)?.label || 'Borrower';
+          newPeople[key] = { label: personLabel, ...e, ...fileInfo };
         }
+        history.unshift({ ...fileInfo, person: personLabel }); // newest first
       }
-      const update = { credit_report: { ...cr, joint, people: newPeople } };
+      const update = { credit_report: { ...cr, joint, people: newPeople, history } };
       const primary = newPeople.primary;
       if (primary) { const mid = midScore(primary.scores) || midScore(primary.vantage_scores); if (mid) update.credit_score_mid = mid; }
       if (lastExtracted.credit_auth_date) update.credit_auth_date = lastExtracted.credit_auth_date;
@@ -3137,7 +3141,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
           <div style={detailBox}>
             <div style={{ fontWeight: 700, marginBottom: '2px' }}>Negative items</div>
             {negItems.length ? negItems.map((it, i) => (
-              <div key={i}>• {it.creditor || 'Account'}{it.type ? ` — ${it.type}` : ''}{it.status ? ` (${it.status})` : ''}{it.balance ? ` · $${Number(it.balance).toLocaleString()}` : ''}{it.date ? ` · ${it.date}` : ''}</div>
+              <div key={i}>• {it.creditor || 'Account'}{it.type ? ` — ${it.type}` : ''}{it.status ? ` (${it.status})` : ''}{it.balance ? ` · $${Number(it.balance).toLocaleString()}` : ''}{it.last_late_date ? ` · last late ${it.last_late_date}` : it.date ? ` · ${it.date}` : ''}{it.rolling ? ' · 🔁 ROLLING' : ''}</div>
             )) : <div>Not itemized by the report — click <strong>View</strong> to see them.</div>}
           </div>
         )}
@@ -3182,6 +3186,22 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         if (!rep || !(rep.scores && Object.values(rep.scores).some(Boolean))) return null;
         return scoreCard(person, rep);
       })}
+
+      {/* Report history — every drop, newest first */}
+      {(cr.history || []).length > 0 && (
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', marginTop: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>Report History</div>
+          {(cr.history || []).map((h, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', borderTop: i ? '1px solid #f1f5f9' : 'none', fontSize: '11px' }}>
+              <FileText size={13} style={{ color: '#3b82f6', flexShrink: 0 }} />
+              <span style={{ flex: 1, color: '#475569' }}>{h.person || 'Report'} · {h.uploaded_at ? format(parseISO(h.uploaded_at), 'M/d/yy h:mma') : ''}</span>
+              {(h.file_path || h.file_url) && (
+                <button onClick={() => openReport(h)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}>View</button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Report Viewer Modal */}
       {signedUrl && (

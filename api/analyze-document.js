@@ -44,6 +44,8 @@ const EXTRACT_TOOL = {
         items: { type: 'object', properties: {
           creditor: { type: 'string' }, type: { type: 'string', description: 'e.g. Collection, Late Payment, Charge-off' },
           status: { type: 'string' }, balance: { type: 'number' }, date: { type: 'string' },
+          last_late_date: { type: 'string', description: 'For a late payment, the most recent month reported late (YYYY-MM)' },
+          rolling: { type: 'boolean', description: 'For late payments: true if the account has consecutive/ongoing recent lates (rolling)' },
         } },
       },
       public_record_items: {
@@ -224,6 +226,10 @@ export default async function handler(req, res) {
                   'If this is a paystub, W-2, VOE, or otherwise shows employment earnings, you MUST fill the ' +
                   'incomes array — one entry per earner — including person, employer, employment_type, pay_frequency, ' +
                   'amount_per_period (the current-period gross), ytd_gross, ytd_as_of_date (the pay/period date), and category. ' +
+                  'For a CREDIT REPORT: put bankruptcies, tax liens, and judgments in public_record_items ' +
+                  '(with filed_date and discharge_date) — NOT in negative_items. Put tradeline derogatories ' +
+                  '(collections, charge-offs, late payments) in negative_items; for late payments include ' +
+                  'last_late_date and whether they are rolling. ' +
                   'Only include fields actually present in the document — do not guess.',
               },
             ],
