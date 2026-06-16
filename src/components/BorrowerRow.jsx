@@ -1420,14 +1420,33 @@ const BorrowerRow = ({
             return <div style={{ flex: 1 }} />;
           }
 
+          const deleteNote = async (e, lineToDelete) => {
+            e.stopPropagation();
+            // Re-read the freshest notes so deleting one never clobbers the rest
+            let current = borrower.notes || '';
+            try {
+              const { data } = await supabase.from('borrowers').select('notes').eq('id', borrower.id).single();
+              if (data && typeof data.notes === 'string') current = data.notes;
+            } catch (err) { /* fall back to prop */ }
+            const parts = current.split(/(?=\[\d{1,2}\/\d{1,2}\/\d{2}\])/);
+            const lines = [];
+            parts.forEach(part => {
+              const t = part.trim();
+              if (!t) return;
+              if (t.match(/^\[\d{1,2}\/\d{1,2}\/\d{2}\]/)) lines.push(t.replace(/\n/g, ' '));
+              else t.split('\n').forEach(l => { if (l.trim()) lines.push(l.trim()); });
+            });
+            const updatedLines = lines.filter(line => line !== lineToDelete);
+            await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
+          };
+
           return (
-            // Notes flow like a sentence: short notes sit several to a line,
-            // a long note takes its own line and wraps — wrapping only when a
-            // note actually needs it. Bounded by how many notes we show.
+            // ONE horizontal line: newest note at the far left, older notes flow
+            // to the right, clipped before CONVO. Notes NEVER stack vertically.
             <div
-              style={{ flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.45' }}
+              style={{ flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
             >
-              {noteLines.slice(0, 6).map((line, idx) => {
+              {noteLines.slice(0, 10).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
@@ -1436,7 +1455,11 @@ const BorrowerRow = ({
                 const noteText = isPriority ? rawText.replace(/^\s*🚩\s*/, '') : rawText;
                 return (
                   <span key={idx} style={{ marginRight: '16px' }}>
-                    <span style={{ color: '#64748b', marginRight: '4px' }}>x</span>
+                    <span
+                      onClick={(e) => deleteNote(e, line)}
+                      style={{ color: '#64748b', marginRight: '4px', cursor: 'pointer', fontWeight: 700 }}
+                      title="Delete this note"
+                    >x</span>
                     {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px', fontSize: '13px' }}>{dateStr}</span>}
                     <span
                       onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
