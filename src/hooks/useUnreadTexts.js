@@ -1,18 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
-// Polls Bonzo (via /api/bonzo-unread) for conversations with unread (new
-// inbound) texts. Matches a CLOSIO borrower to a Bonzo conversation by
-// bonzo_id, phone, or email. "Read" state is kept per-browser in localStorage
-// so the pink dot clears when YOU open the thread in CLOSIO and re-lights only
-// when a newer text arrives.
-const SEEN_KEY = 'closio_text_seen';
-const loadSeen = () => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch { return {}; } };
+// Polls Bonzo (via /api/bonzo-unread) every 15s for conversations with unread
+// (new inbound) texts and exposes isUnread(borrower). The unread state mirrors
+// Bonzo's own unread_messages_count — it clears automatically when Bonzo marks
+// the conversation read (so opening CONVO in CLOSIO never drops a file out from
+// under a filter). A borrower matches a conversation by bonzo_id, phone, or email.
 const tenDigits = (s) => (s || '').replace(/\D/g, '').slice(-10);
 const lc = (s) => (s || '').toLowerCase().trim();
 
 export const useUnreadTexts = (intervalMs = 15000) => {
   const [items, setItems] = useState([]);
-  const [seen, setSeen] = useState(loadSeen);
 
   const poll = useCallback(async () => {
     try {
@@ -28,21 +25,16 @@ export const useUnreadTexts = (intervalMs = 15000) => {
     return () => clearInterval(id);
   }, [poll, intervalMs]);
 
-  // Conversations that are unread AND newer than what we've marked seen here.
-  const freshUnread = useMemo(() => items.filter(it =>
-    it.unread && it.lastAt && (!seen[it.prospectId] || new Date(it.lastAt) > new Date(seen[it.prospectId]))
-  ), [items, seen]);
-
-  // Lookup keys (id / phone / email) so a borrower can match by any of them.
+  // Lookup keys (id / phone / email) for every conversation Bonzo flags unread.
   const keys = useMemo(() => {
     const s = new Set();
-    freshUnread.forEach(c => {
+    items.filter(it => it.unread).forEach(c => {
       if (c.prospectId) s.add('id:' + c.prospectId);
       if (c.phone) s.add('ph:' + c.phone);
       if (c.email) s.add('em:' + c.email);
     });
     return s;
-  }, [freshUnread]);
+  }, [items]);
 
   const isUnread = useCallback((b) => {
     if (!b) return false;
@@ -52,24 +44,5 @@ export const useUnreadTexts = (intervalMs = 15000) => {
     return false;
   }, [keys]);
 
-  const matchConvo = useCallback((b) => {
-    if (!b) return null;
-    const ph = tenDigits(b.phone), em = lc(b.email), bid = b.bonzo_id != null ? String(b.bonzo_id) : null;
-    return items.find(it =>
-      (bid && it.prospectId === bid) || (ph && it.phone === ph) || (em && it.email === em)
-    ) || null;
-  }, [items]);
-
-  const markSeen = useCallback((b) => {
-    const c = matchConvo(b);
-    if (!c || !c.prospectId) return;
-    const ts = c.lastAt || new Date().toISOString();
-    setSeen(s => {
-      const n = { ...s, [c.prospectId]: ts };
-      try { localStorage.setItem(SEEN_KEY, JSON.stringify(n)); } catch (e) { /* ignore */ }
-      return n;
-    });
-  }, [matchConvo]);
-
-  return { isUnread, markSeen };
+  return { isUnread };
 };

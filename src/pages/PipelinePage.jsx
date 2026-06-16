@@ -9,7 +9,7 @@ import { sortBorrowers, isNewLead } from '../lib/utils';
 import { useUnreadTexts } from '../hooks/useUnreadTexts';
 
 const PipelinePage = ({ borrowers, ops }) => {
-  const { isUnread, markSeen } = useUnreadTexts();   // pink-dot new-text tracking (15s poll)
+  const { isUnread } = useUnreadTexts();   // pink-ball new-text tracking (15s poll, mirrors Bonzo)
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [defaultTab, setDefaultTab] = useState(null); // which tab to open by default
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -151,8 +151,14 @@ const PipelinePage = ({ borrowers, ops }) => {
     return sorted;
   }, [borrowers, filterType, filterStage, sortBy, search, isUnread]);
 
-  // Count of borrowers with an unread Bonzo text (for the messages-waiting pill)
+  // Count of borrowers with an unread Bonzo text (for the messages-waiting ball)
   const unreadCount = borrowers.filter(b => isUnread(b)).length;
+
+  // If we're filtered to messages-waiting and they all clear, drop back to All
+  // so we never strand the user on an empty "no borrowers match" view.
+  useEffect(() => {
+    if (filterStage === 'MSG' && unreadCount === 0) setFilterStage('All');
+  }, [filterStage, unreadCount]);
 
   const handleSelect = useCallback((id, checked) => {
     setSelectedIds(s => {
@@ -344,15 +350,6 @@ const PipelinePage = ({ borrowers, ops }) => {
         />
         <button
           type="button"
-          className={`stage-pill ${filterStage === 'MSG' ? 'active' : ''} ${unreadCount > 0 ? 'text-pulse' : ''}`}
-          style={{ background: '#ec4899', color: '#fff', fontWeight: '800', opacity: unreadCount === 0 ? 0.4 : 1 }}
-          onClick={() => { setFilterStage(prev => prev === 'MSG' ? 'All' : 'MSG'); setSearch(''); }}
-          title="Borrowers with a new text waiting"
-        >
-          💬 <span style={{ marginLeft: '3px', fontWeight: '700' }}>{unreadCount}</span>
-        </button>
-        <button
-          type="button"
           className={`stage-pill ${filterStage === 'FLAG' ? 'active' : ''}`}
           style={{ background: '#dc2626', color: '#fff', fontWeight: '800', opacity: (stageCounts['FLAG'] || 0) === 0 ? 0.4 : 1 }}
           onClick={() => { setFilterStage(prev => prev === 'FLAG' ? 'All' : 'FLAG'); setSearch(''); }}
@@ -396,6 +393,21 @@ const PipelinePage = ({ borrowers, ops }) => {
             </button>
           );
         })}
+        {/* New-text ball — far right, after the stages. Pulses when texts are waiting. */}
+        <button
+          type="button"
+          className={unreadCount > 0 ? 'text-pulse' : ''}
+          onClick={() => { setFilterStage(prev => prev === 'MSG' ? 'All' : 'MSG'); setSearch(''); }}
+          title="Borrowers with a new text waiting"
+          style={{
+            marginLeft: '14px', flexShrink: 0, width: '30px', height: '30px', borderRadius: '50%',
+            background: '#ec4899', color: '#fff', border: filterStage === 'MSG' ? '2px solid #fff' : 'none',
+            fontWeight: 800, fontSize: '12px', cursor: 'pointer', display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center', opacity: unreadCount === 0 ? 0.4 : 1,
+          }}
+        >
+          {unreadCount}
+        </button>
       </div>
 
       {/* Pipeline list */}
@@ -432,7 +444,6 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onMarkStipReceived={ops.markStipReceived}
                 onRemoveStip={ops.removeStipulation}
                 hasUnreadText={isUnread(borrower)}
-                onTextSeen={() => markSeen(borrower)}
               />
               {expandedIds.has(borrower.id) && (
                 <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} defaultTab={defaultTab} />

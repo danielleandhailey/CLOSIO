@@ -1524,7 +1524,7 @@ const BorrowerRow = ({
         <div style={{ position: 'relative', flexShrink: 0, marginRight: '10px' }} onClick={e => e.stopPropagation()}>
           <button
             type="button"
-            onClick={() => { setShowConvo(s => !s); if (hasUnreadText) onTextSeen?.(); }}
+            onClick={() => setShowConvo(s => !s)}
             title={hasUnreadText ? 'New text! View conversation' : 'View communications'}
             style={{ background: 'none', border: 'none', color: '#ec4899', fontSize: '11px', fontWeight: '800', letterSpacing: '0.06em', cursor: 'pointer' }}
           >CONVO</button>
