@@ -31,13 +31,22 @@ export default async function handler(req, res) {
   if (!Array.isArray(raw)) return res.status(200).json({ items: [], note: 'No conversations endpoint matched', used });
 
   const items = raw.map(c => {
-    const prospectId = c.prospect_id ?? c.prospect?.id ?? c.lead_id ?? c.person_id ?? c.contact_id ?? c.prospectId ?? null;
-    const last = c.last_message ?? c.latest_message ?? c.message ?? c ?? {};
-    const dir = String(last.direction || (last.from_user || last.outbound ? 'outbound' : 'inbound') || '').toLowerCase();
-    const lastAt = c.last_message_at || c.last_activity_at || last.created_at || c.updated_at || c.created_at || null;
-    const uc = c.unread_count ?? c.unread ?? null;
-    const unread = uc != null ? (uc === true || Number(uc) > 0) : (dir === 'inbound');
-    return { prospectId: prospectId != null ? String(prospectId) : null, lastAt, direction: dir, unread };
+    // Bonzo conversation shape: id (prospect), unread_messages_count, new_response,
+    // last_incoming_message, last_contact, phone, email, full_name.
+    const li = c.last_incoming_message;
+    const liAt = (li && typeof li === 'object')
+      ? (li.created_at || li.sent_at || li.date || li.timestamp || li.time || null)
+      : null;
+    const lastAt = liAt || c.last_contact || c.updated_at || null;
+    const unread = Number(c.unread_messages_count || 0) > 0 || c.new_response === true;
+    return {
+      prospectId: c.id != null ? String(c.id) : null,
+      lastAt,
+      unread,
+      phone: (c.phone || '').replace(/\D/g, '').slice(-10),
+      email: (c.email || '').toLowerCase().trim(),
+      name: c.full_name || '',
+    };
   }).filter(x => x.prospectId);
 
   return res.status(200).json({ items, used, sampleKeys: items.length ? undefined : Object.keys(raw[0] || {}) });

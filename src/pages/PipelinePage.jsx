@@ -9,7 +9,7 @@ import { sortBorrowers, isNewLead } from '../lib/utils';
 import { useUnreadTexts } from '../hooks/useUnreadTexts';
 
 const PipelinePage = ({ borrowers, ops }) => {
-  const { unreadIds, markSeen } = useUnreadTexts();   // pink-dot new-text tracking (15s poll)
+  const { isUnread, markSeen } = useUnreadTexts();   // pink-dot new-text tracking (15s poll)
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [defaultTab, setDefaultTab] = useState(null); // which tab to open by default
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -118,7 +118,7 @@ const PipelinePage = ({ borrowers, ops }) => {
       if (filterStage === 'NEW') {
         list = list.filter(isNewLead);
       } else if (filterStage === 'MSG') {
-        list = list.filter(b => b.bonzo_id && unreadIds.has(String(b.bonzo_id)));
+        list = list.filter(b => isUnread(b));
       } else if (filterStage === 'FLAG') {
         list = list.filter(b => b.flagged);
       } else if (filterStage === 'Stips Needed') {
@@ -149,10 +149,10 @@ const PipelinePage = ({ borrowers, ops }) => {
       return sorted.slice().sort((a, b) => (b.stage === 'HOT' ? 1 : 0) - (a.stage === 'HOT' ? 1 : 0));
     }
     return sorted;
-  }, [borrowers, filterType, filterStage, sortBy, search, unreadIds]);
+  }, [borrowers, filterType, filterStage, sortBy, search, isUnread]);
 
   // Count of borrowers with an unread Bonzo text (for the messages-waiting pill)
-  const unreadCount = borrowers.filter(b => b.bonzo_id && unreadIds.has(String(b.bonzo_id))).length;
+  const unreadCount = borrowers.filter(b => isUnread(b)).length;
 
   const handleSelect = useCallback((id, checked) => {
     setSelectedIds(s => {
@@ -431,8 +431,8 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onAddStip={ops.addStipulation}
                 onMarkStipReceived={ops.markStipReceived}
                 onRemoveStip={ops.removeStipulation}
-                hasUnreadText={!!(borrower.bonzo_id && unreadIds.has(String(borrower.bonzo_id)))}
-                onTextSeen={() => borrower.bonzo_id && markSeen(borrower.bonzo_id)}
+                hasUnreadText={isUnread(borrower)}
+                onTextSeen={() => markSeen(borrower)}
               />
               {expandedIds.has(borrower.id) && (
                 <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} defaultTab={defaultTab} />
