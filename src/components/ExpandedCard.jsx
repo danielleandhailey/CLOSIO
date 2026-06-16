@@ -3291,6 +3291,9 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
   const [target, setTarget] = useState(upgrade.target_score || '');
   const [newStep, setNewStep] = useState('');
   const [uploadingId, setUploadingId] = useState(null);
+  const [pasteText, setPasteText] = useState('');
+  const [parsing, setParsing] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
   const proofRef = useRef();
   const pendingRef = useRef(null);
 
@@ -3301,6 +3304,27 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
   const updateStep = (id, p) => save({ plan: plan.map(s => s.id === id ? { ...s, ...p } : s) });
   const addStep = () => { if (!newStep.trim()) return; save({ plan: [...plan, { id: `${Date.now()}`, text: newStep.trim(), cost: '', impact: '', done: false }] }); setNewStep(''); };
   const removeStep = (id) => save({ plan: plan.filter(s => s.id !== id) });
+
+  const parsePaste = async () => {
+    if (!pasteText.trim()) return;
+    setParsing(true);
+    try {
+      const r = await fetch('/api/parse-upgrade-plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: pasteText }),
+      });
+      const d = await r.json();
+      const steps = (d.steps || []).map((s, i) => ({
+        id: `${Date.now()}_${i}`, text: s.text, cost: s.cost || '', impact: s.impact || '', done: false,
+      }));
+      if (!steps.length) { alert(d.error || 'Could not read a plan from that text.'); setParsing(false); return; }
+      const patch = { plan: [...plan, ...steps] };
+      if (d.target_score && !target) { patch.target_score = d.target_score; setTarget(d.target_score); }
+      save(patch);
+      setPasteText(''); setShowPaste(false);
+    } catch (e) { alert('Error reading plan: ' + e.message); }
+    setParsing(false);
+  };
 
   const uploadProof = async (file, id) => {
     if (!file) return;
@@ -3319,13 +3343,13 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
 
   const labelSm = { fontSize: '10px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '3px' };
   const miniInput = { width: '70px', padding: '3px 6px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '11px' };
-  const linkBtn = { background: 'none', border: '1px solid #c4b5fd', color: '#7c3aed', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontWeight: 600, cursor: 'pointer' };
+  const linkBtn = { background: 'none', border: '1px solid #cbd5e1', color: '#1e3a5f', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontWeight: 600, cursor: 'pointer' };
   const doneCount = plan.filter(s => s.done).length;
 
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
-        style={{ width: '100%', marginBottom: '12px', padding: '8px', borderRadius: '6px', background: '#7c3aed', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
+        style={{ width: '100%', marginBottom: '12px', padding: '8px', borderRadius: '6px', background: '#1e3a5f', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
         📈 Credit Upgrade Plan{plan.length ? ` (${doneCount}/${plan.length} done)` : ''}
       </button>
       {open && (
@@ -3335,7 +3359,7 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
             <input ref={proofRef} type="file" accept=".pdf,image/*" style={{ display: 'none' }}
               onChange={e => { const f = e.target.files?.[0]; if (f) uploadProof(f, pendingRef.current); if (proofRef.current) proofRef.current.value = ''; }} />
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
-              <div style={{ fontWeight: 800, color: '#7c3aed', fontSize: '15px' }}>📈 Credit Upgrade Plan</div>
+              <div style={{ fontWeight: 800, color: '#1e3a5f', fontSize: '15px' }}>📈 Credit Upgrade Plan</div>
               <button onClick={() => setOpen(false)} style={{ marginLeft: 'auto', background: '#64748b', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 14px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}>Close</button>
             </div>
 
@@ -3351,8 +3375,24 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
               </div>
             </div>
 
-            <div style={labelSm}>Game Plan</div>
-            {plan.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', padding: '8px 0' }}>No steps yet — add the game plan below.</div>}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={labelSm}>Game Plan</div>
+              <button onClick={() => setShowPaste(v => !v)} style={{ marginLeft: 'auto', background: 'none', border: '1px solid #1e3a5f', color: '#1e3a5f', borderRadius: '5px', padding: '3px 10px', fontSize: '10px', fontWeight: 700, cursor: 'pointer' }}>
+                📋 Paste plan from email
+              </button>
+            </div>
+            {showPaste && (
+              <div style={{ marginBottom: '12px' }}>
+                <textarea value={pasteText} onChange={e => setPasteText(e.target.value)} rows={6}
+                  placeholder="Paste the upgrade plan email here — AI will turn it into checkable steps…"
+                  style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', resize: 'vertical', boxSizing: 'border-box' }} />
+                <button onClick={parsePaste} disabled={parsing || !pasteText.trim()}
+                  style={{ marginTop: '6px', background: parsing ? '#94a3b8' : '#1e3a5f', color: '#fff', border: 'none', borderRadius: '5px', padding: '7px 16px', fontWeight: 700, cursor: parsing ? 'default' : 'pointer', fontSize: '12px' }}>
+                  {parsing ? 'Reading…' : '✨ Read into steps'}
+                </button>
+              </div>
+            )}
+            {plan.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', padding: '8px 0' }}>No steps yet — paste a plan above or add one below.</div>}
             {plan.map((s, i) => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 0', borderTop: i ? '1px solid #f1f5f9' : 'none' }}>
                 <input type="checkbox" checked={!!s.done} onChange={e => updateStep(s.id, { done: e.target.checked })} style={{ marginTop: '3px' }} />
@@ -3373,7 +3413,7 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
             <div style={{ display: 'flex', gap: '6px', marginTop: '12px' }}>
               <input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()}
                 placeholder="Add a step (e.g. Pay charge-off Merrick CC to $0)" style={{ flex: 1, padding: '7px 9px', border: '1px solid #cbd5e1', borderRadius: '5px', fontSize: '12px' }} />
-              <button onClick={addStep} style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '5px', padding: '7px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>Add</button>
+              <button onClick={addStep} style={{ background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '5px', padding: '7px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>Add</button>
             </div>
           </div>
         </>
@@ -3831,13 +3871,16 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
 
         {openTabs.has('credit') && (
           <div style={boxStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>📊 Credit Report</span>
-              <DocumentLibrary borrower={borrower} />
-            </div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📊 Credit Report</div>
             <CreditUpgradeSection borrower={borrower} onUpdate={ops.updateBorrower} />
             <CreditReportSection borrower={borrower} onUpdate={ops.updateBorrower} ops={ops} />
-            {closeBtn('credit')}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: 'auto', paddingTop: '12px' }}>
+              <DocumentLibrary borrower={borrower} />
+              <button type="button" onClick={() => closeTab('credit')}
+                style={{ background: '#64748b', color: '#fff', border: 'none', padding: '4px 16px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                Close
+              </button>
+            </div>
           </div>
         )}
 

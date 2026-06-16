@@ -14,6 +14,10 @@
     "api/parse-pdf.js": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "api/parse-upgrade-plan.js": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "rewrites": [
