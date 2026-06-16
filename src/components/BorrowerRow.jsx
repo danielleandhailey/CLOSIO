@@ -1223,6 +1223,21 @@ const BorrowerRow = ({
           {borrower.is_favorite ? '★' : '☆'}
         </span>
 
+        {/* Priority flag */}
+        <span
+          onClick={(e) => { e.stopPropagation(); onUpdate(borrower.id, { flagged: !borrower.flagged }); }}
+          style={{
+            cursor: 'pointer',
+            fontSize: '17px',
+            color: borrower.flagged ? '#dc2626' : '#4a5568',
+            marginRight: '6px',
+            lineHeight: 1,
+          }}
+          title={borrower.flagged ? 'Remove priority flag' : 'Flag as priority'}
+        >
+          {borrower.flagged ? '🚩' : '⚑'}
+        </span>
+
 
         {/* Need button - adds STIPS pill */}
         <span
@@ -1276,10 +1291,10 @@ const BorrowerRow = ({
         <span
           className="borrower-name"
           onClick={() => onExpand(borrower.id)}
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: 'pointer', ...(borrower.flagged ? { color: '#dc2626', fontWeight: 800 } : {}) }}
           title="Click to open file"
         >
-          {formatBorrowerName(borrower.name)}
+          {borrower.flagged && '🚩 '}{formatBorrowerName(borrower.name)}
           {(() => {
             const cos = borrower.co_borrowers?.length ? borrower.co_borrowers : (borrower.co_borrower ? [borrower.co_borrower] : []);
             if (!cos.length) return null;

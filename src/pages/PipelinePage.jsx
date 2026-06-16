@@ -90,6 +90,7 @@ const PipelinePage = ({ borrowers, ops }) => {
       }
     });
     counts['NEW'] = borrowers.filter(isNewLead).length;
+    counts['FLAG'] = borrowers.filter(b => b.flagged).length;
     return counts;
   }, [borrowers]);
 
@@ -114,6 +115,8 @@ const PipelinePage = ({ borrowers, ops }) => {
     if (filterStage !== 'All') {
       if (filterStage === 'NEW') {
         list = list.filter(isNewLead);
+      } else if (filterStage === 'FLAG') {
+        list = list.filter(b => b.flagged);
       } else if (filterStage === 'Stips Needed') {
         list = list.filter(b => b.stage === 'Stips Needed' || (b.stips_needed && b.stips_needed > 0));
       } else if (filterStage === 'Updated') {
@@ -332,6 +335,15 @@ const PipelinePage = ({ borrowers, ops }) => {
           title="Select All"
           style={{ width: '14px', height: '14px', cursor: 'pointer', marginRight: '12px', marginLeft: '0px' }}
         />
+        <button
+          type="button"
+          className={`stage-pill ${filterStage === 'FLAG' ? 'active' : ''}`}
+          style={{ background: '#dc2626', color: '#fff', fontWeight: '800', opacity: (stageCounts['FLAG'] || 0) === 0 ? 0.4 : 1 }}
+          onClick={() => { setFilterStage(prev => prev === 'FLAG' ? 'All' : 'FLAG'); setSearch(''); }}
+          title="Priority flagged files"
+        >
+          🚩 <span style={{ marginLeft: '3px', fontWeight: '700' }}>{stageCounts['FLAG'] || 0}</span>
+        </button>
         <button
           type="button"
           className={`stage-pill ${filterStage === 'All' ? 'active' : ''}`}
