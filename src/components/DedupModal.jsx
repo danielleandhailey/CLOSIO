@@ -93,6 +93,25 @@ const DedupModal = ({ borrowers, onMerge, onDelete, onClose }) => {
     setBusy(null);
   };
 
+  const mergeAll = async () => {
+    if (!groups.length) return;
+    if (!window.confirm(`Merge ALL ${groups.length} groups? Each one keeps the selected (●) record and folds the others into it — their notes, docs, phone/email fill any blanks, then the extra copies are removed. Nothing on the kept record is lost.`)) return;
+    setBusy('all');
+    try {
+      for (const g of groups) {
+        const winnerId = winnerOf(g);
+        const losers = g.filter(b => b.id !== winnerId && !excluded[b.id]).map(b => b.id);
+        if (!losers.length) continue;
+        const winner = g.find(b => b.id === winnerId);
+        const overrides = {};
+        const st = stagePick[g[0].id];
+        if (st && st !== winner.stage) overrides.stage = st;
+        await onMerge(winnerId, losers, overrides);
+      }
+    } catch (e) { alert('Merge all failed: ' + e.message); }
+    setBusy(null);
+  };
+
   const overlay = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' };
   const panel = { background: '#15151f', border: '1px solid #3a3a55', borderRadius: '12px', width: 'min(720px, 94vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
 
@@ -110,12 +129,26 @@ const DedupModal = ({ borrowers, onMerge, onDelete, onClose }) => {
             <div style={{ color: '#8080a8', textAlign: 'center', padding: '30px', fontSize: '13px' }}>No duplicates found. 🎉</div>
           )}
 
+          {groups.length > 0 && (
+            <div style={{ background: '#1c1c28', border: '1px solid #3a3a55', borderRadius: '10px', padding: '12px 14px', marginBottom: '14px' }}>
+              <div style={{ color: '#c4b5fd', fontSize: '12px', lineHeight: 1.6 }}>
+                <b style={{ color: '#f0f0ff' }}>How it works:</b> the <b style={{ color: '#22c55e' }}>● selected</b> record is the one you <b style={{ color: '#22c55e' }}>KEEP</b> (your main file).
+                The other(s) get <b>folded into it</b> — their notes, docs, and any phone/email fill in blanks — then the extra copy is <b>removed</b> (not archived).
+                Nothing on the kept record is lost. Uncheck <b>merge</b> on any row that's actually a different person. The dropdown sets the stage for the kept file.
+              </div>
+              <button type="button" disabled={busy !== null} onClick={mergeAll}
+                style={{ marginTop: '10px', width: '100%', padding: '10px', borderRadius: '8px', background: busy !== null ? '#475569' : '#22c55e', color: '#fff', border: 'none', cursor: busy !== null ? 'default' : 'pointer', fontSize: '13px', fontWeight: 800 }}>
+                {busy === 'all' ? 'Merging all…' : `✓ Merge ALL ${groups.length} groups (keep each ● selected)`}
+              </button>
+            </div>
+          )}
+
           {groups.map(g => {
             const winnerId = winnerOf(g);
             return (
               <div key={g[0].id} style={{ border: '1px solid #3a3a55', borderRadius: '10px', padding: '10px', marginBottom: '12px', background: '#1c1c28' }}>
                 <div style={{ fontSize: '10px', color: '#8080a8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                  Keep one (○), uncheck any that's a different person
+                  ● = keep this one (main file) · uncheck "merge" if a row is a different person
                 </div>
                 {g.map(b => {
                   const isWinner = b.id === winnerId;
