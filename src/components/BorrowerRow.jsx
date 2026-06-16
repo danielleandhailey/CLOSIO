@@ -1421,12 +1421,13 @@ const BorrowerRow = ({
           }
 
           return (
-            // Single line that fills across the row and clips with an ellipsis
-            // right before CONVO. (3-line wrap is a separate change for later.)
+            // Notes flow like a sentence: short notes sit several to a line,
+            // a long note takes its own line and wraps — wrapping only when a
+            // note actually needs it. Bounded by how many notes we show.
             <div
-              style={{ flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
+              style={{ flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.45' }}
             >
-              {noteLines.slice(0, 10).map((line, idx) => {
+              {noteLines.slice(0, 6).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
