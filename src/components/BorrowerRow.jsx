@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Trash2, Clock, Upload, Calendar, ArrowRight, Edit3, X, Check } from 'lucide-react';
 import { STAGE_COLORS, STAGES, STAGES_BY_TYPE, PRESET_TAGS, LENDER_OPTIONS, SECONDARY_LENDER, LOAN_TYPE_OPTIONS, STAGES_WITH_AUTO_TAGS, STIP_CATEGORIES } from '../lib/constants';
-import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, formatBorrowerName, isNewLead } from '../lib/utils';
+import { formatCurrency, calcPI, calcLTV, getTagStyle, touchedRecently, touchState, formatBorrowerName, isNewLead } from '../lib/utils';
 import CommunicationPanel from './CommunicationPanel';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
@@ -1198,6 +1198,8 @@ const BorrowerRow = ({
   const outstandingCount = stips.filter(s => !s.received).length;
   const totalCount = stips.length;
   const touched = touchedRecently(borrower.last_touched);
+  const tState = touchState(borrower);            // 'green' (fresh) or 'red' (stale / never touched)
+  const tColor = tState === 'green' ? '#22c55e' : '#ef4444';
 
   const touchLabel = borrower.last_touched
     ? format(typeof borrower.last_touched === 'string' ? parseISO(borrower.last_touched) : borrower.last_touched, 'M/d')
@@ -1557,15 +1559,16 @@ const BorrowerRow = ({
         {/* Quick Note inline */}
         <QuickNoteInput borrower={borrower} onAddNote={onAddNote} onUpdate={onUpdate} />
 
-        {/* Touch stamp - right side */}
-        <span className={`touch-stamp ${touched ? 'touched' : ''}`} style={{ marginRight: '8px' }}>
+        {/* Touch stamp - right side (green = fresh, red = stale) */}
+        <span className={`touch-stamp ${touched ? 'touched' : ''}`} style={{ marginRight: '8px', color: tColor, fontWeight: 700 }}>
           {touchLabel}
         </span>
 
         {/* Actions - clearer icons */}
         <div className="card-actions">
-          <button type="button" className="btn-icon" onClick={() => onTouch(borrower.id)} title="Mark Touched">
-            <Clock size={14} />
+          <button type="button" className="btn-icon" onClick={() => onTouch(borrower.id)}
+            title={tState === 'green' ? 'Touched recently — click to touch again' : 'Stale — click to mark touched'}>
+            <Clock size={14} style={{ color: tColor }} />
           </button>
 
           <button type="button" className="btn-icon" onClick={onOpenCalendar} title="Calendar">

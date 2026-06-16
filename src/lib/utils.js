@@ -67,6 +67,19 @@ export const touchedRecently = (lastTouched) => {
   return differenceInDays(new Date(), d) <= 2;
 };
 
+// Touch freshness for the row's touch button/stamp.
+// Green when touched recently, red once it's gone stale (never-touched = red).
+// ALL stages go red after 3 days; the Shopping stage gets 8 days.
+export const touchState = (borrower) => {
+  const lt = borrower && borrower.last_touched;
+  if (!lt) return 'red';
+  const d = typeof lt === 'string' ? parseISO(lt) : lt;
+  const days = differenceInDays(new Date(), d);
+  const isShopping = (borrower.stage || '').toLowerCase().includes('shopping');
+  const limit = isShopping ? 8 : 3;
+  return days <= limit ? 'green' : 'red';
+};
+
 // ---- Sorting ----
 export const sortBorrowers = (borrowers, sortBy, stageOrder) => {
   // Map old stage names to new ones for sorting
