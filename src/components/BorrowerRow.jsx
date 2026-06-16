@@ -1440,6 +1440,34 @@ const BorrowerRow = ({
             await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
           };
 
+          // Toggle the red priority flag on a single note (add/remove its 🚩 marker)
+          const toggleFlagNote = async (e, lineToToggle) => {
+            e.stopPropagation();
+            let current = borrower.notes || '';
+            try {
+              const { data } = await supabase.from('borrowers').select('notes').eq('id', borrower.id).single();
+              if (data && typeof data.notes === 'string') current = data.notes;
+            } catch (err) { /* fall back to prop */ }
+            const parts = current.split(/(?=\[\d{1,2}\/\d{1,2}\/\d{2}\])/);
+            const lines = [];
+            parts.forEach(part => {
+              const t = part.trim();
+              if (!t) return;
+              if (t.match(/^\[\d{1,2}\/\d{1,2}\/\d{2}\]/)) lines.push(t.replace(/\n/g, ' '));
+              else t.split('\n').forEach(l => { if (l.trim()) lines.push(l.trim()); });
+            });
+            const updated = lines.map(l => {
+              if (l !== lineToToggle) return l;
+              const m = l.match(/^(\[\d{1,2}\/\d{1,2}\/\d{2}\]\s*)([\s\S]*)$/);
+              if (!m) return l;
+              const prefix = m[1];
+              const body = m[2];
+              const newBody = body.trim().startsWith('🚩') ? body.replace(/^\s*🚩\s*/, '') : `🚩 ${body}`;
+              return `${prefix}${newBody}`;
+            });
+            await onUpdate(borrower.id, { notes: updated.join('\n') });
+          };
+
           return (
             // Each note is its OWN COLUMN. Newest at the far left, older notes
             // to the right, clipped before CONVO. A long note wraps WITHIN its
@@ -1470,7 +1498,13 @@ const BorrowerRow = ({
                       style={{ color: '#64748b', marginRight: '4px', cursor: 'pointer', fontWeight: 700 }}
                       title="Delete this note"
                     >x</span>
-                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px', fontSize: '13px' }}>{dateStr}</span>}
+                    {dateStr && (
+                      <span
+                        onClick={(e) => toggleFlagNote(e, line)}
+                        style={{ color: '#f59e0b', marginRight: '4px', fontSize: '13px', cursor: 'pointer' }}
+                        title="Click the date to flag / un-flag (red) this note"
+                      >{dateStr}</span>
+                    )}
                     <span
                       onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
                       style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#dc2626' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal' }}
