@@ -3334,8 +3334,11 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
   const [parsing, setParsing] = useState(false);
   const [showPaste, setShowPaste] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [lenderName, setLenderName] = useState(upgrade.lender_name || '');
+  const [lenderEmail, setLenderEmail] = useState(upgrade.lender_email || '');
   const proofRef = useRef();
   const pendingRef = useRef(null);
+  const lenderRef = useRef();
 
   const primary = cr.people?.primary || (cr.scores ? cr : null);
   const cur = (primary && primary.scores) || {};
@@ -3349,7 +3352,7 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
   const borrowerDisplay = fullName.includes(',')
     ? `${(fullName.split(',')[1] || '').trim()} ${(fullName.split(',')[0] || '').trim()}`.trim()
     : fullName;
-  const lenderFirst = (upgrade.lender_name || '').trim().split(/\s+/)[0] || 'there';
+  const lenderFirst = (lenderName || '').trim().split(/\s+/)[0] || 'there';
 
   const save = (patch) => onUpdate(borrower.id, { credit_report: { ...cr, upgrade: { ...upgrade, ...patch } } });
   const updateStep = (id, p) => save({ plan: plan.map(s => s.id === id ? { ...s, ...p } : s) });
@@ -3370,9 +3373,12 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
       if (!steps.length) { alert(d.error || 'Could not read a plan from that text.'); setParsing(false); return; }
       const patch = { plan: [...plan, ...steps], pasted_at: new Date().toISOString() };
       if (d.target_score && !target) { patch.target_score = d.target_score; setTarget(d.target_score); }
-      if (d.lender_name) patch.lender_name = d.lender_name;
-      if (d.lender_email) patch.lender_email = d.lender_email;
+      if (d.lender_name) { patch.lender_name = d.lender_name; setLenderName(d.lender_name); }
+      if (d.lender_email) { patch.lender_email = d.lender_email; setLenderEmail(d.lender_email); }
       save(patch);
+      if (!d.lender_name && !d.lender_email) {
+        setTimeout(() => { try { lenderRef.current?.focus(); } catch (e) { /* ignore */ } }, 100);
+      }
       setPasteText(''); setShowPaste(false);
     } catch (e) { alert('Error reading plan: ' + e.message); }
     setParsing(false);
@@ -3432,7 +3438,7 @@ ${borrower.lo_name || 'Your Loan Officer'}`;
 ${stepsList}
 Send me proof of each as you finish so we can re-score, no need to wait. Let's go!`;
 
-  const lenderEmail =
+  const lenderEmailBody =
 `Hi ${lenderFirst},
 
 ${borrowerDisplay || 'The borrower'} has completed all the credit upgrade items on the plan, proofs attached. We're ready to re-score.
@@ -3446,10 +3452,21 @@ Thanks!`;
     try { await navigator.clipboard.writeText(text); alert(`${what} copied — paste it to your borrower.`); }
     catch (e) { alert('Could not copy automatically. Here it is:\n\n' + text); }
   };
+  const saveLender = () => {
+    const patch = {};
+    if (lenderName !== (upgrade.lender_name || '')) patch.lender_name = lenderName;
+    if (lenderEmail !== (upgrade.lender_email || '')) patch.lender_email = lenderEmail;
+    if (Object.keys(patch).length) save(patch);
+  };
   const emailLender = async () => {
-    try { await navigator.clipboard.writeText(lenderEmail); } catch (e) { /* ignore */ }
+    if (!lenderName.trim() && !lenderEmail.trim()) {
+      alert("I don't have the lender contact yet. Add their name and email up top (it's right under the scores) and I'll have this ready.");
+      try { lenderRef.current?.focus(); } catch (e) { /* ignore */ }
+      return;
+    }
+    try { await navigator.clipboard.writeText(lenderEmailBody); } catch (e) { /* ignore */ }
     setShowLibrary(true);
-    alert(`Lender email copied${upgrade.lender_email ? ` (send to ${upgrade.lender_email})` : ''}. The proof Library is open — download each one and attach it to your email.`);
+    alert(`Lender email copied${lenderEmail ? ` (send to ${lenderEmail})` : ''}. The proof Library is open, download each one and attach it to your email.`);
   };
 
   const labelSm = { fontSize: '10px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '3px' };
@@ -3491,9 +3508,22 @@ Thanks!`;
               )}
             </div>
 
+            <div style={{ marginBottom: '12px' }}>
+              <div style={labelSm}>Lender contact (for re-score)</div>
+              {plan.length > 0 && !lenderName && !lenderEmail && (
+                <div style={{ fontSize: '11px', color: '#b45309', marginBottom: '6px' }}>I couldn't find a contact in that email. Add their name and email here so I can send the proofs when you're done.</div>
+              )}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input ref={lenderRef} value={lenderName} onChange={e => setLenderName(e.target.value)} onBlur={saveLender}
+                  placeholder="Contact name" style={{ flex: 1, minWidth: '130px', padding: '6px 8px', border: `1px solid ${plan.length > 0 && !lenderName && !lenderEmail ? '#f59e0b' : '#cbd5e1'}`, borderRadius: '5px', fontSize: '12px' }} />
+                <input value={lenderEmail} onChange={e => setLenderEmail(e.target.value)} onBlur={saveLender}
+                  placeholder="contact@email.com" style={{ flex: 1, minWidth: '160px', padding: '6px 8px', border: `1px solid ${plan.length > 0 && !lenderName && !lenderEmail ? '#f59e0b' : '#cbd5e1'}`, borderRadius: '5px', fontSize: '12px' }} />
+              </div>
+            </div>
+
             {complete && (
               <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', color: '#065f46', fontSize: '13px', fontWeight: 700 }}>
-                ✅ All steps complete! Ready to re-score{upgrade.lender_name ? ` — send the proofs to ${upgrade.lender_name}` : ''}.
+                ✅ All steps complete! Ready to re-score{lenderName ? `, send the proofs to ${lenderName}` : ''}.
               </div>
             )}
 
