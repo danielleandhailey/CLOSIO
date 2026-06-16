@@ -6,8 +6,10 @@ import AddBorrowerModal from '../components/AddBorrowerModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { STAGES, STAGES_BY_TYPE, STAGE_COLORS, SORT_OPTIONS } from '../lib/constants';
 import { sortBorrowers, isNewLead } from '../lib/utils';
+import { useUnreadTexts } from '../hooks/useUnreadTexts';
 
 const PipelinePage = ({ borrowers, ops }) => {
+  const { unreadIds, markSeen } = useUnreadTexts();   // pink-dot new-text tracking (15s poll)
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [defaultTab, setDefaultTab] = useState(null); // which tab to open by default
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -415,6 +417,8 @@ const PipelinePage = ({ borrowers, ops }) => {
                 onAddStip={ops.addStipulation}
                 onMarkStipReceived={ops.markStipReceived}
                 onRemoveStip={ops.removeStipulation}
+                hasUnreadText={!!(borrower.bonzo_id && unreadIds.has(String(borrower.bonzo_id)))}
+                onTextSeen={() => borrower.bonzo_id && markSeen(borrower.bonzo_id)}
               />
               {expandedIds.has(borrower.id) && (
                 <ExpandedCard borrower={borrower} ops={ops} onClose={() => handleClose(borrower.id)} defaultTab={defaultTab} />

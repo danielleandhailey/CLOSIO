@@ -1186,6 +1186,7 @@ const BorrowerRow = ({
   onTouch, onMoveStage, onAddTag, onRemoveTag,
   onOpenCalendar, onUpdate, onDocDrop, onAddNote,
   onAddStip, onMarkStipReceived, onRemoveStip,
+  hasUnreadText, onTextSeen,
 }) => {
   const [showSummary, setShowSummary] = useState(false);
   const [showConvo, setShowConvo] = useState(false);
@@ -1523,10 +1524,14 @@ const BorrowerRow = ({
         <div style={{ position: 'relative', flexShrink: 0, marginRight: '10px' }} onClick={e => e.stopPropagation()}>
           <button
             type="button"
-            onClick={() => setShowConvo(s => !s)}
-            title="View communications"
+            onClick={() => { setShowConvo(s => !s); if (hasUnreadText) onTextSeen?.(); }}
+            title={hasUnreadText ? 'New text! View conversation' : 'View communications'}
             style={{ background: 'none', border: 'none', color: '#ec4899', fontSize: '11px', fontWeight: '800', letterSpacing: '0.06em', cursor: 'pointer' }}
           >CONVO</button>
+          {hasUnreadText && (
+            <span className="text-pulse" title="New text"
+              style={{ position: 'absolute', top: '-3px', right: '-7px', width: '9px', height: '9px', borderRadius: '50%', background: '#ec4899', pointerEvents: 'none' }} />
+          )}
           {showConvo && (
             <>
               <div onClick={() => setShowConvo(false)} style={{ position: 'fixed', inset: 0, zIndex: 90 }} />
