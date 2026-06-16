@@ -3,8 +3,21 @@ import { STAGES } from '../lib/constants';
 
 const digits = (s) => (s || '').replace(/\D/g, '');
 const contactScore = (b) => ((b.email && b.email.trim() ? 2 : 0) + (digits(b.phone) ? 1 : 0));
-const lastName = (n) => (n || '').toLowerCase().split(',')[0].replace(/[^a-z]/g, '').trim();
-const firstName = (n) => ((n || '').toLowerCase().split(',')[1] || '').replace(/[^a-z\s]/g, ' ').trim();
+// Parse a name in EITHER "Last, First" or "First [Middle] Last" format so the
+// same person isn't missed just because the two records are typed differently.
+const parseName = (n) => {
+  const raw = (n || '').toLowerCase().trim();
+  if (!raw) return { last: '', first: '' };
+  if (raw.includes(',')) {
+    const [l, f] = raw.split(',');
+    return { last: (l || '').replace(/[^a-z]/g, ''), first: (f || '').replace(/[^a-z\s]/g, ' ').trim() };
+  }
+  const parts = raw.replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { last: parts[0] || '', first: '' };
+  return { last: parts[parts.length - 1], first: parts.slice(0, -1).join(' ') };
+};
+const lastName = (n) => parseName(n).last;
+const firstName = (n) => parseName(n).first;
 const recency = (b) => new Date(b.updated_at || b.last_touched || b.created_at || 0).getTime();
 const recencyLabel = (b) => {
   const t = recency(b);
