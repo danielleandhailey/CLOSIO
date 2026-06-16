@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { STAGES } from '../lib/constants';
+import { toFirstLast } from '../lib/utils';
 
 const digits = (s) => (s || '').replace(/\D/g, '');
 const contactScore = (b) => ((b.email && b.email.trim() ? 2 : 0) + (digits(b.phone) ? 1 : 0));
@@ -159,7 +160,7 @@ const DedupModal = ({ borrowers, onMerge, onDelete, onClose }) => {
                         onChange={() => setWinners(w => ({ ...w, [g[0].id]: b.id }))} title="Keep this one" />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ color: '#f0f0ff', fontWeight: 700, fontSize: '13px' }}>
-                          {b.name} {isWinner && <span style={{ color: '#22c55e', fontSize: '10px', fontWeight: 700 }}>KEEP</span>}
+                          {toFirstLast(b.name)} {isWinner && <span style={{ color: '#22c55e', fontSize: '10px', fontWeight: 700 }}>KEEP</span>}
                         </div>
                         <div style={{ color: '#9a9ab8', fontSize: '11px' }}>
                           {b.stage || '—'} · {b.phone || 'no phone'} · {b.email || 'no email'} · last {recencyLabel(b)}

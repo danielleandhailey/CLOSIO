@@ -176,17 +176,24 @@ export const getFirstName = (name) => {
 };
 
 // Format name as "LASTNAME, First" with co-borrower(s)
+// Flip a single STORED name to "First Last" for display (to match Bonzo).
+// The stored value is never changed — this only affects how it's shown.
+// A "Last, First" value becomes "First Last"; a no-comma value is shown as-is.
+export const toFirstLast = (name) => {
+  if (!name) return '';
+  const n = String(name).trim();
+  if (n.includes(',')) {
+    const [last, first] = n.split(',').map(s => s.trim());
+    return [first, last].filter(Boolean).join(' ');
+  }
+  return n; // no comma — already First Last (or as typed)
+};
+
 export const formatBorrowerName = (name, coBorrower, coBorrowers) => {
   if (!name) return '';
-  let display;
-  if (name.includes(',')) {
-    const [lastName, firstName] = name.split(',').map(s => s.trim());
-    display = `${lastName}, ${firstName}`;
-  } else {
-    display = name.trim(); // no comma — show as typed, never guess/flip last vs first
-  }
+  let display = toFirstLast(name);
   const allCoBorrowers = coBorrowers?.length ? coBorrowers : (coBorrower ? [coBorrower] : []);
-  if (allCoBorrowers.length === 1) display += ` & ${allCoBorrowers[0]}`;
+  if (allCoBorrowers.length === 1) display += ` & ${toFirstLast(allCoBorrowers[0])}`;
   else if (allCoBorrowers.length > 1) display += ` +${allCoBorrowers.length}`;
   return display;
 };

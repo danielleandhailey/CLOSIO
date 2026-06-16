@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Plus, X, Check, ChevronDown, ChevronRight, FileText, Upload } from 'lucide-react';
 import { STAGES_WITH_FULL_DETAILS, CONTACT_ROLES, STIP_TEMPLATES, STIP_CATEGORIES, EMPLOYMENT_TYPES, INCOME_TYPES } from '../lib/constants';
-import { formatDate, formatCurrency, formatRate, calcPI, calcLTV, taskUrgency, urgencyColor } from '../lib/utils';
+import { formatDate, formatCurrency, formatRate, calcPI, calcLTV, taskUrgency, urgencyColor, toFirstLast } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { claudeService } from '../lib/claude';
 import CommunicationPanel from './CommunicationPanel';
@@ -640,7 +640,7 @@ const DocDropZone = ({ borrower, onDocAdded, ops, label, compact }) => {
         // If the doc is clearly for a different borrower, ask before applying anything
         if (extracted.borrower_name && borrower.name && !sameBorrower(extracted.borrower_name, borrower.name)) {
           const apply = window.confirm(
-            `This document looks like it's for "${extracted.borrower_name}", but this file is "${borrower.name}".\n\nOK = add it to THIS file anyway.\nCancel = skip this document.`
+            `This document looks like it's for "${extracted.borrower_name}", but this file is "${toFirstLast(borrower.name)}".\n\nOK = add it to THIS file anyway.\nCancel = skip this document.`
           );
           if (!apply) {
             await supabase.from('doc_queue').delete().eq('id', row.id);
@@ -1523,7 +1523,7 @@ West Capital Lending Team`;
     return body;
   };
 
-  const emailSubject = `** NEEDS LIST ** ${borrower.name}`;
+  const emailSubject = `** NEEDS LIST ** ${toFirstLast(borrower.name)}`;
   const emailBody = buildEmailBody();
   const emailBodyHTML = buildEmailBodyHTML();
 
@@ -1540,7 +1540,7 @@ West Capital Lending Team`;
     }
 
     try {
-      const taskTitle = `📧 Send stips list to ${borrower.name} (${outstanding.length} items)`;
+      const taskTitle = `📧 Send stips list to ${toFirstLast(borrower.name)} (${outstanding.length} items)`;
       const today = new Date().toISOString().split('T')[0];
       // Use direct supabase insert instead of ops.addTask to avoid schema issues
       const { error } = await supabase.from('tasks').insert([{
@@ -2677,8 +2677,8 @@ const NotifyLOASection = ({ borrower }) => {
   const LOA_NAME = 'H. Rose';
 
   const sendEmail = () => {
-    const subject = `File Update: ${borrower.name}`;
-    const body = message || `Please review the file for ${borrower.name}.`;
+    const subject = `File Update: ${toFirstLast(borrower.name)}`;
+    const body = message || `Please review the file for ${toFirstLast(borrower.name)}.`;
     window.open(`mailto:${LOA_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
     const now = new Date();
     const stamp = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -2687,7 +2687,7 @@ const NotifyLOASection = ({ borrower }) => {
 
   const createTask = async () => {
     try {
-      const taskTitle = message || `Review file: ${borrower.name}`;
+      const taskTitle = message || `Review file: ${toFirstLast(borrower.name)}`;
       const today = new Date().toISOString().split('T')[0];
       const { error } = await supabase.from('tasks').insert([{
         borrower_id: borrower.id,
@@ -2717,7 +2717,7 @@ const NotifyLOASection = ({ borrower }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
       <div style={{ fontSize: '11px', color: '#64748b' }}>
-        Notify <strong>{LOA_NAME}</strong> about: <strong>{borrower.name}</strong>
+        Notify <strong>{LOA_NAME}</strong> about: <strong>{toFirstLast(borrower.name)}</strong>
       </div>
 
       <textarea
@@ -3201,7 +3201,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     return (
       <div key={person.key} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginBottom: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>📄 {person.label}</div>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>📄 {toFirstLast(person.label)}</div>
           {(rep.file_path || rep.file_url) && (
             <button onClick={() => openReport(rep)} style={{ background: '#1e3a5f', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>View</button>
           )}
@@ -3296,7 +3296,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
           <span style={{ fontSize: '10px', fontWeight: 800, color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualifying Score</span>
           <span style={{ fontSize: '22px', fontWeight: 900, color: '#059669', lineHeight: 1 }}>{qualMid}</span>
           {peopleMids.length > 1 && qualPerson && (
-            <span style={{ fontSize: '11px', color: '#065f46' }}>(lowest mid — {qualPerson.label})</span>
+            <span style={{ fontSize: '11px', color: '#065f46' }}>(lowest mid — {toFirstLast(qualPerson.label)})</span>
           )}
         </div>
       )}
@@ -3315,7 +3315,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
           <div onClick={() => setSignedUrl(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000 }} />
           <div style={{ position: 'fixed', top: '5%', left: '5%', right: '5%', bottom: '5%', background: '#fff', borderRadius: '12px', zIndex: 1001, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: '600', color: '#1e293b' }}>Credit Report - {borrower.name}</span>
+              <span style={{ fontWeight: '600', color: '#1e293b' }}>Credit Report - {toFirstLast(borrower.name)}</span>
               <button onClick={() => setSignedUrl(null)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Close</button>
             </div>
             <iframe src={signedUrl} style={{ flex: 1, border: 'none' }} title="Credit Report" />

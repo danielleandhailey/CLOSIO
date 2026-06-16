@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { format, parseISO, differenceInDays, isSameDay, startOfDay } from 'date-fns';
 import { Calendar, Lock, AlertTriangle, Clock, CheckSquare, TrendingUp, DollarSign, Home, Users, X } from 'lucide-react';
 import { STAGES, STAGE_COLORS } from '../lib/constants';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency, toFirstLast } from '../lib/utils';
 
 // Assignee colors - text only, no pills
 const getAssigneeTextColor = (name) => {
@@ -152,7 +152,7 @@ const BorrowerListModal = ({ title, borrowers, onClose, onSelectBorrower, onExte
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {borrowers.map((b, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--surface2)', borderRadius: '8px' }}>
-                <span onClick={() => { onSelectBorrower(b.id, 'terms'); onClose(); }} style={{ fontWeight: '700', color: '#3b82f6', flex: 1, cursor: 'pointer' }}>{b.name}</span>
+                <span onClick={() => { onSelectBorrower(b.id, 'terms'); onClose(); }} style={{ fontWeight: '700', color: '#3b82f6', flex: 1, cursor: 'pointer' }}>{toFirstLast(b.name)}</span>
                 <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{b.stage}</span>
                 {(b.effectiveLockDate || b.lock_expiration) && (
                   <span
@@ -650,7 +650,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
                   onChange={e => setApptForm(f => ({ ...f, borrower_id: e.target.value }))}
                   style={{ flex: 1, padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: '12px' }}
                 >
-                  {borrowers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  {borrowers.map(b => <option key={b.id} value={b.id}>{toFirstLast(b.name)}</option>)}
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -706,7 +706,7 @@ const DashboardHeader = ({ borrowers = [], onSelectBorrower, onFilterStage, ops,
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {floatingLoans.map((b, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--surface2)', borderRadius: '8px' }}>
-                    <span onClick={() => { onSelectBorrower(b.id, 'terms'); setShowListModal(null); }} style={{ fontWeight: '700', color: '#3b82f6', flex: 1, cursor: 'pointer' }}>{b.name}</span>
+                    <span onClick={() => { onSelectBorrower(b.id, 'terms'); setShowListModal(null); }} style={{ fontWeight: '700', color: '#3b82f6', flex: 1, cursor: 'pointer' }}>{toFirstLast(b.name)}</span>
                     <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{b.stage}</span>
                     {b.lender && (
                       <span
