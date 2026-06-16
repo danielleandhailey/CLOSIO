@@ -3097,9 +3097,9 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
 
   const redCell = (label, count, onClick) => (
     <div onClick={count > 0 ? onClick : undefined}
-      style={{ background: count > 0 ? '#fee2e2' : '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center', cursor: count > 0 ? 'pointer' : 'default' }}>
-      <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: '14px', fontWeight: '700', color: count > 0 ? '#dc2626' : '#1e293b' }}>{count}{count > 0 ? ' ▾' : ''}</div>
+      style={{ background: count > 0 ? '#fee2e2' : '#f1f5f9', padding: '6px 3px', borderRadius: '6px', textAlign: 'center', cursor: count > 0 ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ fontSize: '8px', color: '#64748b', textTransform: 'uppercase', lineHeight: 1.2 }}>{label}</div>
+      <div style={{ fontSize: '15px', fontWeight: '700', color: count > 0 ? '#dc2626' : '#1e293b' }}>{count}{count > 0 ? ' ▾' : ''}</div>
     </div>
   );
 
@@ -3109,7 +3109,11 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     const hasV = Object.values(v).some(Boolean);
     const negItems = rep.negative_items || [];
     const pubItems = rep.public_record_items || [];
-    const negCount = rep.negative_marks || negItems.length || 0;
+    const isCO = (it) => /charge.?off/i.test(`${it.type || ''} ${it.status || ''}`);
+    const isBK = (it) => /bankrupt/i.test(`${it.type || ''} ${it.status || ''}`);
+    // BK shows only under Public Records; charge-offs float to the top
+    const displayNeg = negItems.filter(it => !isBK(it)).sort((a, b) => (isCO(b) ? 1 : 0) - (isCO(a) ? 1 : 0));
+    const negCount = negItems.length ? displayNeg.length : (rep.negative_marks || 0);
     const pubCount = rep.public_records || pubItems.length || 0;
     const negKey = `${person.key}:neg`, pubKey = `${person.key}:pub`;
     const toggle = (k) => setOpenDetail(o => ({ ...o, [k]: !o[k] }));
@@ -3122,14 +3126,14 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
             <button onClick={() => openReport(rep)} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>View</button>
           )}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-          <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.9fr 1fr 1fr', gap: '8px', alignItems: 'stretch' }}>
+          <div style={{ background: '#f1f5f9', padding: '10px 8px', borderRadius: '6px', textAlign: 'center' }}>
             <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>FICO (EQ/EX/TU)</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{s.equifax || '—'} / {s.experian || '—'} / {s.transunion || '—'}</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>{s.equifax || '—'} / {s.experian || '—'} / {s.transunion || '—'}</div>
             {hasV && (
               <>
-                <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginTop: '5px' }}>Vantage (EQ/EX/TU)</div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#7c3aed' }}>{v.equifax || '—'} / {v.experian || '—'} / {v.transunion || '—'}</div>
+                <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginTop: '6px' }}>Vantage (EQ/EX/TU)</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: '#7c3aed' }}>{v.equifax || '—'} / {v.experian || '—'} / {v.transunion || '—'}</div>
               </>
             )}
           </div>
@@ -3140,9 +3144,20 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         {openDetail[negKey] && (
           <div style={detailBox}>
             <div style={{ fontWeight: 700, marginBottom: '2px' }}>Negative items</div>
-            {negItems.length ? negItems.map((it, i) => (
-              <div key={i}>• {it.creditor || 'Account'}{it.type ? ` — ${it.type}` : ''}{it.status ? ` (${it.status})` : ''}{it.balance ? ` · $${Number(it.balance).toLocaleString()}` : ''}{it.last_late_date ? ` · last late ${it.last_late_date}` : it.date ? ` · ${it.date}` : ''}{it.rolling ? ' · 🔁 ROLLING' : ''}</div>
-            )) : <div>Not itemized by the report — click <strong>View</strong> to see them.</div>}
+            {displayNeg.length ? displayNeg.map((it, i) => {
+              const co = isCO(it);
+              const paid = /paid/i.test(it.status || '');
+              const statusTxt = co ? (paid ? 'PAID THRU COLLECTIONS' : 'CHARGED OFF') : (it.status || '');
+              return (
+                <div key={i}>
+                  • {it.creditor || 'Account'} — {co ? <strong>CHARGE OFF</strong> : (it.type || 'Account')}
+                  {it.balance ? ` · $${Number(it.balance).toLocaleString()}` : ''}
+                  {statusTxt ? ` · ${statusTxt}` : ''}
+                  {!co && it.last_late_date ? ` · last late ${it.last_late_date}` : ''}
+                  {!co && it.rolling ? ' · 🔁 ROLLING' : ''}
+                </div>
+              );
+            }) : <div>No itemized negatives{negCount > 0 ? ' — click View to see them' : ''}.</div>}
           </div>
         )}
         {openDetail[pubKey] && (
