@@ -1439,40 +1439,30 @@ const BorrowerRow = ({
             await onUpdate(borrower.id, { notes: updatedLines.join('\n') });
           };
 
-          // Truncate at word boundary
-          const truncateAtWord = (text, maxLen) => {
-            if (text.length <= maxLen) return text;
-            const truncated = text.substring(0, maxLen);
-            const lastSpace = truncated.lastIndexOf(' ');
-            return (lastSpace > maxLen - 30 ? truncated.substring(0, lastSpace) : truncated) + '...';
-          };
-
           return (
             <div
-              style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'nowrap', gap: '6px', flex: 1, overflow: 'hidden', marginLeft: '0' }}
+              style={{ flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginRight: '12px' }}
             >
-              {noteLines.slice(0, 3).map((line, idx) => {
+              {noteLines.slice(0, 8).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
                 const match = line.match(/^\[(\d{1,2}\/\d{1,2}\/\d{2})\]\s*(.*)$/);
                 const dateStr = match ? match[1] : '';
                 const rawText = match ? match[2] : line;
                 const isPriority = rawText.trim().startsWith('🚩');
                 const noteText = isPriority ? rawText.replace(/^\s*🚩\s*/, '') : rawText;
-                const truncatedText = truncateAtWord(noteText, 80);
                 return (
-                  <span
-                    key={idx}
-                    onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                    style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#dc2626' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                    title={noteText}
-                  >
+                  <span key={idx} style={{ marginRight: '16px' }}>
                     <span
                       onClick={(e) => deleteNote(e, line)}
                       style={{ color: '#ef4444', marginRight: '4px', cursor: 'pointer', fontWeight: 700 }}
                       title="Delete this note"
                     >×</span>
-                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px' }}>{dateStr}</span>}
-                    {truncatedText}
+                    {dateStr && <span style={{ color: '#f59e0b', marginRight: '4px', fontSize: '13px' }}>{dateStr}</span>}
+                    <span
+                      onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
+                      style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#dc2626' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal' }}
+                      title={noteText}
+                    >{noteText}</span>
                   </span>
                 );
               })}
