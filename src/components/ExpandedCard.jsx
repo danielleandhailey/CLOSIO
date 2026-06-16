@@ -3214,14 +3214,14 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
                 <React.Fragment key={i}>
                   {i > 0 && <span style={{ color: '#cbd5e1' }}> / </span>}
                   <span style={{
-                    color: (sc && sc === mid) ? (isQual ? '#b91c1c' : '#0d9488') : '#94a3b8',
+                    color: (sc && sc === mid) ? (isQual ? '#059669' : '#b91c1c') : '#94a3b8',
                     textDecoration: (sc && sc === mid) ? 'underline' : 'none', textUnderlineOffset: '3px',
                   }}>{sc || '—'}</span>
                 </React.Fragment>
               ))}
             </div>
             {mid && (
-              <div style={{ marginTop: '3px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', color: isQual ? '#b91c1c' : '#0d9488' }}>
+              <div style={{ marginTop: '3px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', color: isQual ? '#059669' : '#b91c1c' }}>
                 MID {mid}{isQual ? ' • QUALIFYING' : ''}
               </div>
             )}
@@ -3292,11 +3292,11 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
 
       {/* Qualifying score = lowest mid across borrowers */}
       {qualMid && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '8px 12px', marginBottom: '10px' }}>
-          <span style={{ fontSize: '10px', fontWeight: 800, color: '#7f1d1d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualifying Score</span>
-          <span style={{ fontSize: '22px', fontWeight: 900, color: '#b91c1c', lineHeight: 1 }}>{qualMid}</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', padding: '8px 12px', marginBottom: '10px' }}>
+          <span style={{ fontSize: '10px', fontWeight: 800, color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualifying Score</span>
+          <span style={{ fontSize: '22px', fontWeight: 900, color: '#059669', lineHeight: 1 }}>{qualMid}</span>
           {peopleMids.length > 1 && qualPerson && (
-            <span style={{ fontSize: '11px', color: '#7f1d1d' }}>(lowest mid — {qualPerson.label})</span>
+            <span style={{ fontSize: '11px', color: '#065f46' }}>(lowest mid — {qualPerson.label})</span>
           )}
         </div>
       )}
@@ -3308,21 +3308,6 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         return scoreCard(person, rep);
       })}
 
-      {/* Report history — every drop, newest first */}
-      {(cr.history || []).length > 0 && (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', marginTop: '4px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>Report History</div>
-          {(cr.history || []).map((h, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', borderTop: i ? '1px solid #f1f5f9' : 'none', fontSize: '11px' }}>
-              <FileText size={13} style={{ color: '#3b82f6', flexShrink: 0 }} />
-              <span style={{ flex: 1, color: '#475569' }}>{h.person || 'Report'} · {h.uploaded_at ? format(parseISO(h.uploaded_at), 'M/d/yy h:mma') : ''}</span>
-              {(h.file_path || h.file_url) && (
-                <button onClick={() => openReport(h)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}>View</button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Report Viewer Modal */}
       {signedUrl && (
@@ -3946,7 +3931,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
   const boxStyle = { position: 'relative', background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '500px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '400px' };
   // Full-size (maximized) version of a tab box
   const maxBoxStyle = { position: 'fixed', inset: '10px', width: 'auto', zIndex: 1600, overflowY: 'auto', background: '#f1f5f9', borderRadius: '8px', padding: '20px', border: '2px solid #0d9488', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 48px rgba(0,0,0,0.45)' };
-  const tabBoxStyle = (id) => (maxTab === id ? maxBoxStyle : boxStyle);
+  const tabBoxStyle = (id, extra) => (maxTab === id ? maxBoxStyle : { ...boxStyle, ...(extra || {}) });
   // Expand / restore button for the top-right of a tab box
   const maxBtn = (id) => (
     <button type="button" onClick={() => setMaxTab(m => (m === id ? null : id))}
@@ -3978,7 +3963,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
       {/* Content Boxes */}
       <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
         {openTabs.has('notes') && (
-          <div style={{ ...boxStyle, minHeight: '320px', height: 'min(550px, 72vh)', display: 'flex', flexDirection: 'column' }}>
+          <div style={tabBoxStyle('notes', { minHeight: '320px', height: 'min(550px, 72vh)', display: 'flex', flexDirection: 'column' })}>
+            {maxBtn('notes')}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <NotesSection borrower={borrower} ops={ops} onClose={onClose} />
             </div>
@@ -3998,14 +3984,16 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('tasks') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('tasks')}>
+            {maxBtn('tasks')}
             <TasksSection borrower={borrower} ops={ops} />
             {closeBtn('tasks')}
           </div>
         )}
 
         {openTabs.has('bonzonotes') && (
-          <div style={{ ...boxStyle, background: '#1e3a5f', border: '2px solid #3b82f6' }}>
+          <div style={tabBoxStyle('bonzonotes', { background: '#1e3a5f', border: '2px solid #3b82f6' })}>
+            {maxBtn('bonzonotes')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#60a5fa', marginBottom: '12px' }}>📘 Bonzo Notes</div>
             <BonzoNotesSection borrower={borrower} />
             {closeBtn('bonzonotes')}
@@ -4013,7 +4001,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('comms') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('comms')}>
+            {maxBtn('comms')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💬 Communication</div>
             <CommunicationSection borrower={borrower} onLinked={ops?.refetch} />
             {closeBtn('comms')}
@@ -4021,7 +4010,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('docs') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('docs')}>
+            {maxBtn('docs')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📄 Upload Documents</div>
             <DocDropZone borrower={borrower} onDocAdded={() => ops.refetch()} ops={ops} />
             {closeBtn('docs')}
@@ -4029,7 +4019,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('needs') && (
-          <div style={{ ...boxStyle, width: '500px' }}>
+          <div style={tabBoxStyle('needs', { width: '500px' })}>
+            {maxBtn('needs')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📋 Needs List</div>
             <NeedsSection borrower={borrower} ops={ops} />
             {closeBtn('needs')}
@@ -4037,7 +4028,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('borrowers') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('borrowers')}>
+            {maxBtn('borrowers')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>👤 Borrowers</div>
             <div style={{ marginBottom: '16px' }}>
               <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop 1003 / AUS to auto-fill" />
@@ -4048,7 +4040,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('terms') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('terms')}>
+            {maxBtn('terms')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💰 Loan Terms</div>
             <div style={{ marginBottom: '16px' }}>
               <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop docs to auto-fill loan terms" />
@@ -4059,7 +4052,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('income') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('income')}>
+            {maxBtn('income')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>💵 Income / Employment</div>
             <div style={{ marginBottom: '16px' }}>
               <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop paystub / W-2 / tax returns" />
@@ -4070,7 +4064,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('contacts') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('contacts')}>
+            {maxBtn('contacts')}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>👥 Contacts</div>
               <button type="button" onClick={() => setContactsExpanded(e => !e)}
@@ -4093,7 +4088,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('contingencies') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('contingencies')}>
+            {maxBtn('contingencies')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>⚠️ Contingencies</div>
             <div style={{ marginBottom: '16px' }}>
               <DocDropZone borrower={borrower} ops={ops} onDocAdded={() => ops.refetch()} compact label="📎 Drop Purchase Agreement" />
@@ -4129,7 +4125,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('appraisal') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('appraisal')}>
+            {maxBtn('appraisal')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>
               🏠 Appraisal {borrower.appraisal_type && <span style={{ fontWeight: '400', color: '#1e293b' }}>— {borrower.appraisal_type}</span>}
             </div>
@@ -4142,7 +4139,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('preapproval') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('preapproval')}>
+            {maxBtn('preapproval')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>✅ Preapproval</div>
             <PreapprovalSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('preapproval')}
@@ -4150,7 +4148,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('history') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('history')}>
+            {maxBtn('history')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📜 History</div>
             <StageHistory borrowerId={borrower.id} />
             {closeBtn('history')}
@@ -4158,7 +4157,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('calc') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('calc')}>
+            {maxBtn('calc')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>Calculators</div>
             <CalcSection borrower={borrower} />
             {closeBtn('calc')}
@@ -4166,7 +4166,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('subhub') && (
-          <div style={{ ...boxStyle, border: '2px solid #3b82f6' }}>
+          <div style={tabBoxStyle('subhub', { border: '2px solid #3b82f6' })}>
+            {maxBtn('subhub')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>SUB HUB - Submit to Processing</div>
             <SubHubSection borrower={borrower} onUpdate={ops.updateBorrower} ops={ops} />
             {closeBtn('subhub')}
@@ -4174,7 +4175,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('getpaid') && (
-          <div style={{ ...boxStyle, border: borrower.funded_date ? '2px solid #10b981' : '2px solid #f59e0b' }}>
+          <div style={tabBoxStyle('getpaid', { border: borrower.funded_date ? '2px solid #10b981' : '2px solid #f59e0b' })}>
+            {maxBtn('getpaid')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>GET PAID - Funded Stage</div>
             <GetPaidSection borrower={borrower} onUpdate={ops.updateBorrower} />
             {closeBtn('getpaid')}
@@ -4182,7 +4184,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('notifyloa') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('notifyloa')}>
+            {maxBtn('notifyloa')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📣 Notify LOA</div>
             <NotifyLOASection borrower={borrower} />
             {closeBtn('notifyloa')}
