@@ -384,17 +384,11 @@ const QuickNoteInput = ({ borrower, onAddNote }) => {
 
   const save = async () => {
     if (!note.trim()) return;
-    const dateStamp = format(new Date(), 'M/d/yy');
-    // A priority note is marked with a leading 🚩 (stripped on display) so the row shows it bold red
+    // addNote() in the parent stamps the date and safely prepends to the existing
+    // notes (reading fresh from the DB), so we pass ONLY the new note body here.
+    // A priority note carries a leading 🚩 (stripped on display) so the row shows it bold red.
     const body = priority ? `🚩 ${note.trim()}` : note.trim();
-    const newNote = `[${dateStamp}] ${body}`;
-    // Re-read freshest notes so a quickly-added second note never clobbers the first
-    let existing = borrower.notes || '';
-    try {
-      const { data } = await supabase.from('borrowers').select('notes').eq('id', borrower.id).single();
-      if (data && typeof data.notes === 'string') existing = data.notes;
-    } catch (e) { /* fall back to prop */ }
-    await onAddNote(borrower.id, existing ? `${newNote}\n${existing}` : newNote);
+    await onAddNote(borrower.id, body);
     reset();
   };
 
