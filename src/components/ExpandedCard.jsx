@@ -3648,6 +3648,206 @@ Thanks!`;
   );
 };
 
+// ---- AUS (DU/LPA) Findings Section ----
+const AUSSection = ({ borrower, onUpdate }) => {
+  const aus = borrower.aus_findings || null;
+  const [pasteText, setPasteText] = useState('');
+  const [parsing, setParsing] = useState(false);
+  const [showConditions, setShowConditions] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef();
+
+  const saveAus = (data) => onUpdate(borrower.id, { aus_findings: { ...data, parsed_at: new Date().toISOString() } });
+
+  const handleResult = (d) => {
+    if (!d || d.error || !d.recommendation) { alert(d?.error || 'Could not read AUS findings from that.'); return false; }
+    saveAus(d); return true;
+  };
+  const parseText = async () => {
+    if (!pasteText.trim()) return;
+    setParsing(true);
+    try {
+      const r = await fetch('/api/parse-aus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: pasteText }) });
+      if (handleResult(await r.json())) setPasteText('');
+    } catch (e) { alert('Error reading AUS: ' + e.message); }
+    setParsing(false);
+  };
+  const parseFile = async (file) => {
+    if (!file) return;
+    setParsing(true);
+    try {
+      const b64 = await fileToBase64(file);
+      const r = await fetch('/api/parse-aus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64Data: b64, mimeType: file.type }) });
+      handleResult(await r.json());
+    } catch (e) { alert('Error reading AUS: ' + e.message); }
+    setParsing(false);
+  };
+
+  const money = (n) => (n || n === 0) ? `$${Number(n).toLocaleString()}` : '—';
+  const pct = (n) => (n || n === 0) ? `${n}%` : '—';
+  const eligible = aus && (aus.eligible !== false) && !/ineligible|refer/i.test(aus.recommendation || '');
+  const recColor = eligible ? '#059669' : '#b91c1c';
+  const recBg = eligible ? '#ecfdf5' : '#fef2f2';
+  const recBorder = eligible ? '#6ee7b7' : '#fecaca';
+  const cellLabel = { fontSize: '9px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' };
+  const cellVal = { fontSize: '14px', fontWeight: 700, color: '#1e293b' };
+  const cell = (label, val, valColor) => (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px' }}>
+      <div style={cellLabel}>{label}</div>
+      <div style={{ ...cellVal, color: valColor || '#1e293b' }}>{val}</div>
+    </div>
+  );
+  const sectionTitle = (t) => <div style={{ fontSize: '11px', fontWeight: 800, color: '#1e3a5f', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '14px 0 6px' }}>{t}</div>;
+  const mid3 = (arr) => { const v = (arr || []).filter(Boolean).slice().sort((a, b) => a - b); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; };
+
+  return (
+    <div>
+      <input ref={inputRef} type="file" accept=".pdf,image/*" style={{ display: 'none' }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) parseFile(f); if (inputRef.current) inputRef.current.value = ''; }} />
+
+      {/* Input: drop / browse / paste */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={async e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer?.files?.[0]; if (f) await parseFile(f); }}
+        onClick={() => inputRef.current?.click()}
+        style={{ padding: '14px', borderRadius: '8px', marginBottom: '10px', background: dragging ? '#e0f2fe' : '#f1f5f9', border: `2px dashed ${dragging ? '#3b82f6' : '#94a3b8'}`, textAlign: 'center', cursor: 'pointer' }}
+      >
+        <FileText size={20} style={{ color: '#64748b', marginBottom: '2px' }} />
+        <div style={{ fontSize: '12px', color: '#475569', fontWeight: 700 }}>{parsing ? 'Reading findings…' : 'Drop AUS PDF or click to browse'}</div>
+      </div>
+      <textarea value={pasteText} onChange={e => setPasteText(e.target.value)} rows={4}
+        placeholder="…or paste the findings text here (Ctrl+A, Ctrl+V) and hit Read"
+        style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', resize: 'vertical', boxSizing: 'border-box' }} />
+      <button onClick={parseText} disabled={parsing || !pasteText.trim()}
+        style={{ marginTop: '6px', marginBottom: '6px', background: parsing ? '#94a3b8' : '#1e3a5f', color: '#fff', border: 'none', borderRadius: '5px', padding: '7px 16px', fontWeight: 700, cursor: parsing ? 'default' : 'pointer', fontSize: '12px' }}>
+        {parsing ? 'Reading…' : '✨ Read findings'}
+      </button>
+
+      {aus && (
+        <div>
+          {/* Recommendation */}
+          <div style={{ background: recBg, border: `1px solid ${recBorder}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' }}>
+            <div style={{ fontSize: '9px', fontWeight: 800, color: recColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{aus.aus_type || 'AUS'} Recommendation</div>
+            <div style={{ fontSize: '18px', fontWeight: 900, color: recColor, lineHeight: 1.1 }}>{aus.recommendation}</div>
+            {!eligible && (aus.ineligible_reasons || []).length > 0 && (
+              <div style={{ marginTop: '6px', fontSize: '12px', color: '#7f1d1d' }}>
+                <div style={{ fontWeight: 700, marginBottom: '2px' }}>Why:</div>
+                {aus.ineligible_reasons.map((r, i) => <div key={i}>• {r}</div>)}
+              </div>
+            )}
+          </div>
+
+          {/* Key numbers */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+            {cell('LTV / CLTV', `${pct(aus.ltv)}${aus.cltv ? ' / ' + pct(aus.cltv) : ''}`)}
+            {cell('Housing', pct(aus.housing_ratio))}
+            {cell('Total DTI', pct(aus.total_ratio), aus.total_ratio > 50 ? '#b45309' : '#1e293b')}
+            {cell('Loan Type', aus.loan_type || '—')}
+            {cell('Note Rate', aus.note_rate ? `${aus.note_rate}%` : '—')}
+            {cell('Term', aus.loan_term || '—')}
+            {cell('Loan Amount', money(aus.total_loan_amount || aus.loan_amount))}
+            {cell('Sales Price', money(aus.sales_price))}
+            {cell('Appraised', money(aus.appraised_value))}
+            {cell('Appraisal Waiver / PIW', aus.appraisal_waiver || '—', /elig|yes|approv/i.test(aus.appraisal_waiver || '') ? '#059669' : '#1e293b')}
+            {cell('Tax Returns', aus.tax_returns_required || '—')}
+            {cell('Disburse By', aus.disbursement_by_date || '—')}
+          </div>
+
+          {/* Funds */}
+          {(aus.funds_required || aus.funds_available || aus.funds_shortage || aus.reserves) && (
+            <>
+              {sectionTitle('Funds')}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                {cell('Required', money(aus.funds_required))}
+                {cell('Available', money(aus.funds_available))}
+                {cell('Shortage', money(aus.funds_shortage), (aus.funds_shortage > 0) ? '#b91c1c' : '#059669')}
+                {cell('Reserves', money(aus.reserves), (aus.reserves < 0) ? '#b91c1c' : '#1e293b')}
+                {aus.months_reserves != null && cell('Months Reserves', String(aus.months_reserves))}
+              </div>
+            </>
+          )}
+
+          {/* Credit scores */}
+          {(aus.credit_scores || []).length > 0 && (
+            <>
+              {sectionTitle('Credit Scores (mid)')}
+              {aus.credit_scores.map((c, i) => {
+                const m = mid3(c.scores);
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: '8px', fontSize: '13px', padding: '2px 0' }}>
+                    <span style={{ color: '#475569', minWidth: '140px' }}>{c.borrower}</span>
+                    <span>{(c.scores || []).map((s, j) => (
+                      <span key={j} style={{ color: s === m ? '#059669' : '#94a3b8', fontWeight: s === m ? 800 : 600, textDecoration: s === m ? 'underline' : 'none', marginRight: '6px' }}>{s}</span>
+                    ))}</span>
+                    {m && <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669' }}>MID {m}</span>}
+                  </div>
+                );
+              })}
+            </>
+          )}
+
+          {/* Income used */}
+          {(aus.income_used || []).length > 0 && (
+            <>
+              {sectionTitle('Income Used')}
+              {aus.income_used.map((x, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '2px 0', color: '#1e293b' }}>
+                  <span>{x.borrower} <span style={{ color: '#64748b' }}>· {x.type}</span></span>
+                  <span style={{ fontWeight: 700 }}>{money(x.amount)}/mo</span>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Assets used */}
+          {(aus.assets_used || []).length > 0 && (
+            <>
+              {sectionTitle('Assets Used')}
+              {aus.assets_used.map((x, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '2px 0', color: '#1e293b' }}>
+                  <span>{x.borrower} <span style={{ color: '#64748b' }}>· {x.account_type}{x.institution ? ` (${x.institution})` : ''}</span></span>
+                  <span style={{ fontWeight: 700 }}>{money(x.amount)}</span>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Omitted liabilities — flagged */}
+          {(aus.omitted_liabilities || []).length > 0 && (
+            <>
+              {sectionTitle('⚠️ Omitted Liabilities (document the omission)')}
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '8px', fontSize: '12px', color: '#92400e' }}>
+                {aus.omitted_liabilities.map((x, i) => (
+                  <div key={i}>• {x.borrower}{x.creditor ? ` — ${x.creditor}` : ''} · bal {money(x.balance)} · pmt {money(x.payment)}</div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Conditions */}
+          {(aus.conditions || []).length > 0 && (
+            <>
+              <button onClick={() => setShowConditions(v => !v)} style={{ marginTop: '14px', background: 'none', border: '1px solid #cbd5e1', borderRadius: '5px', padding: '5px 12px', fontSize: '11px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>
+                {showConditions ? 'Hide' : 'Show'} conditions / verification messages ({aus.conditions.length})
+              </button>
+              {showConditions && (
+                <div style={{ marginTop: '6px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px', fontSize: '11px', color: '#475569', lineHeight: 1.5, maxHeight: '260px', overflowY: 'auto' }}>
+                  {aus.conditions.map((c, i) => <div key={i} style={{ padding: '3px 0', borderTop: i ? '1px solid #f1f5f9' : 'none' }}>{i + 1}. {c}</div>)}
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={{ marginTop: '10px', fontSize: '10px', color: '#94a3b8' }}>
+            {aus.loan_number ? `Loan #${aus.loan_number} · ` : ''}{aus.casefile_id ? `Casefile ${aus.casefile_id} · ` : ''}{aus.submission_date || ''}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ---- Income/Employment Section ----
 const IncomeSection = ({ borrower, onUpdate }) => {
   const incomes = borrower.incomes || [];
@@ -3914,6 +4114,7 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     { id: 'docs',     label: 'DOCUMENTS' },
     { id: 'borrowers', label: 'BORROWERS' },
     { id: 'credit',   label: 'CREDIT REPORT' },
+    { id: 'aus',      label: 'AUS' },
     { id: 'income',   label: 'INCOME' },
     { id: 'needs',    label: 'NEEDS' },
     { id: 'terms',    label: 'LOAN TERMS' },
@@ -4121,6 +4322,15 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
               </button>
               <div style={{ flex: 1 }} />
             </div>
+          </div>
+        )}
+
+        {openTabs.has('aus') && (
+          <div style={tabBoxStyle('aus')}>
+            {maxBtn('aus')}
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📋 AUS Findings (DU / LPA)</div>
+            <AUSSection borrower={borrower} onUpdate={ops.updateBorrower} />
+            {closeBtn('aus')}
           </div>
         )}
 

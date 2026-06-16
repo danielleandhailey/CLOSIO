@@ -22,6 +22,10 @@
     "api/verify-proof.js": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "api/parse-aus.js": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "rewrites": [
