@@ -117,6 +117,8 @@ const PipelinePage = ({ borrowers, ops }) => {
     if (filterStage !== 'All') {
       if (filterStage === 'NEW') {
         list = list.filter(isNewLead);
+      } else if (filterStage === 'MSG') {
+        list = list.filter(b => b.bonzo_id && unreadIds.has(String(b.bonzo_id)));
       } else if (filterStage === 'FLAG') {
         list = list.filter(b => b.flagged);
       } else if (filterStage === 'Stips Needed') {
@@ -147,7 +149,10 @@ const PipelinePage = ({ borrowers, ops }) => {
       return sorted.slice().sort((a, b) => (b.stage === 'HOT' ? 1 : 0) - (a.stage === 'HOT' ? 1 : 0));
     }
     return sorted;
-  }, [borrowers, filterType, filterStage, sortBy, search]);
+  }, [borrowers, filterType, filterStage, sortBy, search, unreadIds]);
+
+  // Count of borrowers with an unread Bonzo text (for the messages-waiting pill)
+  const unreadCount = borrowers.filter(b => b.bonzo_id && unreadIds.has(String(b.bonzo_id))).length;
 
   const handleSelect = useCallback((id, checked) => {
     setSelectedIds(s => {
@@ -337,6 +342,15 @@ const PipelinePage = ({ borrowers, ops }) => {
           title="Select All"
           style={{ width: '14px', height: '14px', cursor: 'pointer', marginRight: '12px', marginLeft: '0px' }}
         />
+        <button
+          type="button"
+          className={`stage-pill ${filterStage === 'MSG' ? 'active' : ''} ${unreadCount > 0 ? 'text-pulse' : ''}`}
+          style={{ background: '#ec4899', color: '#fff', fontWeight: '800', opacity: unreadCount === 0 ? 0.4 : 1 }}
+          onClick={() => { setFilterStage(prev => prev === 'MSG' ? 'All' : 'MSG'); setSearch(''); }}
+          title="Borrowers with a new text waiting"
+        >
+          💬 <span style={{ marginLeft: '3px', fontWeight: '700' }}>{unreadCount}</span>
+        </button>
         <button
           type="button"
           className={`stage-pill ${filterStage === 'FLAG' ? 'active' : ''}`}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 // Polls Bonzo (via /api/bonzo-unread) for new inbound texts and tracks which
 // borrowers (by bonzo_id / prospect id) have an UNREAD text. "Read" state is
@@ -25,11 +25,11 @@ export const useUnreadTexts = (intervalMs = 15000) => {
     return () => clearInterval(id);
   }, [poll, intervalMs]);
 
-  const unreadIds = new Set(
+  const unreadIds = useMemo(() => new Set(
     items
       .filter(it => it.unread && it.lastAt && (!seen[it.prospectId] || new Date(it.lastAt) > new Date(seen[it.prospectId])))
       .map(it => it.prospectId)
-  );
+  ), [items, seen]);
 
   const markSeen = useCallback((prospectId) => {
     if (!prospectId) return;
