@@ -12,6 +12,8 @@ const PLAN_TOOL = {
     type: 'object',
     properties: {
       target_score: { type: 'string', description: 'The goal/target credit score if stated (e.g. "620"). Omit if not mentioned.' },
+      lender_name: { type: 'string', description: 'The name of the person who sent the email / the credit-repair or lender contact to reply to. Omit if not found.' },
+      lender_email: { type: 'string', description: 'The reply-to / sender email address for that contact. Omit if not found.' },
       steps: {
         type: 'array',
         description: 'Each distinct action item in the plan, in order.',
@@ -75,7 +77,12 @@ export default async function handler(req, res) {
 
     const toolUse = (data.content || []).find((b) => b.type === 'tool_use');
     const input = toolUse?.input || {};
-    return res.status(200).json({ target_score: input.target_score || '', steps: input.steps || [] });
+    return res.status(200).json({
+      target_score: input.target_score || '',
+      lender_name: input.lender_name || '',
+      lender_email: input.lender_email || '',
+      steps: input.steps || [],
+    });
   } catch (e) {
     return res.status(200).json({ error: e.message, steps: [] });
   }

@@ -3329,20 +3329,30 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
   const plan = upgrade.plan || [];
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState(upgrade.target_score || '');
-  const [newStep, setNewStep] = useState('');
   const [uploadingId, setUploadingId] = useState(null);
   const [pasteText, setPasteText] = useState('');
   const [parsing, setParsing] = useState(false);
   const [showPaste, setShowPaste] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
   const proofRef = useRef();
   const pendingRef = useRef(null);
 
   const primary = cr.people?.primary || (cr.scores ? cr : null);
   const cur = (primary && primary.scores) || {};
 
+  // Borrower first name (handles "Last, First" and "First Last")
+  const fullName = (borrower.name || '').trim();
+  const firstName = fullName.includes(',')
+    ? (fullName.split(',')[1] || '').trim().split(/\s+/)[0]
+    : fullName.split(/\s+/)[0];
+  const first = firstName || 'there';
+  const borrowerDisplay = fullName.includes(',')
+    ? `${(fullName.split(',')[1] || '').trim()} ${(fullName.split(',')[0] || '').trim()}`.trim()
+    : fullName;
+  const lenderFirst = (upgrade.lender_name || '').trim().split(/\s+/)[0] || 'there';
+
   const save = (patch) => onUpdate(borrower.id, { credit_report: { ...cr, upgrade: { ...upgrade, ...patch } } });
   const updateStep = (id, p) => save({ plan: plan.map(s => s.id === id ? { ...s, ...p } : s) });
-  const addStep = () => { if (!newStep.trim()) return; save({ plan: [...plan, { id: `${Date.now()}`, text: newStep.trim(), cost: '', impact: '', done: false }] }); setNewStep(''); };
   const removeStep = (id) => save({ plan: plan.filter(s => s.id !== id) });
 
   const parsePaste = async () => {
@@ -3355,42 +3365,107 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
       });
       const d = await r.json();
       const steps = (d.steps || []).map((s, i) => ({
-        id: `${Date.now()}_${i}`, text: s.text, cost: s.cost || '', impact: s.impact || '', done: false,
+        id: `${Date.now()}_${i}`, text: s.text, cost: s.cost || '', done: false,
       }));
       if (!steps.length) { alert(d.error || 'Could not read a plan from that text.'); setParsing(false); return; }
-      const patch = { plan: [...plan, ...steps] };
+      const patch = { plan: [...plan, ...steps], pasted_at: new Date().toISOString() };
       if (d.target_score && !target) { patch.target_score = d.target_score; setTarget(d.target_score); }
+      if (d.lender_name) patch.lender_name = d.lender_name;
+      if (d.lender_email) patch.lender_email = d.lender_email;
       save(patch);
       setPasteText(''); setShowPaste(false);
     } catch (e) { alert('Error reading plan: ' + e.message); }
     setParsing(false);
   };
 
+  // Upload a proof → AI verifies it matches the step → auto-cross-off if confirmed
   const uploadProof = async (file, id) => {
     if (!file) return;
     setUploadingId(id);
-    const fileName = `proof_${borrower.id}_${id}_${Date.now()}.pdf`;
+    const ext = (file.name.split('.').pop() || 'pdf');
+    const fileName = `proof_${borrower.id}_${id}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('Documents').upload(fileName, file);
     let proof = { proof_name: file.name };
     if (!error) { const { data } = supabase.storage.from('Documents').getPublicUrl(fileName); proof = { proof_name: file.name, proof_path: fileName, proof_url: data.publicUrl }; }
-    updateStep(id, proof);
+
+    let verified = false, note = '';
+    try {
+      const b64 = await fileToBase64(file);
+      const r = await fetch('/api/verify-proof', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Data: b64, mimeType: file.type, stepText: plan.find(s => s.id === id)?.text || '' }),
+      });
+      const d = await r.json();
+      verified = !!d.verified; note = d.note || '';
+    } catch (e) { note = 'Could not verify automatically — check it manually.'; }
+
+    updateStep(id, { ...proof, done: verified, verify_note: note });
     setUploadingId(null);
+    if (!verified) alert(`Proof uploaded, but I couldn't confirm it crosses this step off.\n\n${note || ''}\n\nIf it's correct, just tick the box yourself.`);
   };
+
   const viewProof = async (s) => {
     if (s.proof_path) { const { data } = await supabase.storage.from('Documents').createSignedUrl(s.proof_path, 3600); if (data?.signedUrl) window.open(data.signedUrl, '_blank'); }
     else if (s.proof_url) window.open(s.proof_url, '_blank');
   };
 
+  const stepsList = plan.map((s, i) => `${i + 1}. ${s.text}`).join('\n');
+  const tScore = target || upgrade.target_score || 'your goal';
+
+  const borrowerEmail =
+`Hi ${first},
+
+Great news, your free credit upgrade plan is ready :)
+
+Here's exactly what we'll knock out together to get you to your target score of ${tScore}:
+
+${stepsList}
+
+As you take care of each one, just send me the proof (a receipt, a letter, a screenshot, whatever you've got) and I'll log it right away so we can re-score as soon as everything's done.
+
+Send them along as you get them, no need to wait. Excited to get you there!
+
+${borrower.lo_name || 'Your Loan Officer'}`;
+
+  const borrowerSMS =
+`Hi ${first}! Your free credit upgrade plan is ready :) To hit your target score of ${tScore} we'll knock out a few items:
+${stepsList}
+Send me proof of each as you finish so we can re-score, no need to wait. Let's go!`;
+
+  const lenderEmail =
+`Hi ${lenderFirst},
+
+${borrowerDisplay || 'The borrower'} has completed all the credit upgrade items on the plan, proofs attached. We're ready to re-score.
+
+Items completed:
+${stepsList}
+
+Thanks!`;
+
+  const copy = async (text, what) => {
+    try { await navigator.clipboard.writeText(text); alert(`${what} copied — paste it to your borrower.`); }
+    catch (e) { alert('Could not copy automatically. Here it is:\n\n' + text); }
+  };
+  const emailLender = async () => {
+    try { await navigator.clipboard.writeText(lenderEmail); } catch (e) { /* ignore */ }
+    setShowLibrary(true);
+    alert(`Lender email copied${upgrade.lender_email ? ` (send to ${upgrade.lender_email})` : ''}. The proof Library is open — download each one and attach it to your email.`);
+  };
+
   const labelSm = { fontSize: '10px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '3px' };
   const miniInput = { width: '70px', padding: '3px 6px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '11px' };
   const linkBtn = { background: 'none', border: '1px solid #cbd5e1', color: '#1e3a5f', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontWeight: 600, cursor: 'pointer' };
+  const actionBtn = { flex: 1, background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '6px', padding: '9px', fontWeight: 700, cursor: 'pointer', fontSize: '12px' };
   const doneCount = plan.filter(s => s.done).length;
+  const complete = plan.length > 0 && doneCount === plan.length;
+  const proofs = plan.filter(s => s.proof_name);
 
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
-        style={{ width: '100%', marginBottom: '12px', padding: '8px', borderRadius: '6px', background: '#1e3a5f', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
-        📈 Credit Upgrade Plan{plan.length ? ` (${doneCount}/${plan.length} done)` : ''}
+        style={{ width: '100%', marginBottom: '12px', padding: '8px 14px', borderRadius: '6px', background: '#1e3a5f', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+        <span>📈 Credit Upgrade Plan{plan.length ? ` (${doneCount}/${plan.length} done)` : ''}</span>
+        {upgrade.pasted_at && <span style={{ marginLeft: 'auto', fontSize: '10px', fontWeight: 600, opacity: 0.85 }}>added {formatDate(upgrade.pasted_at)}</span>}
       </button>
       {open && (
         <>
@@ -3405,15 +3480,22 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
 
             <div style={{ display: 'flex', gap: '20px', marginBottom: '14px', flexWrap: 'wrap' }}>
               <div>
-                <div style={labelSm}>Target Score</div>
-                <input value={target} onChange={e => setTarget(e.target.value)} onBlur={() => { if (target !== (upgrade.target_score || '')) save({ target_score: target }); }}
-                  placeholder="620" style={{ width: '90px', padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '5px', fontSize: '13px' }} />
-              </div>
-              <div>
                 <div style={labelSm}>Current (EQ/EX/TU)</div>
                 <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', paddingTop: '4px' }}>{cur.equifax || '—'} / {cur.experian || '—'} / {cur.transunion || '—'}</div>
               </div>
+              {(target || upgrade.target_score) && (
+                <div>
+                  <div style={labelSm}>Target Score</div>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: '#1e3a5f', paddingTop: '4px' }}>{target || upgrade.target_score}</div>
+                </div>
+              )}
             </div>
+
+            {complete && (
+              <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', color: '#065f46', fontSize: '13px', fontWeight: 700 }}>
+                ✅ All steps complete! Ready to re-score{upgrade.lender_name ? ` — send the proofs to ${upgrade.lender_name}` : ''}.
+              </div>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
               <div style={labelSm}>Game Plan</div>
@@ -3432,7 +3514,7 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
                 </button>
               </div>
             )}
-            {plan.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', padding: '8px 0' }}>No steps yet — paste a plan above or add one below.</div>}
+            {plan.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', padding: '8px 0' }}>No steps yet — paste the upgrade email above to build the plan.</div>}
             {plan.map((s, i) => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 0', borderTop: i ? '1px solid #f1f5f9' : 'none' }}>
                 <input type="checkbox" checked={!!s.done} onChange={e => updateStep(s.id, { done: e.target.checked })} style={{ marginTop: '3px' }} />
@@ -3440,22 +3522,45 @@ const CreditUpgradeSection = ({ borrower, onUpdate }) => {
                   <div style={{ fontSize: '13px', color: '#1e293b', textDecoration: s.done ? 'line-through' : 'none' }}>{i + 1}. {s.text}</div>
                   <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                     <input value={s.cost || ''} onChange={e => updateStep(s.id, { cost: e.target.value })} placeholder="cost $" style={miniInput} />
-                    <input value={s.impact || ''} onChange={e => updateStep(s.id, { impact: e.target.value })} placeholder="+pts" style={miniInput} />
                     {s.proof_name
-                      ? <button onClick={() => viewProof(s)} style={linkBtn}>📎 proof</button>
-                      : <button onClick={() => { pendingRef.current = s.id; proofRef.current?.click(); }} style={linkBtn}>{uploadingId === s.id ? '…' : 'upload proof'}</button>}
+                      ? <button onClick={() => viewProof(s)} style={{ ...linkBtn, borderColor: s.done ? '#6ee7b7' : '#cbd5e1', color: s.done ? '#059669' : '#1e3a5f' }}>📎 {s.done ? 'verified' : 'proof'}</button>
+                      : <button onClick={() => { pendingRef.current = s.id; proofRef.current?.click(); }} style={linkBtn}>{uploadingId === s.id ? 'verifying…' : 'upload proof'}</button>}
+                    {s.proof_name && !s.done && <span style={{ fontSize: '10px', color: '#dc2626' }}>not confirmed</span>}
                   </div>
                 </div>
                 <button onClick={() => removeStep(s.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={14} /></button>
               </div>
             ))}
 
-            <div style={{ display: 'flex', gap: '6px', marginTop: '12px' }}>
-              <input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()}
-                placeholder="Add a step (e.g. Pay charge-off Merrick CC to $0)" style={{ flex: 1, padding: '7px 9px', border: '1px solid #cbd5e1', borderRadius: '5px', fontSize: '12px' }} />
-              <button onClick={addStep} style={{ background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '5px', padding: '7px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>Add</button>
-            </div>
+            {plan.length > 0 && (
+              <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                <button onClick={() => copy(borrowerEmail, 'Email')} style={actionBtn}>📧 Copy Email</button>
+                <button onClick={() => copy(borrowerSMS, 'SMS')} style={actionBtn}>💬 Copy SMS</button>
+                <button onClick={() => setShowLibrary(true)} style={{ ...actionBtn, background: 'none', border: '1px solid #1e3a5f', color: '#1e3a5f' }}>📚 Library{proofs.length ? ` (${proofs.length})` : ''}</button>
+                {complete && <button onClick={emailLender} style={{ ...actionBtn, background: '#059669' }}>📧 Email Lender</button>}
+              </div>
+            )}
           </div>
+
+          {showLibrary && (
+            <>
+              <div onClick={() => setShowLibrary(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 2002 }} />
+              <div style={{ position: 'fixed', top: '12%', left: '50%', transform: 'translateX(-50%)', width: 'min(520px, 92vw)', maxHeight: '76vh', overflowY: 'auto', background: '#fff', borderRadius: '12px', zIndex: 2003, padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ fontWeight: 800, color: '#1e3a5f', fontSize: '14px' }}>📚 Proof Library</div>
+                  <button onClick={() => setShowLibrary(false)} style={{ marginLeft: 'auto', background: '#64748b', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 14px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}>Close</button>
+                </div>
+                {proofs.length === 0 && <div style={{ color: '#94a3b8', fontSize: '12px', padding: '8px 0' }}>No proofs uploaded yet.</div>}
+                {proofs.map((s, i) => (
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderTop: i ? '1px solid #f1f5f9' : 'none', fontSize: '12px' }}>
+                    {s.done ? <span style={{ color: '#059669' }}>✓</span> : <span style={{ color: '#dc2626' }}>•</span>}
+                    <div style={{ flex: 1, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.text}</div>
+                    <button onClick={() => viewProof(s)} style={{ background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>View</button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </>
