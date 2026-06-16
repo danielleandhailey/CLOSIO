@@ -3088,10 +3088,10 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
       onDragOver={e => e.preventDefault()}
       onDrop={async e => { e.preventDefault(); await uploadFiles(e.dataTransfer?.files); }}
       onClick={() => inputRef.current?.click()}
-      style={{ padding: '16px', borderRadius: '8px', marginBottom: '12px', background: '#fef3c7', border: '2px dashed #f59e0b', textAlign: 'center', cursor: 'pointer' }}
+      style={{ padding: '16px', borderRadius: '8px', marginBottom: '12px', background: '#f1f5f9', border: '2px dashed #94a3b8', textAlign: 'center', cursor: 'pointer' }}
     >
-      <FileText size={22} style={{ color: '#f59e0b', marginBottom: '4px' }} />
-      <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '700' }}>{uploading ? 'Reading…' : label}</div>
+      <FileText size={22} style={{ color: '#64748b', marginBottom: '4px' }} />
+      <div style={{ fontSize: '12px', color: '#475569', fontWeight: '700' }}>{uploading ? 'Reading…' : label}</div>
     </div>
   );
 
@@ -3117,7 +3117,7 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
     const pubCount = rep.public_records || pubItems.length || 0;
     const negKey = `${person.key}:neg`, pubKey = `${person.key}:pub`;
     const toggle = (k) => setOpenDetail(o => ({ ...o, [k]: !o[k] }));
-    const detailBox = { background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '6px', padding: '8px', marginTop: '8px', fontSize: '11px', color: '#7c2d12', lineHeight: 1.6 };
+    const detailBox = { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '8px', marginTop: '8px', fontSize: '11px', color: '#7f1d1d', lineHeight: 1.6 };
     return (
       <div key={person.key} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginBottom: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
