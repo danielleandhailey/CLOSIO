@@ -1507,7 +1507,7 @@ const BorrowerRow = ({
                     )}
                     <span
                       onClick={(e) => { e.stopPropagation(); onExpand(borrower.id, 'notes'); }}
-                      style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#dc2626' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal' }}
+                      style={{ cursor: 'pointer', fontSize: '13px', color: isPriority ? '#f87171' : '#cbd5e1', fontWeight: isPriority ? 800 : 'normal' }}
                       title={noteText}
                     >{noteText}</span>
                   </span>
