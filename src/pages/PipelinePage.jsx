@@ -42,6 +42,13 @@ const PipelinePage = ({ borrowers, ops }) => {
     try { localStorage.setItem('closio_stage_order', JSON.stringify(full)); } catch (e) { /* ignore */ }
   };
 
+  // Clicking the CLOSIO logo / Pipeline tab clears the search and resets filters
+  useEffect(() => {
+    const reset = () => { setSearch(''); setFilterStage('All'); setFilterType('All'); };
+    window.addEventListener('resetPipeline', reset);
+    return () => window.removeEventListener('resetPipeline', reset);
+  }, []);
+
   // Auto Bonzo sync at startup and every 15 minutes
   useEffect(() => {
     let mounted = true;

@@ -221,7 +221,9 @@ const AppInner = () => {
     <div className="app-shell">
       {/* Top Nav */}
       <nav className="top-nav">
-        <div className="brand">
+        <div className="brand" style={{ cursor: 'pointer' }}
+          onClick={() => { setActiveTab('Pipeline'); window.dispatchEvent(new Event('resetPipeline')); }}
+          title="Back to pipeline">
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
             <strong style={{ color: '#fff', fontWeight: '800', letterSpacing: '0.08em', fontSize: '26px' }}>CLOSIO<sup style={{ fontSize: '12px', color: '#0d9488' }}>™</sup></strong>
             <span style={{ color: '#64748b', fontSize: '11px', fontWeight: '500', letterSpacing: '0.02em' }}>Close More.</span>
@@ -234,7 +236,7 @@ const AppInner = () => {
               key={tab}
               type="button"
               className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => { setActiveTab(tab); if (tab === 'Pipeline') window.dispatchEvent(new Event('resetPipeline')); }}
             >
               {tab === 'Pipeline' && '📋 '}
               {tab === 'Calendar' && '📅 '}
