@@ -379,7 +379,15 @@ const incTypeNorm = (t) => {
   if (/commission/.test(s)) return 'commission';
   return 'base';
 };
-const incKey = (i) => `${(i.person || '').toLowerCase().trim()}|${(i.employer || '').toLowerCase().trim()}|${incTypeNorm(i.income_type || i.category)}`;
+// Normalize an employer name so "FedEx Supply Chain, Inc." / "Fedex Supply Chain" /
+// "FedEx Supply Chain Inc" all key the same (drop punctuation + Inc/LLC/Corp suffixes).
+const empNorm = (e) => (e || '')
+  .toLowerCase()
+  .replace(/[.,]/g, ' ')
+  .replace(/\b(inc|llc|corp|co|ltd|company|incorporated|the)\b/g, '')
+  .replace(/\s+/g, ' ')
+  .trim();
+const incKey = (i) => `${(i.person || '').toLowerCase().trim()}|${empNorm(i.employer)}|${incTypeNorm(i.income_type || i.category)}`;
 
 // Consolidate income lines by person+employer+type so multiple paystubs of the
 // SAME job collapse into ONE source. The newest stub (by YTD as-of date) drives
