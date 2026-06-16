@@ -38,6 +38,24 @@ const EXTRACT_TOOL = {
       vantage_transunion: { type: 'number', description: 'TransUnion VantageScore (only if present on report)' },
       negative_marks: { type: 'number', description: 'Count of negative marks / derogatory items' },
       public_records: { type: 'number', description: 'Count of public records' },
+      credit_people: {
+        type: 'array',
+        description: 'For a credit report covering MORE THAN ONE person (e.g. a joint married report with 6 scores), one entry per person with their own scores. For a single-person report this may be omitted.',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            fico_equifax: { type: 'number' },
+            fico_experian: { type: 'number' },
+            fico_transunion: { type: 'number' },
+            vantage_equifax: { type: 'number' },
+            vantage_experian: { type: 'number' },
+            vantage_transunion: { type: 'number' },
+            negative_marks: { type: 'number' },
+            public_records: { type: 'number' },
+          },
+        },
+      },
 
       // Loan terms
       purchase_price: { type: 'number', description: 'Sale / purchase price in dollars' },
