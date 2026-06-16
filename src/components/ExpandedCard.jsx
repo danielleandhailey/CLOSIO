@@ -3866,6 +3866,7 @@ const AppraisalSection = ({ borrower, onUpdate }) => {
 // ---- Main Expanded Card ----
 const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
   const [openTabs, setOpenTabs] = useState(new Set([defaultTab || 'notes']));
+  const [maxTab, setMaxTab] = useState(null);
   const [contactsExpanded, setContactsExpanded] = useState(false);
   const hasFullDetails = STAGES_WITH_FULL_DETAILS.includes(borrower.stage);
 
@@ -3907,7 +3908,18 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
     { id: 'notifyloa', label: 'NOTIFY LOA' },
   ];
 
-  const boxStyle = { background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '500px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '400px' };
+  const boxStyle = { position: 'relative', background: '#f1f5f9', borderRadius: '8px', padding: '16px', border: '2px solid #0d9488', width: '500px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: '400px' };
+  // Full-size (maximized) version of a tab box
+  const maxBoxStyle = { position: 'fixed', inset: '10px', width: 'auto', zIndex: 1600, overflowY: 'auto', background: '#f1f5f9', borderRadius: '8px', padding: '20px', border: '2px solid #0d9488', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 48px rgba(0,0,0,0.45)' };
+  const tabBoxStyle = (id) => (maxTab === id ? maxBoxStyle : boxStyle);
+  // Expand / restore button for the top-right of a tab box
+  const maxBtn = (id) => (
+    <button type="button" onClick={() => setMaxTab(m => (m === id ? null : id))}
+      title={maxTab === id ? 'Restore to normal size' : 'Expand to full size'}
+      style={{ position: 'absolute', top: '10px', right: '12px', background: '#fff', border: '1px solid #94a3b8', borderRadius: '4px', color: '#475569', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '3px 7px', zIndex: 3 }}>
+      {maxTab === id ? '🗗' : '⛶'}
+    </button>
+  );
   const closeBtn = (id) => (
     <div style={{ textAlign: 'center', marginTop: 'auto', paddingTop: '12px' }}>
       <button type="button" onClick={() => closeTab(id)}
@@ -4065,7 +4077,8 @@ const ExpandedCard = ({ borrower, ops, onClose, defaultTab }) => {
         )}
 
         {openTabs.has('credit') && (
-          <div style={boxStyle}>
+          <div style={tabBoxStyle('credit')}>
+            {maxBtn('credit')}
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>📊 Credit Report</div>
             <CreditUpgradeSection borrower={borrower} onUpdate={ops.updateBorrower} />
             <CreditReportSection borrower={borrower} onUpdate={ops.updateBorrower} ops={ops} />
