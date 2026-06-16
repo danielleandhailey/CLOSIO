@@ -1441,10 +1441,13 @@ const BorrowerRow = ({
           };
 
           return (
-            // ONE horizontal line: newest note at the far left, older notes flow
-            // to the right, clipped before CONVO. Notes NEVER stack vertically.
+            // Each note is its OWN COLUMN. Newest at the far left, older notes
+            // to the right, clipped before CONVO. A long note wraps WITHIN its
+            // column up to 3 lines; notes sit side by side and never stack as
+            // separate rows. A new note is added at the left and pushes older
+            // notes rightward, out of view.
             <div
-              style={{ flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
+              style={{ flex: 1, minWidth: 0, marginRight: '12px', overflow: 'hidden', whiteSpace: 'nowrap' }}
             >
               {noteLines.slice(0, 10).map((line, idx) => {
                 // Try to parse [M/D/YY] prefix (date only, no time)
@@ -1454,7 +1457,14 @@ const BorrowerRow = ({
                 const isPriority = rawText.trim().startsWith('🚩');
                 const noteText = isPriority ? rawText.replace(/^\s*🚩\s*/, '') : rawText;
                 return (
-                  <span key={idx} style={{ marginRight: '16px' }}>
+                  <span
+                    key={idx}
+                    style={{
+                      display: 'inline-block', verticalAlign: 'top', whiteSpace: 'normal',
+                      wordBreak: 'break-word', maxWidth: '360px', marginRight: '16px',
+                      lineHeight: '1.35', maxHeight: '4.05em', overflow: 'hidden',
+                    }}
+                  >
                     <span
                       onClick={(e) => deleteNote(e, line)}
                       style={{ color: '#64748b', marginRight: '4px', cursor: 'pointer', fontWeight: 700 }}
