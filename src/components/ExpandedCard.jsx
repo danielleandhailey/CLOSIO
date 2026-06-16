@@ -3082,6 +3082,13 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
   const coBorrowers = borrower.co_borrowers?.length ? borrower.co_borrowers : (borrower.co_borrower ? [borrower.co_borrower] : []);
   const people = [{ key: 'primary', label: borrower.name || 'Primary Borrower' }, ...coBorrowers.map((cb, i) => ({ key: `co_${i}`, label: cb }))];
 
+  // Each borrower's MID FICO, and the QUALIFYING score = the LOWEST mid across borrowers.
+  const peopleMids = people
+    .map(p => ({ key: p.key, label: p.label, mid: midScore((peopleData[p.key] || {}).scores) }))
+    .filter(x => x.mid);
+  const qualMid = peopleMids.length ? Math.min(...peopleMids.map(x => x.mid)) : null;
+  const qualPerson = peopleMids.find(x => x.mid === qualMid);
+
   const setJoint = (val) => onUpdate(borrower.id, { credit_report: { ...cr, joint: val } });
 
   const tokens = (n) => (n || '').toLowerCase().match(/[a-z]{2,}/g) || [];
@@ -3176,6 +3183,8 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
 
   const scoreCard = (person, rep) => {
     const s = rep.scores || {};
+    const mid = midScore(s);
+    const isQual = qualMid != null && mid != null && mid === qualMid;
     const v = rep.vantage_scores || {};
     const hasV = Object.values(v).some(Boolean);
     const negItems = rep.negative_items || [];
@@ -3200,7 +3209,22 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         <div style={{ display: 'grid', gridTemplateColumns: '1.9fr 1fr 1fr', gap: '8px', alignItems: 'stretch' }}>
           <div style={{ background: '#f1f5f9', padding: '10px 8px', borderRadius: '6px', textAlign: 'center' }}>
             <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>FICO (EQ/EX/TU)</div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>{s.equifax || '—'} / {s.experian || '—'} / {s.transunion || '—'}</div>
+            <div style={{ fontSize: '20px', fontWeight: '800' }}>
+              {[s.equifax, s.experian, s.transunion].map((sc, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span style={{ color: '#cbd5e1' }}> / </span>}
+                  <span style={{
+                    color: (sc && sc === mid) ? (isQual ? '#b91c1c' : '#0d9488') : '#94a3b8',
+                    textDecoration: (sc && sc === mid) ? 'underline' : 'none', textUnderlineOffset: '3px',
+                  }}>{sc || '—'}</span>
+                </React.Fragment>
+              ))}
+            </div>
+            {mid && (
+              <div style={{ marginTop: '3px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', color: isQual ? '#b91c1c' : '#0d9488' }}>
+                MID {mid}{isQual ? ' • QUALIFYING' : ''}
+              </div>
+            )}
             {hasV && (
               <>
                 <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginTop: '6px' }}>Vantage (EQ/EX/TU)</div>
@@ -3265,6 +3289,17 @@ const CreditReportSection = ({ borrower, onUpdate }) => {
         : coBorrowers.length > 0
           ? 'Drop credit report(s) — drop both at once, sorted by name'
           : 'Drop Credit Report PDF or Click to Browse')}
+
+      {/* Qualifying score = lowest mid across borrowers */}
+      {qualMid && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '8px 12px', marginBottom: '10px' }}>
+          <span style={{ fontSize: '10px', fontWeight: 800, color: '#7f1d1d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualifying Score</span>
+          <span style={{ fontSize: '22px', fontWeight: 900, color: '#b91c1c', lineHeight: 1 }}>{qualMid}</span>
+          {peopleMids.length > 1 && qualPerson && (
+            <span style={{ fontSize: '11px', color: '#7f1d1d' }}>(lowest mid — {qualPerson.label})</span>
+          )}
+        </div>
+      )}
 
       {/* Per-person score cards */}
       {people.map(person => {
