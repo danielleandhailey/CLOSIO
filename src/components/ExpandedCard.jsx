@@ -387,7 +387,16 @@ const empNorm = (e) => (e || '')
   .replace(/\b(inc|llc|corp|co|ltd|company|incorporated|the)\b/g, '')
   .replace(/\s+/g, ' ')
   .trim();
-const incKey = (i) => `${(i.person || '').toLowerCase().trim()}|${empNorm(i.employer)}|${incTypeNorm(i.income_type || i.category)}`;
+// Normalize a person's name so "Robert L. Torres" / "Robert L Torres" /
+// "Robert Leo Torres" / "Torres, Robert" all key the same (first + last only,
+// middle names/initials and punctuation ignored).
+const personNorm = (p) => {
+  const toks = (p || '').toLowerCase().replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(t => t.length >= 2);
+  if (!toks.length) return '';
+  if (toks.length === 1) return toks[0];
+  return [toks[0], toks[toks.length - 1]].sort().join('|');
+};
+const incKey = (i) => `${personNorm(i.person)}|${empNorm(i.employer)}|${incTypeNorm(i.income_type || i.category)}`;
 
 const isW2 = (i) => (i.doc_type || '').toLowerCase() === 'w2' || (i.tax_year && (i.annual_wages || i.ytd_gross));
 
