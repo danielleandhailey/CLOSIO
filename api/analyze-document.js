@@ -233,6 +233,9 @@ export default async function handler(req, res) {
                   'amount_per_period (the current-period gross), ytd_gross, ytd_as_of_date (the pay/period date), and category. ' +
                   'ALWAYS set doc_type: "paystub" for a pay stub, "w2" for a W-2 form. For a W-2 ALSO set tax_year and ' +
                   'annual_wages (Box 5 Medicare wages, else Box 1) — do NOT put W-2 annual wages in amount_per_period or ytd_gross. ' +
+                  'For a paystub ALWAYS capture pay_period_start and pay_period_end, and set pay_frequency from those dates: ' +
+                  '7-day period = Weekly (52/yr); 14-day period = Bi-Weekly (26/yr); 1st-15th or 16th-end = Semi-Monthly (24/yr); ' +
+                  'full month = Monthly (12/yr). Cross-check by dividing YTD gross by the current-period gross to estimate periods elapsed. ' +
                   'For a CREDIT REPORT: put bankruptcies, tax liens, and judgments in public_record_items ' +
                   '(with filed_date and discharge_date) — NOT in negative_items. Put tradeline derogatories ' +
                   '(collections, charge-offs, late payments) in negative_items; for late payments include ' +

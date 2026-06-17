@@ -391,6 +391,22 @@ const incKey = (i) => `${(i.person || '').toLowerCase().trim()}|${empNorm(i.empl
 
 const isW2 = (i) => (i.doc_type || '').toLowerCase() === 'w2' || (i.tax_year && (i.annual_wages || i.ytd_gross));
 
+// Derive pay frequency from THIS stub's actual pay-period dates (reads the
+// evidence, not a blanket assumption): a 14-day period = Bi-Weekly, 7 = Weekly,
+// 15-17 (e.g. 1st-15th) = Semi-Monthly, ~month = Monthly.
+const deriveFrequency = (start, end) => {
+  if (!start || !end) return null;
+  const a = new Date(start), b = new Date(end);
+  if (isNaN(a.getTime()) || isNaN(b.getTime())) return null;
+  const days = Math.round((b - a) / 86400000) + 1; // inclusive
+  if (days <= 0) return null;
+  if (days <= 8) return 'Weekly';
+  if (days <= 14) return 'Bi-Weekly';
+  if (days <= 17) return 'Semi-Monthly';
+  if (days >= 25) return 'Monthly';
+  return 'Bi-Weekly';
+};
+
 // Consolidate income lines by person+employer+type into ONE source per job.
 // W-2s go into prior-year HISTORY (w2_history); paystubs drive the CURRENT
 // numbers (newest pay-period-end wins). Every paystub is kept under `sources`.
@@ -426,12 +442,14 @@ const consolidateIncomes = (list, newDocName) => {
       return;
     }
 
-    // Paystub / current income
+    // Paystub / current income. Derive frequency from this stub's own period
+    // dates (authoritative); fall back to what the AI stated.
+    const freq = deriveFrequency(inc.pay_period_start, inc.pay_period_end) || inc.pay_frequency;
     const incDate = inc.pay_period_end || inc.ytd_as_of_date || '';
     const exDate = rec.pay_period_end || rec.ytd_as_of_date || '';
     const newer = !exDate || (incDate && String(incDate) >= String(exDate));
     if (inc.amount_per_period || inc.ytd_gross || inc.gross_monthly) {
-      rec.sources.push({ doc_name: inc.source_doc || newDocName || '', period: inc.pay_period_end || inc.ytd_as_of_date || '', amount_per_period: inc.amount_per_period, ytd_gross: inc.ytd_gross, ytd_as_of_date: inc.ytd_as_of_date, pay_frequency: inc.pay_frequency });
+      rec.sources.push({ doc_name: inc.source_doc || newDocName || '', period: inc.pay_period_end || inc.ytd_as_of_date || '', amount_per_period: inc.amount_per_period, ytd_gross: inc.ytd_gross, ytd_as_of_date: inc.ytd_as_of_date, pay_frequency: freq });
     }
     (inc.sources || []).forEach(s => rec.sources.push(s));
     (inc.w2_history || []).forEach(w => { if (!rec.w2_history.find(x => x.year === w.year)) rec.w2_history.push(w); });
@@ -440,7 +458,7 @@ const consolidateIncomes = (list, newDocName) => {
         ...rec,
         person: inc.person || rec.person, employer: inc.employer || rec.employer,
         income_type: inc.income_type || rec.income_type, category: inc.category || rec.category,
-        pay_frequency: inc.pay_frequency || rec.pay_frequency,
+        pay_frequency: freq || rec.pay_frequency,
         amount_per_period: inc.amount_per_period, ytd_gross: inc.ytd_gross, ytd_as_of_date: inc.ytd_as_of_date,
         pay_period_start: inc.pay_period_start, pay_period_end: inc.pay_period_end,
         hourly_rate: inc.hourly_rate, hours_per_period: inc.hours_per_period, gross_monthly: inc.gross_monthly,
