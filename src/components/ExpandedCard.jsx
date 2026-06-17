@@ -400,20 +400,37 @@ const incKey = (i) => `${personNorm(i.person)}|${empNorm(i.employer)}|${incTypeN
 
 const isW2 = (i) => (i.doc_type || '').toLowerCase() === 'w2' || (i.tax_year && (i.annual_wages || i.ytd_gross));
 
-// Derive pay frequency from THIS stub's actual pay-period dates (reads the
-// evidence, not a blanket assumption): a 14-day period = Bi-Weekly, 7 = Weekly,
-// 15-17 (e.g. 1st-15th) = Semi-Monthly, ~month = Monthly.
-const deriveFrequency = (start, end) => {
-  if (!start || !end) return null;
-  const a = new Date(start), b = new Date(end);
-  if (isNaN(a.getTime()) || isNaN(b.getTime())) return null;
-  const days = Math.round((b - a) / 86400000) + 1; // inclusive
-  if (days <= 0) return null;
-  if (days <= 8) return 'Weekly';
-  if (days <= 14) return 'Bi-Weekly';
-  if (days <= 17) return 'Semi-Monthly';
-  if (days >= 25) return 'Monthly';
-  return 'Bi-Weekly';
+// Derive pay frequency from THIS stub's evidence (reads it, never a blanket
+// assumption). Priority: (1) actual pay-period dates — 7d=Weekly, 14d=Bi-Weekly,
+// 15-17d (e.g. 1st-15th)=Semi-Monthly, ~month=Monthly; (2) fallback when dates
+// are missing — YTD ÷ current-gross gives periods elapsed, ÷ months ≈ periods/mo
+// (~4.33 weekly, ~2.17 bi-weekly, ~2.0 semi-monthly, ~1 monthly).
+const deriveFrequency = (inc) => {
+  const s = inc && inc.pay_period_start, e = inc && inc.pay_period_end;
+  if (s && e) {
+    const a = new Date(s), b = new Date(e);
+    if (!isNaN(a.getTime()) && !isNaN(b.getTime())) {
+      const days = Math.round((b - a) / 86400000) + 1;
+      if (days > 0) {
+        if (days <= 8) return 'Weekly';
+        if (days <= 14) return 'Bi-Weekly';
+        if (days <= 17) return 'Semi-Monthly';
+        if (days >= 25) return 'Monthly';
+        return 'Bi-Weekly';
+      }
+    }
+  }
+  // Fallback: estimate from YTD ÷ current gross over the months elapsed
+  const ytd = Number(inc && inc.ytd_gross), per = Number(inc && inc.amount_per_period);
+  const months = ytdMonthsElapsed(inc && inc.ytd_as_of_date);
+  if (ytd && per && months) {
+    const perMonth = (ytd / per) / months;
+    if (perMonth >= 3.5) return 'Weekly';
+    if (perMonth >= 2.1) return 'Bi-Weekly';
+    if (perMonth >= 1.5) return 'Semi-Monthly';
+    return 'Monthly';
+  }
+  return null;
 };
 
 // Consolidate income lines by person+employer+type into ONE source per job.
@@ -453,7 +470,7 @@ const consolidateIncomes = (list, newDocName) => {
 
     // Paystub / current income. Derive frequency from this stub's own period
     // dates (authoritative); fall back to what the AI stated.
-    const freq = deriveFrequency(inc.pay_period_start, inc.pay_period_end) || inc.pay_frequency;
+    const freq = deriveFrequency(inc) || inc.pay_frequency;
     const incDate = inc.pay_period_end || inc.ytd_as_of_date || '';
     const exDate = rec.pay_period_end || rec.ytd_as_of_date || '';
     const newer = !exDate || (incDate && String(incDate) >= String(exDate));
