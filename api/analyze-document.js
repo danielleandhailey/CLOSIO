@@ -168,6 +168,9 @@ const EXTRACT_TOOL = {
             category: { type: 'string', description: 'base, overtime, bonus, commission, or other' },
             hourly_rate: { type: 'number' },
             hours_per_period: { type: 'number' },
+            doc_type: { type: 'string', description: 'What kind of doc this income line came from: "paystub", "w2", "voe", "tax_return", or "other". A W-2 form = "w2"; a pay stub = "paystub".' },
+            tax_year: { type: 'number', description: 'For a W-2: the tax year (e.g. 2024).' },
+            annual_wages: { type: 'number', description: 'For a W-2: the annual gross wages — use Box 5 (Medicare wages) if present, else Box 1.' },
           },
         },
       },
@@ -228,6 +231,8 @@ export default async function handler(req, res) {
                   'If this is a paystub, W-2, VOE, or otherwise shows employment earnings, you MUST fill the ' +
                   'incomes array — one entry per earner — including person, employer, employment_type, pay_frequency, ' +
                   'amount_per_period (the current-period gross), ytd_gross, ytd_as_of_date (the pay/period date), and category. ' +
+                  'ALWAYS set doc_type: "paystub" for a pay stub, "w2" for a W-2 form. For a W-2 ALSO set tax_year and ' +
+                  'annual_wages (Box 5 Medicare wages, else Box 1) — do NOT put W-2 annual wages in amount_per_period or ytd_gross. ' +
                   'For a CREDIT REPORT: put bankruptcies, tax liens, and judgments in public_record_items ' +
                   '(with filed_date and discharge_date) — NOT in negative_items. Put tradeline derogatories ' +
                   '(collections, charge-offs, late payments) in negative_items; for late payments include ' +

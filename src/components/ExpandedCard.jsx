@@ -389,25 +389,63 @@ const empNorm = (e) => (e || '')
   .trim();
 const incKey = (i) => `${(i.person || '').toLowerCase().trim()}|${empNorm(i.employer)}|${incTypeNorm(i.income_type || i.category)}`;
 
-// Consolidate income lines by person+employer+type so multiple paystubs of the
-// SAME job collapse into ONE source. The newest stub (by YTD as-of date) drives
-// the numbers; every stub is recorded under `sources` for the click-to-expand.
+const isW2 = (i) => (i.doc_type || '').toLowerCase() === 'w2' || (i.tax_year && (i.annual_wages || i.ytd_gross));
+
+// Consolidate income lines by person+employer+type into ONE source per job.
+// W-2s go into prior-year HISTORY (w2_history); paystubs drive the CURRENT
+// numbers (newest pay-period-end wins). Every paystub is kept under `sources`.
 const consolidateIncomes = (list, newDocName) => {
   const out = [];
+  const ensure = (proto) => {
+    const k = incKey(proto);
+    let idx = out.findIndex(e => incKey(e) === k);
+    if (idx < 0) {
+      out.push({ person: proto.person, employer: proto.employer, income_type: proto.income_type, category: proto.category, id: proto.id || `${Date.now()}_${out.length}`, sources: [], w2_history: [] });
+      idx = out.length - 1;
+    }
+    return idx;
+  };
+
   (list || []).forEach(raw => {
     const inc = { ...raw };
-    const key = incKey(inc);
-    const ownSrc = inc.sources || ((inc.amount_per_period || inc.ytd_gross || inc.gross_monthly)
-      ? [{ doc_name: inc.source_doc || newDocName || '', period: inc.ytd_as_of_date || inc.pay_period || '', amount_per_period: inc.amount_per_period, ytd_gross: inc.ytd_gross, ytd_as_of_date: inc.ytd_as_of_date, gross_monthly: inc.gross_monthly }]
-      : []);
-    const idx = out.findIndex(e => incKey(e) === key);
-    if (idx >= 0) {
-      const ex = out[idx];
-      const newer = !ex.ytd_as_of_date || (inc.ytd_as_of_date && String(inc.ytd_as_of_date) >= String(ex.ytd_as_of_date));
-      const sources = [...(ex.sources || []), ...ownSrc];
-      out[idx] = newer ? { ...ex, ...inc, id: ex.id, sources } : { ...ex, sources };
-    } else {
-      out.push({ ...inc, id: inc.id || `${Date.now()}_${out.length}`, sources: ownSrc });
+    const idx = ensure(inc);
+    const rec = out[idx];
+    rec.sources = rec.sources || [];
+    rec.w2_history = rec.w2_history || [];
+
+    if (isW2(inc)) {
+      const year = inc.tax_year;
+      const wages = inc.annual_wages || inc.ytd_gross || inc.gross_monthly;
+      if (year && wages) {
+        const wi = rec.w2_history.findIndex(w => w.year === year);
+        const entry = { year, wages: Number(wages), doc_name: inc.source_doc || newDocName || '' };
+        if (wi >= 0) rec.w2_history[wi] = entry; else rec.w2_history.push(entry);
+      }
+      // carry forward any history already attached to this incoming record
+      (inc.w2_history || []).forEach(w => { if (!rec.w2_history.find(x => x.year === w.year)) rec.w2_history.push(w); });
+      return;
+    }
+
+    // Paystub / current income
+    const incDate = inc.pay_period_end || inc.ytd_as_of_date || '';
+    const exDate = rec.pay_period_end || rec.ytd_as_of_date || '';
+    const newer = !exDate || (incDate && String(incDate) >= String(exDate));
+    if (inc.amount_per_period || inc.ytd_gross || inc.gross_monthly) {
+      rec.sources.push({ doc_name: inc.source_doc || newDocName || '', period: inc.pay_period_end || inc.ytd_as_of_date || '', amount_per_period: inc.amount_per_period, ytd_gross: inc.ytd_gross, ytd_as_of_date: inc.ytd_as_of_date, pay_frequency: inc.pay_frequency });
+    }
+    (inc.sources || []).forEach(s => rec.sources.push(s));
+    (inc.w2_history || []).forEach(w => { if (!rec.w2_history.find(x => x.year === w.year)) rec.w2_history.push(w); });
+    if (newer) {
+      out[idx] = {
+        ...rec,
+        person: inc.person || rec.person, employer: inc.employer || rec.employer,
+        income_type: inc.income_type || rec.income_type, category: inc.category || rec.category,
+        pay_frequency: inc.pay_frequency || rec.pay_frequency,
+        amount_per_period: inc.amount_per_period, ytd_gross: inc.ytd_gross, ytd_as_of_date: inc.ytd_as_of_date,
+        pay_period_start: inc.pay_period_start, pay_period_end: inc.pay_period_end,
+        hourly_rate: inc.hourly_rate, hours_per_period: inc.hours_per_period, gross_monthly: inc.gross_monthly,
+        doc_type: 'paystub', id: rec.id,
+      };
     }
   });
   return out;
@@ -430,6 +468,12 @@ const calcIncomeDetail = (inc) => {
   }
   if (!methods.length && inc.gross_monthly) {
     methods.push({ label: 'Stated monthly', monthly: Number(inc.gross_monthly), detail: 'as entered' });
+  }
+  // Prior 2-year W-2 average (the historical check)
+  const w2 = (inc.w2_history || []).slice().sort((a, b) => b.year - a.year).slice(0, 2);
+  if (w2.length) {
+    const avg = w2.reduce((s, w) => s + Number(w.wages || 0), 0) / w2.length;
+    methods.push({ label: `${w2.length}-yr W-2 avg`, monthly: avg / 12, detail: `${w2.map(w => `${w.year} ${moneyFmt(w.wages)}`).join(' + ')} ÷ ${w2.length} ÷ 12` });
   }
   const qualifying = methods.length ? Math.min(...methods.map(m => m.monthly)) : 0;
   const picked = methods.find(m => m.monthly === qualifying) || methods[0] || { label: 'n/a', monthly: 0, detail: '' };
@@ -4126,6 +4170,14 @@ const IncomeSection = ({ borrower, onUpdate }) => {
                       </div>
                     ))}
                     <div style={{ fontSize: '10px', color: '#92400e', marginTop: '4px' }}>Uses the more conservative (lower) method. Verify employment dates + whether OT/bonus is consistent.</div>
+                    {(src.w2_history || []).length > 0 && (
+                      <>
+                        <div style={{ fontWeight: 700, color: '#475569', margin: '8px 0 4px' }}>W-2 history</div>
+                        {src.w2_history.slice().sort((a, b) => b.year - a.year).map((w, i) => (
+                          <div key={i} style={{ color: '#475569', padding: '1px 0' }}>• {w.year}: {moneyFmt(w.wages)}{w.doc_name ? ` (${w.doc_name})` : ''}</div>
+                        ))}
+                      </>
+                    )}
                     {(src.sources || []).length > 0 && (
                       <>
                         <div style={{ fontWeight: 700, color: '#475569', margin: '8px 0 4px' }}>Paystubs used</div>
