@@ -72,8 +72,10 @@ const MatrixPage = () => {
         alert('Database error: ' + dbErr.message);
         throw dbErr;
       }
+      console.log('Matrix saved:', insertedData);
 
       const { data } = await supabase.from('lender_matrices').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+      console.log('Matrices fetched:', data?.length);
       setMatrices(data || []);
 
       // Parse PDF in background (don't block upload)
