@@ -41,7 +41,9 @@ const MatrixPage = () => {
     if (!file || !user) return;
     setUploading(true);
     try {
-      const path = `${user.id}/${Date.now()}_${file.name}`;
+      // Sanitize filename - remove special chars that break Supabase storage
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${user.id}/${Date.now()}_${safeName}`;
       // Use Documents bucket (same as other uploads)
       const { error: upErr } = await supabase.storage.from('Documents').upload(path, file);
       if (upErr) {
