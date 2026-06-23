@@ -227,6 +227,7 @@ const MatrixPage = () => {
                     >
                       <div style={{ fontWeight: '600', color: '#3b82f6', fontSize: '11px' }}>{lender}</div>
                       {matrixType && <div style={{ fontSize: '9px', color: '#64748b' }}>{matrixType}</div>}
+                      {m.created_at && <div style={{ fontSize: '8px', color: '#4b5563' }}>{new Date(m.created_at).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })}</div>}
                     </a>
                     <button type="button" onClick={async () => {
                       await supabase.from('lender_matrices').delete().eq('id', m.id);
