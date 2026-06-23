@@ -33,9 +33,14 @@ export default async function handler(req, res) {
 
   try {
     // Fetch the PDF
+    console.log('Fetching PDF from:', fileUrl?.substring(0, 100));
     const pdfResponse = await fetch(fileUrl);
+    if (!pdfResponse.ok) {
+      return res.status(500).json({ error: `Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}` });
+    }
     const pdfBuffer = await pdfResponse.arrayBuffer();
     const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
+    console.log('PDF fetched, size:', pdfBuffer.byteLength);
 
     // Use Claude to extract and summarize the PDF content
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
