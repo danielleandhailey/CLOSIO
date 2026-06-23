@@ -112,7 +112,7 @@ Format as clear, searchable bullet points. Be thorough - this will be used to an
     return res.status(200).json({ success: true, indexed: extractedText.substring(0, 500) + '...' });
 
   } catch (e) {
-    console.error('PDF parse error:', e);
-    return res.status(500).json({ error: e.message });
+    console.error('PDF parse error:', e.message, e.stack);
+    return res.status(500).json({ error: e.message, stack: e.stack?.substring(0, 300) });
   }
 }
