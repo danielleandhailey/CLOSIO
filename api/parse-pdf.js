@@ -43,6 +43,7 @@ export default async function handler(req, res) {
     console.log('PDF fetched, size:', pdfBuffer.byteLength);
 
     // Use Claude to extract and summarize the PDF content
+    console.log('Calling Claude API...');
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -83,6 +84,7 @@ Format as clear, searchable bullet points. Be thorough - this will be used to an
         }]
       })
     });
+    console.log('Claude response status:', claudeResponse.status);
 
     const claudeData = await claudeResponse.json();
 
