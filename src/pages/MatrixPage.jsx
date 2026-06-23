@@ -73,27 +73,15 @@ const MatrixPage = () => {
         throw dbErr;
       }
 
-      // Parse PDF and index with AI
-      try {
-        const parseRes = await fetch('/api/parse-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileUrl,
-            matrixId: insertedData.id,
-            lenderName
-          })
-        });
-        const parseData = await parseRes.json();
-        if (!parseData.success) {
-          console.warn('PDF indexing warning:', parseData.error);
-        }
-      } catch (parseErr) {
-        console.warn('PDF parse error:', parseErr);
-      }
-
       const { data } = await supabase.from('lender_matrices').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
       setMatrices(data || []);
+
+      // Parse PDF in background (don't block upload)
+      fetch('/api/parse-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileUrl, matrixId: insertedData.id, lenderName })
+      }).catch(() => {});
     } catch (e) {
       console.error('Matrix upload error:', e);
     } finally {
